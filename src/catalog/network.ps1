@@ -116,5 +116,84 @@ function Get-NetworkCatalogActions {
         }
         undoCmd='NetworkThrottlingIndex=10'
     }
+    $A += @{
+        id='net.wol-off'
+        titulo='Wake-on-LAN desactivado en adaptadores de red'
+        titulo_en='Disable Wake-on-LAN on network adapters'
+        descripcion='Evita que la red despierte el PC desde suspension/apagado (gana bateria en portatil y evita encendidos fantasma).'
+        descripcion_en='Prevents the NIC from waking the PC from sleep/off (saves laptop battery, avoids phantom power-ons).'
+        categoria='network'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('portatil-ahorro','red-privacidad','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'WoL habilitado en adap. magic packet -> deshabilitado' }
+        apply={
+            $acs = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue)
+            foreach ($ad in $acs) {
+                try { Disable-NetAdapterPowerManagement -Name $ad.Name -WakeOnMagicPacket -WakeOnPattern -ErrorAction SilentlyContinue } catch { }
+            }
+        }
+        undo={
+            $acs = @(Get-NetAdapter -Physical -ErrorAction SilentlyContinue)
+            foreach ($ad in $acs) {
+                try { Enable-NetAdapterPowerManagement -Name $ad.Name -WakeOnMagicPacket -WakeOnPattern -ErrorAction SilentlyContinue } catch { }
+            }
+        }
+        undoCmd='Enable-NetAdapterPowerManagement -WakeOnMagicPacket -WakeOnPattern'
+    }
+    $A += @{
+        id='net.netbios-off'
+        titulo='NetBIOS over TCP/IP deshabilitado'
+        titulo_en='Disable NetBIOS over TCP/IP'
+        descripcion='Cierra el puerto 137-139 de descubrimiento de red legado. En redes domesticas sin SMB antiguo: sin efecto visible.'
+        descripcion_en='Closes legacy ports 137-139. On home networks without old SMB: no visible effect.'
+        categoria='network'; riesgo='medio'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('red-privacidad','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'NetBIOS: por defecto -> deshabilitado (TcpipParameters)' }
+        apply={
+            foreach ($iid in (Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces' -ErrorAction SilentlyContinue)) {
+                Set-STRegValue "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces\$($iid.PSChildName)" 'NetbiosOptions' 2
+            }
+        }
+        undo={
+            foreach ($iid in (Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces' -ErrorAction SilentlyContinue)) {
+                Set-STRegValue "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces\$($iid.PSChildName)" 'NetbiosOptions' 0
+            }
+        }
+        undoCmd='NetbiosOptions=0 en NetBT\Parameters\Interfaces'
+    }
+    $A += @{
+        id='net.llmnr-off'
+        titulo='Desactivar LLMNR y mDNS (resolucion local)'
+        titulo_en='Disable LLMNR and mDNS (local resolution)'
+        descripcion='Evita envenenamiento de cache LLMNR (ataques de vecinos en la LAN) y trafico mDNS extra. La resolución DNS normal sigue igual.'
+        descripcion_en='Prevents LLMNR cache poisoning (LAN neighbor attacks) and extra mDNS traffic. Normal DNS keeps working.'
+        categoria='network'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('red-privacidad','ofimatica','personalizado')
+        niveles=@{ suave=1; medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'EnableMulticast(LLMNR)/EnableMDNS ON -> OFF (politica de maquina)' }
+        apply={
+            $g='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient'
+            $prevA = Get-STRegValue $g 'EnableMulticast' $null
+            $prevB = Get-STRegValue $g 'EnableMDNS' $null
+            Set-STRegValue $g '__ST_prev_EnableMulticast' ([int]$(if ($null -eq $prevA) { 1 } else { [int]$prevA }))
+            Set-STRegValue $g '__ST_prev_EnableMDNS' ([int]$(if ($null -eq $prevB) { 1 } else { [int]$prevB }))
+            Set-STRegValue $g 'EnableMulticast' 0
+            Set-STRegValue $g 'EnableMDNS' 0
+        }
+        undo={
+            $g='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient'
+            $pa = Get-STRegValue $g '__ST_prev_EnableMulticast' 1
+            $pb = Get-STRegValue $g '__ST_prev_EnableMDNS' 1
+            Set-STRegValue $g 'EnableMulticast' ([int]$pa)
+            Set-STRegValue $g 'EnableMDNS' ([int]$pb)
+            Remove-ItemProperty $g '__ST_prev_EnableMulticast' -ErrorAction SilentlyContinue
+            Remove-ItemProperty $g '__ST_prev_EnableMDNS' -ErrorAction SilentlyContinue
+        }
+        undoCmd='EnableMulticast=1; EnableMDNS=1 (o borrar politicas)'
+    }
     return $A
 }

@@ -42,7 +42,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('status','battery','power','undo','analyze','help')) { $cmd = $low; continue }
+    if ($low -in @('status','battery','power','undo','analyze','history','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     if ($a.StartsWith('-')) { Write-STWarn ("flag desconocido: $a") }
 }
@@ -60,6 +60,7 @@ try {
         'power'     { Invoke-STPowerMenu }
         'undo'      { Invoke-STUndo -Id:$optId -Yes:$flagYes }
         'analyze'   { Invoke-STAnalyze }
+        'history'   { Show-STHistory }
         'help'      { Show-STHelp }
         default     { Write-STErr ("comando desconocido: $cmd"); Show-STHelp; exit 1 }
     }

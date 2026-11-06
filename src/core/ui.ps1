@@ -98,6 +98,7 @@ $script:ST_ES = @{
     'prof.portatil-rendimiento' = 'Portatil - Rendimiento (enchufado)'
     'prof.limpieza'  = 'Limpieza de disco'
     'prof.bajos-recursos' = 'Bajos recursos (PC antiguo)'
+    'prof.red-privacidad' = 'Red y privacidad'
     'prof.personalizado' = 'Personalizado (elige tu mismo)'
     'prof.custom'    = 'Personalizado'
     'list.title'     = 'Acciones disponibles (filtra hardware/perfil). Espacio=seleccionar  Enter=continuar  F=ficha  Esc=volver'
@@ -133,6 +134,9 @@ $script:ST_ES = @{
     'undo.none'      = 'No hay cambios registrados.'
     'undo.list'      = 'Cambios en el journal (arriba = mas antiguo):'
     'analyze.title'  = 'Analisis de espacio (informativo, no borra nada)'
+    'history.title'  = 'Historial de cambios (journal)'
+    'history.none'   = 'No hay cambios registrados.'
+    'history.line'   = 'Journal'
     'power.title'    = 'Planes de energia SparkTune'
     'battery.title'  = 'Informe de bateria'
     'hw.detect'      = 'Detectando hardware'
@@ -174,6 +178,7 @@ $script:ST_EN = @{
     'prof.portatil-rendimiento' = 'Laptop - Performance (plugged in)'
     'prof.limpieza'  = 'Disk cleanup'
     'prof.bajos-recursos' = 'Low resources (old PC)'
+    'prof.red-privacidad' = 'Network & privacy'
     'prof.personalizado' = 'Custom (pick yourself)'
     'prof.custom'    = 'Custom'
     'list.title'     = 'Available actions (filtered by HW/profile). Space=toggle Enter=continue F=card Esc=back'
@@ -209,6 +214,9 @@ $script:ST_EN = @{
     'undo.none'      = 'No recorded changes.'
     'undo.list'      = 'Journal entries (top = oldest):'
     'analyze.title'  = 'Space analysis (read-only, deletes nothing)'
+    'history.title'  = 'Change history (journal)'
+    'history.none'   = 'No recorded changes.'
+    'history.line'   = 'Journal'
     'power.title'    = 'SparkTune power plans'
     'battery.title'  = 'Battery report'
     'hw.detect'      = 'Detecting hardware'
@@ -271,9 +279,11 @@ function Show-STHelp {
         '  power                  Listar/crear/aplicar planes SparkTune',
         '  undo                   Deshacer cambios (--id=xxx para uno concreto)',
         '  analyze                Que ocupa espacio (no borra nada)',
+        '  history                Historial de cambios del journal',
         '',
         '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
-        '                         portatil-ahorro|portatil-rendimiento|personalizado',
+        '                         portatil-ahorro|portatil-rendimiento|',
+        '                         red-privacidad|personalizado',
         '  --nivel=suave          suave|medio|agresivo',
         '  --yes                  Sin confirmaciones (cuidado)',
         '  --dry-run              Simulacion: muestra, no ejecuta',
@@ -297,9 +307,11 @@ function Show-STHelp {
             '  power                  List/create/apply SparkTune power plans',
             '  undo                   Revert changes (--id=xxx for a single one)',
             '  analyze                What takes space (deletes nothing)',
+            '  history                Change history from the journal',
             '',
             '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
-            '                         portatil-ahorro|portatil-rendimiento|personalizado',
+            '                         portatil-ahorro|portatil-rendimiento|',
+            '                         red-privacidad|personalizado',
             '  --nivel=suave          suave|medio|agresivo',
             '  --yes                  Skip confirmations (careful)',
             '  --dry-run              Simulation: show, do not execute',

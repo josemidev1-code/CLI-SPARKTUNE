@@ -36,6 +36,7 @@ sparktune status                   # CPU, RAM, discos, GPU, bateria, plan, servi
 sparktune analyze                  # que esta ocupando espacio (no borra nada)
 sparktune power                    # planes SparkTune: listar / crear / aplicar / restaurar
 sparktune battery                  # informe de bateria + planes recomendados
+sparktune history                  # historial de cambios del journal (estado por entrada)
 sparktune undo                     # deshace cambios (en orden inverso), --id=xxx para uno
 sparktune --help
 ```
@@ -43,7 +44,7 @@ sparktune --help
 Flags:
 
 ```
---perfil=gaming|ofimatica|limpieza|bajos-recursos|portatil-ahorro|portatil-rendimiento|personalizado
+--perfil=gaming|ofimatica|limpieza|bajos-recursos|portatil-ahorro|portatil-rendimiento|red-privacidad|personalizado
 --nivel=suave|medio|agresivo
 --yes                              # sin confirmaciones (usalo solo si sabes lo que haces)
 --dry-run                          # simulacion: muestra lo que haria, no toca nada
@@ -82,10 +83,14 @@ src/data/            profiles.json (id de acciones por perfil/nivel), figlet.txt
 ## Roadmap
 
 - [ ] Mas perfiles (creativo/edicion, desarrollo)
-- [ ] Perfil "red/privacidad" dedicado (acciones `net.*` / `priv.*` hoy solo en personalizado)
+- [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0
 - [ ] Smoke-test automatizado en --dry-run (CI en runner de Windows)
 - [ ] Capturas en el README
 - [ ] Paquete winget
+
+## Registro de sesiones
+
+Ver [SESSIONS.md](SESSIONS.md) (que se hace en cada sesion de desarrollo y que queda pendiente).
 
 ## Licencia
 

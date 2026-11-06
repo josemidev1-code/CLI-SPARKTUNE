@@ -29,5 +29,10 @@
     "medio": ["clean.temp-user","clean.dns","gamemode","gamebar.dvr","gpu.hags","gpu.driver-advice","cpu.fgboost","off.classic-menu","off.netindex","upd.pause","lap.adaptive","power.spark-equili","power.spark-rendi","power.spark-turbo"],
     "agresivo": ["clean.temp-user","clean.temp-system","clean.dns","gamemode","gamebar.dvr","gpu.hags","gpu.driver-advice","cpu.fgboost","cpu.idlestates","off.classic-menu","priv.tips","priv.teletrack","upd.forced-reboot","upd.pause","lap.adaptive","net.latin","power.spark-rendi","power.spark-turbo","power.spark-equili"]
   },
+  "red-privacidad": {
+    "suave": ["clean.dns","net.doh","net.llmnr-off","priv.tips","priv.ads","priv.activity","priv.input-personalization"],
+    "medio": ["clean.dns","net.doh","net.llmnr-off","net.wol-off","net.netbios-off","priv.tips","priv.ads","priv.activity","priv.input-personalization","priv.preapps","priv.teletrack","priv.cortana"],
+    "agresivo": ["clean.dns","net.doh","net.llmnr-off","net.wol-off","net.netbios-off","net.nla","net.latin","priv.tips","priv.ads","priv.activity","priv.input-personalization","priv.preapps","priv.teletrack","priv.diagsvc-off","priv.cortana","priv.deep-telemetry"]
+  },
   "personalizado": { "suave": ["*"], "medio": ["*"], "agresivo": ["*"] }
 }

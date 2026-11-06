@@ -222,7 +222,8 @@ function Select-STProfile {
         @{ id='portatil-rendimiento';icon='4' }
         @{ id='limpieza';            icon='5' }
         @{ id='bajos-recursos';      icon='6' }
-        @{ id='personalizado';       icon='7' }
+        @{ id='red-privacidad';      icon='7' }
+        @{ id='personalizado';       icon='8' }
     )
     $items = @()
     foreach ($p in $profs) { $items += [pscustomobject]@{ id = $p.id; label = "$(T "prof.$($p.id)")" } }
@@ -355,6 +356,27 @@ function Invoke-STUndo {
         Write-STProgress -Pct ([int](100 * $i / $rev.Count)) -Label "$i/$($rev.Count)"
     }
     Write-STProgress -Pct 100 -Label (T 'run.done')
+}
+
+# ---------- history ----------
+function Show-STHistory {
+    $entries = @(Read-STJournal)
+    Write-STLine ''
+    Write-STLine "  $(T 'history.title')" 'cyan' 'bold'
+    Write-STLine ''
+    if ($entries.Count -eq 0) { Write-STInfo (T 'history.none'); return }
+    $undoneKeys = @{}
+    foreach ($e in $entries) { if ($e.status -eq 'undo' -and $e.refSeq) { $undoneKeys["$($e.refSeq)"] = $true } }
+    Write-STLine ("    {0,-18} {1,-26} {2,-10} {3}" -f 'seq','id','estado','titulo') 'gray'
+    foreach ($e in $entries) {
+        if ($e.status -eq 'undo') { continue }
+        $st = $e.status
+        $col = switch ($st) { 'applied' { if ($undoneKeys["$($e.seq)"]) { $st = 'undone'; 'gray' } else { 'green' } } 'failed' { 'red' } 'dryrun' { 'gray' } default { 'gray' } }
+        Write-STLine ("    {0,-18} {1,-26} {2,-10} {3}" -f $e.seq, $e.id, $st, $e.titulo) $col
+    }
+    $pend = @(Get-STJournalPending)
+    Write-STLine ''
+    Write-STInfo "$(T 'history.line'): $($entries.Count) entradas, $($pend.Count) activas (sparktune undo para deshacer)"
 }
 
 # ---------- status ----------
