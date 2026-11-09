@@ -57,8 +57,12 @@ Check 'catalog loads' {
 }
 
 Check 'unique ids' {
-    $dups = $all | Group-Object id | Where-Object { $_.Count -gt 1 }
-    if ($dups) { throw (($dups | ForEach-Object { $_.Name }) -join ', ') }
+    $seen = @{}; $dupes = @()
+    foreach ($a in $all) {
+        $i = "$($a.id)"
+        if ($seen.ContainsKey($i)) { $dupes += $i } else { $seen[$i] = $true }
+    }
+    if ($dupes.Count -gt 0) { throw "duplicados: $($dupes -join ', ')" }
 }
 
 Check 'required fields per action' {
@@ -93,13 +97,14 @@ Check 'wizard menu matches profiles.json' {
 
 Check 'ui dictionary ES/EN symmetric' {
     $ui = Get-Content (Join-Path $root 'src\core\ui.ps1') -Raw
-    $es = [regex]::Matches($ui, "'([\w.\-]+)'\s*=").ForEach({$_.Groups[1].Value})
     $a = ($ui -split '\$script:ST_ES')[1] -split '\$script:ST_EN'
     $b = (($ui -split '\$script:ST_EN')[1] -split 'function Set-STLang')[0]
-    $kEs = @([regex]::Matches($a, "'([\w.\-]+)'\s*=") | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
-    $kEn = @([regex]::Matches($b, "'([\w.\-]+)'\s*=") | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
-    $diff = Compare-Object $kEs $kEn
-    if ($diff) { throw (($diff | ForEach-Object { "$($_.InputObject) ($($_.SideIndicator))" }) -join ', ') }
+    $setEs = @{}; foreach ($m in [regex]::Matches($a, "'([\w.\-]+)'\s*=")) { $setEs[$m.Groups[1].Value] = $true }
+    $setEn = @{}; foreach ($m in [regex]::Matches($b, "'([\w.\-]+)'\s*=")) { $setEn[$m.Groups[1].Value] = $true }
+    $miss = @()
+    foreach ($k in $setEs.Keys) { if (-not $setEn.ContainsKey($k)) { $miss += "$k solo-en-ES" } }
+    foreach ($k in $setEn.Keys) { if (-not $setEs.ContainsKey($k)) { $miss += "$k solo-en-EN" } }
+    if ($miss.Count) { throw ($miss -join ', ') }
 }
 
 Check 'apps.json valid' {
@@ -109,8 +114,9 @@ Check 'apps.json valid' {
         if (-not $a.id -or -not $a.name -or -not $a.winget -or -not $a.cat) { throw "app incompleta: $($a.id)" }
         if ($cats -notcontains $a.cat) { throw "$($a.id): categoria desconocida $($a.cat)" }
     }
-    $dups = $j.apps | Group-Object id | Where-Object { $_.Count -gt 1 }
-    if ($dups) { throw ($dups | ForEach-Object { $_.Name }) -join ', ' }
+    $dupes = @()
+    foreach ($g in ($j.apps | Group-Object id)) { if ($g.Count -gt 1) { $dupes += $g.Name } }
+    if ($dupes.Count) { throw "duplicados: $($dupes -join ', ')" }
 }
 
 Check 'detect blocks run with fake hw' {
