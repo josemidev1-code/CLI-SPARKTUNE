@@ -26,15 +26,13 @@ $STSUB = @{
     IdleTimeAc='63f2ec4e-4d4f-4e90-bda6-c7c82d8aff83'; IdleTimeDc='5d76a2ca-a8d3-441c-b2f3-2fd0836d4028'
     ProcPerfBoost='be337238-0d82-4146-a960-4f3749d470c7'  # 0=Default 1=Efficient 2=Aggressive
     LatencyHint='f4baaf2c-638c-4790-b101-0f4f02493e7b'    # processor performance history/decrease hint
-    SubPci='eeeabc0fe-811e-11d5-b4d9-00a0242541e9'; AspmAc='eeeabc0f-811e-11d5-b4d9-000242541e9'
+    SubPci='eeabc0fe-811e-11d5-b4d9-00a0242541e9'         # PCI Express subgrupo
+    AspmAc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'         # ASPM Policies (mismo set GUID en AC y DC)
+    AspmDc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'
     SubGPU='44f76c74-876a-482b-9b8c-7c00af9bc5a5'
     DgpuMinAc='48f03ac5-cf51-4766-8fd5-0a1db1999fd1'; DgpuMaxAc='ec8d00b4-65e9-4b1b-83cc-001e81eee0ae'
     DgpuMinDc='b8f44f6f-53e4-4a3f-a33f-9f8744a060e0'; DgpuMaxDc='ea8c88e8-f68b-4e0e-a3d3-4b1e5b5515a3'
-    SubPt='7b7fd3c5-cd56-4b5a-94e5-7b9e589a1f5f'  # Power Throttling {7B7FD3C5-...} alias: 90e0adb2-...? usar: 7B7FD3C5 no documentado; usar el oficial:
 }
-# Power Throttling oficial: subgrupo 7B7FD3C5-C5D5-4B5A-... — usamos los GUIDs ampliamente documentados:
-$STSUB.SubPt   = '7B7FD3C5-C5D5-4B5A-94E5-7B9E589A1F5F'
-$STSUB.Pt90Ac  = '21c187d4-5510-24d2-59a6-65c2b2f2c84b'  # 90th percentile foreground (documentado en foros; si falla, setea y continua)
 $STSUB.SubNet='e543ec7e-637f-44ef-b78d-910a4c57d14c'
 $STSUB.NetRfAc='14519c9e-4e37-4ade-9c0a-c916adc3d4e9'   # Wireless adapter power mode AC
 $STSUB.NetRfDc='69cfff71-c3a7-4c4c-97d3-125048f2f2ea'   # DC
@@ -123,8 +121,8 @@ function Get-STPlanSpec([string]$Key, $hw) {
                  "$($P.SubBatt)|$($P.SleepIdleAc)"=120;"$($P.SubBatt)|$($P.CritBatt)"=5;"$($P.SubBatt)|$($P.LowBatt)"=20
                  "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubNet)|$($P.NetRfAc)"=2;"$($P.SubVideo)|$($P.VidIdleAc)"=30}
             Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=5;"$($P.SubProc)|$($P.ProcMaxDc)"=60;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                 "$($P.SubBatt)|$($P.SleepIdleDc)"=60;"$($P.SubBatt)|$($P.CritBatt)"=5;"$($P.SubBatt)|$($P.LowBatt)"=20
-                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubNet)|$($P.NetRfDc)"=2;"$($P.SubVideo)|$($P.VidIdleDc)"=15} } }
+                  "$($P.SubBatt)|$($P.SleepIdleDc)"=60;"$($P.SubBatt)|$($P.CritBatt)"=5;"$($P.SubBatt)|$($P.LowBatt)"=20
+                 "$($P.SubPci)|$($P.AspmDc)"=0;"$($P.SubNet)|$($P.NetRfDc)"=2;"$($P.SubVideo)|$($P.VidIdleDc)"=15} } }
         'spark-ahorro' { return @{
             Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=5;"$($P.SubProc)|$($P.ProcMaxAc)"=90;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
                  "$($P.SubBatt)|$($P.SleepIdleAc)"=300;"$($P.SubPci)|$($P.AspmAc)"=1}

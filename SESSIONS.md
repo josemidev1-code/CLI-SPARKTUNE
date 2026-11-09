@@ -2,6 +2,28 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-09 — Sesion 2 (v1.2.0 "final boss": apps, seguridad, CI)
+
+Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
+
+### Hecho
+
+- **F0 fixes**: `net.doh` guarda/restaura DNS real por adaptador (`state-net.doh.json`;
+  antes usaba `InterfaceIndex 0` invalido); GUIDs PCI/ASPM de power.ps1 corregidos y GUIDs
+  inventados de Power Throttling eliminados; `clean.dns` sin exigir admin; install.ps1: copia
+  selectiva sin `.git`/tests, journal portable, `WM_SETTINGCHANGE` con `lParam='Environment'`;
+  uninstall robusto; todos los `.ps1`/JSON con UTF-8 BOM; `globals.ps1` con home portable (`HOME`).
+- **F1**: `tests/run-tests.ps1` (11 tests sin dependencias, pasan en pwsh 7 y 5.1) +
+  `.github/workflows/ci.yml` (job contract + dry-run 8 perfiles×3 niveles en windows-latest).
+- **Apps estilo winutil**: `sparktune apps` — menu por categorias (9), 35 apps `apps.json`
+  via winget oficial, ✔ de instaladas, dry-run seguro, `winget upgrade` global.
+- **Seguridad**: `src/catalog/security.ps1` — `sec.defender-report`, `sec.pua-protection`,
+  `sec.autostart-notifs`, `sec.firewall-log`, `sec.smb1-off`, `sec.hidden-restore`
+  (integrado en red-privacidad y ofimatica). Nunca desactiva nada de seguridad.
+- **`doctor`**, **`report --out=`** (HTML), **`undo --category=`**.
+- **Docs**: CHANGELOG.md (v1.0-1.2), docs/DESIGN.md (arquitectura + contrato de accion +
+  checklist para anadir acciones), README actualizado, version 1.2.0.
+
 ## 2026-11-06 — Sesion 1 (perfil red-privacidad + comando history)
 
 Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
@@ -24,6 +46,10 @@ Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
   strings ES/EN `history.*`, enrutado en `sparktune.ps1` y ayuda.
 - README: perfil y comando nuevos, roadmap actualizado.
 
+### Pendiente (heredado a Sesion 2)
+
+- Probar en Windows real; CI smoke-test; mas perfiles; capturas y winget.
+
 ### Pendiente / siguiente sesion
 
 - [ ] **Probar en Windows**: no hay pwsh en este PC Linux; `net.*` nuevas y `history`
@@ -36,6 +62,5 @@ Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
 
 ### Notas para el desarrollador
 
-- Cambiar `$Global:STVersion` en `src/core/globals.ps1` solo cuando se pruebe en Windows
-  (pendiente: subir a `1.1.0`).
+- `pwsh` local para probar en Linux: `/tmp/opencode/pwsh/pwsh` (no forma parte del repo).
 - Los IDs de accion son contrato del journal: no renombrar IDs ya publicados.

@@ -20,8 +20,13 @@ if ($userPath) {
     Write-Host "Quitado del PATH de usuario." -ForegroundColor Green
 }
 
-if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
-Write-Host "Carpena eliminada: $dst" -ForegroundColor Green
+if (Test-Path $dst) {
+    try { Remove-Item $dst -Recurse -Force } catch {
+        Write-Host "No se pudo borrar $dst (archivos abiertos). Cierra la terminal que lo use y reintenta." -ForegroundColor Red
+        exit 1
+    }
+}
+Write-Host "Carpeta eliminada: $dst" -ForegroundColor Green
 
 if ($Journal) {
     $home2 = Join-Path $env:USERPROFILE '.sparktune'

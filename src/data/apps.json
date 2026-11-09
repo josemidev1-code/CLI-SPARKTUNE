@@ -1,0 +1,270 @@
+﻿{
+  "categories": [
+    {
+      "id": "internet",
+      "label_es": "Internet y navegadores",
+      "label_en": "Internet & browsers"
+    },
+    {
+      "id": "social",
+      "label_es": "Social y comunicacion",
+      "label_en": "Social & communication"
+    },
+    {
+      "id": "tools",
+      "label_es": "Utilidades del sistema",
+      "label_en": "System utilities"
+    },
+    {
+      "id": "gaming",
+      "label_es": "Gaming",
+      "label_en": "Gaming"
+    },
+    {
+      "id": "design",
+      "label_es": "Diseno y creacion",
+      "label_en": "Design & creation"
+    },
+    {
+      "id": "dev",
+      "label_es": "Programacion",
+      "label_en": "Development"
+    },
+    {
+      "id": "docs",
+      "label_es": "Documentos y PDF",
+      "label_en": "Documents & PDF"
+    },
+    {
+      "id": "music",
+      "label_es": "Musica y video",
+      "label_en": "Music & video"
+    },
+    {
+      "id": "security",
+      "label_es": "Seguridad",
+      "label_en": "Security"
+    }
+  ],
+  "apps": [
+    {
+      "id": "chrome",
+      "cat": "internet",
+      "name": "Google Chrome",
+      "winget": "Google.Chrome"
+    },
+    {
+      "id": "firefox",
+      "cat": "internet",
+      "name": "Firefox",
+      "winget": "Mozilla.Firefox"
+    },
+    {
+      "id": "brave",
+      "cat": "internet",
+      "name": "Brave",
+      "winget": "BraveSoftware.BraveBrowser"
+    },
+    {
+      "id": "edge",
+      "cat": "internet",
+      "name": "Microsoft Edge",
+      "winget": "Microsoft.Edge"
+    },
+    {
+      "id": "vlc",
+      "cat": "music",
+      "name": "VLC Media Player",
+      "winget": "VideoLAN.VLC"
+    },
+    {
+      "id": "spotify",
+      "cat": "music",
+      "name": "Spotify",
+      "winget": "Spotify.Spotify"
+    },
+    {
+      "id": "whatsapp",
+      "cat": "social",
+      "name": "WhatsApp",
+      "winget": "WhatsApp.WhatsApp"
+    },
+    {
+      "id": "telegram",
+      "cat": "social",
+      "name": "Telegram Desktop",
+      "winget": "Telegram.TelegramDesktop"
+    },
+    {
+      "id": "discord",
+      "cat": "social",
+      "name": "Discord",
+      "winget": "Discord.Discord"
+    },
+    {
+      "id": "zoom",
+      "cat": "social",
+      "name": "Zoom",
+      "winget": "Zoom.Zoom"
+    },
+    {
+      "id": "teamviewer",
+      "cat": "tools",
+      "name": "TeamViewer",
+      "winget": "TeamViewer.TeamViewer"
+    },
+    {
+      "id": "7zip",
+      "cat": "tools",
+      "name": "7-Zip",
+      "winget": "7zip.7zip"
+    },
+    {
+      "id": "notepadpp",
+      "cat": "tools",
+      "name": "Notepad++",
+      "winget": "Notepad++.Notepad++"
+    },
+    {
+      "id": "sharex",
+      "cat": "tools",
+      "name": "ShareX (capturas)",
+      "winget": "ShareX.ShareX"
+    },
+    {
+      "id": "powertoys",
+      "cat": "tools",
+      "name": "PowerToys",
+      "winget": "Microsoft.PowerToys"
+    },
+    {
+      "id": "hwinfo",
+      "cat": "tools",
+      "name": "HWiNFO64",
+      "winget": "REALTIMEHWiNFO.HWiNFO64",
+      "hidden": true
+    },
+    {
+      "id": "cpu-z",
+      "cat": "tools",
+      "name": "CPU-Z",
+      "winget": "CPUID.CPU-Z",
+      "hidden": true
+    },
+    {
+      "id": "gpu-z",
+      "cat": "tools",
+      "name": "GPU-Z",
+      "winget": "TechPowerHouse.GPU-Z",
+      "hidden": true
+    },
+    {
+      "id": "hwmonitor",
+      "cat": "tools",
+      "name": "HWMonitor",
+      "winget": "OpenHardwareMonitor.OpenHardwareMonitor",
+      "hidden": true
+    },
+    {
+      "id": "everything",
+      "cat": "tools",
+      "name": "Everything (busqueda)",
+      "winget": "DavidErceg.Everything",
+      "hidden": true
+    },
+    {
+      "id": "steam",
+      "cat": "gaming",
+      "name": "Steam",
+      "winget": "Valve.Steam"
+    },
+    {
+      "id": "epic",
+      "cat": "gaming",
+      "name": "Epic Games Launcher",
+      "winget": "EpicGames.EpicGamesLauncher"
+    },
+    {
+      "id": "obs",
+      "cat": "design",
+      "name": "OBS Studio",
+      "winget": "OBSProject.OBSStudio"
+    },
+    {
+      "id": "gimp",
+      "cat": "design",
+      "name": "GIMP",
+      "winget": "GIMP.GIMP"
+    },
+    {
+      "id": "blender",
+      "cat": "design",
+      "name": "Blender",
+      "winget": "BlenderFoundation.Blender"
+    },
+    {
+      "id": "audacity",
+      "cat": "design",
+      "name": "Audacity",
+      "winget": "Audacity.Audacity"
+    },
+    {
+      "id": "vscode",
+      "cat": "dev",
+      "name": "Visual Studio Code",
+      "winget": "Microsoft.VisualStudioCode"
+    },
+    {
+      "id": "git",
+      "cat": "dev",
+      "name": "Git",
+      "winget": "Git.Git"
+    },
+    {
+      "id": "python",
+      "cat": "dev",
+      "name": "Python 3",
+      "winget": "Python.Python.3.12"
+    },
+    {
+      "id": "acrobat",
+      "cat": "docs",
+      "name": "Adobe Acrobat Reader",
+      "winget": "Adobe.Acrobat.Reader.64-bit"
+    },
+    {
+      "id": "libre",
+      "cat": "docs",
+      "name": "LibreOffice",
+      "winget": "TheDocumentFoundation.LibreOffice"
+    },
+    {
+      "id": "msoffice",
+      "cat": "docs",
+      "name": "Microsoft 365 (Office)",
+      "winget": "Microsoft.Office",
+      "hidden": true
+    },
+    {
+      "id": "msoffice2021",
+      "cat": "docs",
+      "name": "Office 2021",
+      "winget": "Microsoft.Office.2021",
+      "hidden": true
+    },
+    {
+      "id": "bitwarden",
+      "cat": "security",
+      "name": "Bitwarden",
+      "winget": "Bitwarden.Bitwarden",
+      "hidden": true
+    },
+    {
+      "id": "keepass",
+      "cat": "security",
+      "name": "KeePassXC",
+      "winget": "KeePassXC.KeePassXC",
+      "hidden": true
+    }
+  ]
+}

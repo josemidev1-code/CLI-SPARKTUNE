@@ -37,7 +37,10 @@ sparktune analyze                  # que esta ocupando espacio (no borra nada)
 sparktune power                    # planes SparkTune: listar / crear / aplicar / restaurar
 sparktune battery                  # informe de bateria + planes recomendados
 sparktune history                  # historial de cambios del journal (estado por entrada)
-sparktune undo                     # deshace cambios (en orden inverso), --id=xxx para uno
+sparktune apps                     # instalar apps populares (menu estilo winutil, via winget)
+sparktune doctor                   # salud del sistema y coherencia journal/catalogo
+sparktune report [--out=archivo]   # informe HTML (sistema, discos, journal) para compartir
+sparktune undo                     # deshace cambios (en orden inverso), --id=xxx o --category=priv
 sparktune --help
 ```
 
@@ -66,6 +69,8 @@ sparktune --perfil=gaming --nivel=medio --dry-run
 - **Riesgo alto = confirmacion tipando SI**, y aviso de punto de restauracion.
 - **Journal** en `~/.sparktune/journal.json` y **undo** de todo o de un cambio concreto.
 - **Planes de energia** propios (Ultra Ahorro -> Turbo GPU) creados con `powercfg` duplicando los de fabrica, y restaurables.
+- **Instalador de apps** (`sparktune apps`): 35 apps organizadas por categorias (navegadores, social, herramientas, gaming, diseno, programacion, docs, musica, seguridad) instaladas con **winget oficial**; nada de mirrors ni instaladores sueltos.
+- **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catalogo `sec.*` informa y endurece (PUA, SMBv1, logs), todo reversible.
 
 No hace "tweaks magicos" que rompen Windows: cada accion tiene undo documentado, y lo que no se
 puede deshacer (limpieza de ficheros) esta marcado como irreversible y se confirma aparte.
@@ -76,22 +81,26 @@ puede deshacer (limpieza de ficheros) esta marcado como irreversible y se confir
 sparktune.ps1        entrada + parseo de flags
 install.ps1          instalacion usuario (PATH sin admin)
 src/core/            ui (ES/EN, ANSI), detect, engine (preview/apply/undo), journal, banner, catalog loader
-src/catalog/         acciones por area: cpu, gpu, memory, network, privacy, cleanup, power, laptop, office, updates
-src/data/            profiles.json (id de acciones por perfil/nivel), figlet.txt (banner)
+src/catalog/         acciones por area: cpu, gpu, memory, network, privacy, security, cleanup, power, laptop, office, updates
+src/data/            profiles.json (ids por perfil/nivel), apps.json (instalador), figlet.txt (banner)
+tests/run-tests.ps1  tests de contrato (sin dependencias)
+docs/DESIGN.md       arquitectura y como anadir acciones
 ```
 
 ## Roadmap
 
 - [ ] Mas perfiles (creativo/edicion, desarrollo)
 - [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0
-- [ ] Smoke-test automatizado en --dry-run (CI en runner de Windows)
+- [x] Instalador de apps estilo winutil via winget (`sparktune apps`) — v1.2.0
+- [x] Smoke-test automatizado en --dry-run (CI en runner de Windows) — v1.2.0
+- [ ] Mas acciones de apps (paquetes portables, actualizar solo seleccionadas)
 - [ ] Capturas en el README
 - [ ] Paquete winget
 
 ## Registro de sesiones
 
-Ver [SESSIONS.md](SESSIONS.md) (que se hace en cada sesion de desarrollo y que queda pendiente).
+Ver [SESSIONS.md](SESSIONS.md) (que se hace en cada sesion de desarrollo y que queda pendiente) y [CHANGELOG.md](CHANGELOG.md).
 
 ## Licencia
 
-MIT (por anadir)
+MIT

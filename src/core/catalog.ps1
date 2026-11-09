@@ -7,6 +7,7 @@ function Load-STCatalog {
     $all = @()
     $getters = @('Get-CleanupCatalogActions','Get-MemoryCatalogActions','Get-CpuCatalogActions',
                  'Get-GpuCatalogActions','Get-NetworkCatalogActions','Get-PrivacyCatalogActions',
+                 'Get-SecurityCatalogActions',
                  'Get-OfficeCatalogActions','Get-UpdatesCatalogActions','Get-PowerCatalogActions',
                  'Get-LaptopCatalogActions')
     foreach ($m in (Get-ChildItem -Path $Global:STCatalogDir -Filter '*.ps1' | Sort-Object Name)) {

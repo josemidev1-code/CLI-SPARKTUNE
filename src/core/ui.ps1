@@ -137,6 +137,9 @@ $script:ST_ES = @{
     'history.title'  = 'Historial de cambios (journal)'
     'history.none'   = 'No hay cambios registrados.'
     'history.line'   = 'Journal'
+    'doctor.title'   = 'Doctor: comprobaciones de salud y consistencia'
+    'doctor.clean'   = 'Todo en orden. Sin avisos.'
+    'doctor.issues'  = 'Avisos encontrados:'
     'power.title'    = 'Planes de energia SparkTune'
     'battery.title'  = 'Informe de bateria'
     'hw.detect'      = 'Detectando hardware'
@@ -217,6 +220,9 @@ $script:ST_EN = @{
     'history.title'  = 'Change history (journal)'
     'history.none'   = 'No recorded changes.'
     'history.line'   = 'Journal'
+    'doctor.title'   = 'Doctor: health and consistency checks'
+    'doctor.clean'   = 'All good. No warnings.'
+    'doctor.issues'  = 'Warnings found:'
     'power.title'    = 'SparkTune power plans'
     'battery.title'  = 'Battery report'
     'hw.detect'      = 'Detecting hardware'
@@ -280,6 +286,7 @@ function Show-STHelp {
         '  undo                   Deshacer cambios (--id=xxx para uno concreto)',
         '  analyze                Que ocupa espacio (no borra nada)',
         '  history                Historial de cambios del journal',
+        '  apps                   Instalar apps populares via winget (menu interactivo)',
         '',
         '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
         '                         portatil-ahorro|portatil-rendimiento|',
@@ -308,6 +315,7 @@ function Show-STHelp {
             '  undo                   Revert changes (--id=xxx for a single one)',
             '  analyze                What takes space (deletes nothing)',
             '  history                Change history from the journal',
+            '  apps                   Install popular apps via winget (interactive menu)',
             '',
             '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
             '                         portatil-ahorro|portatil-rendimiento|',

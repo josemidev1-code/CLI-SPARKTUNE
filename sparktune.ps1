@@ -13,6 +13,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $Global:STVerboseErr = ($env:SPARKTUNE_DEBUG -eq '1')
+$Global:STReportOut = ''
+$Global:STUndoCat = ''
 $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 . (Join-Path $Global:STSrc 'globals.ps1')
 . (Join-Path $Global:STSrc 'ui.ps1')
@@ -38,11 +40,13 @@ foreach ($a in $RawArgs) {
         '^(--perfil=.+|--profile=.+)$' { $optPerfil = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--nivel=.+|--level=.+)$' { $optNivel = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--id=.+)$' { $optId = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--category=.+|--cat=.+)$' { $Global:STUndoCat = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--out=.+)$' { $Global:STReportOut = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--perfil|--profile)$' { Write-STWarn ("usa --perfil=valor"); $flagHelp = $true; $matched = $true; continue }
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('status','battery','power','undo','analyze','history','help')) { $cmd = $low; continue }
+    if ($low -in @('status','battery','power','undo','analyze','history','apps','doctor','report','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     if ($a.StartsWith('-')) { Write-STWarn ("flag desconocido: $a") }
 }
@@ -58,9 +62,12 @@ try {
         'status'    { Show-STStatus }
         'battery'   { Show-STBatteryReport }
         'power'     { Invoke-STPowerMenu }
-        'undo'      { Invoke-STUndo -Id:$optId -Yes:$flagYes }
+        'undo'      { Invoke-STUndo -Id:$optId -Category:$Global:STUndoCat -Yes:$flagYes }
         'analyze'   { Invoke-STAnalyze }
         'history'   { Show-STHistory }
+        'apps'     { Invoke-STAppsMenu }
+        'doctor'   { Invoke-STDoctor }
+        'report'   { Show-STReport -Out $Global:STReportOut }
         'help'      { Show-STHelp }
         default     { Write-STErr ("comando desconocido: $cmd"); Show-STHelp; exit 1 }
     }

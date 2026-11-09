@@ -16,6 +16,24 @@ function Set-STRegValue {
     Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type
 }
 
+# ---------- estat d'accions (undo complex: snapshots de configuracion) ----------
+function Get-STStateFile([string]$Id) {
+    $f = Join-Path $Global:STHome "state-$Id.json"
+    if (-not (Test-Path $f)) { return $null }
+    try { return (Get-Content $f -Raw -Encoding UTF8) | ConvertFrom-Json } catch { return $null }
+}
+function Set-STStateFile([string]$Id, $Data) {
+    $f = Join-Path $Global:STHome "state-$Id.json"
+    $tmp = "$f.tmp"
+    $json = ConvertTo-Json $Data -Depth 10
+    [System.IO.File]::WriteAllText($tmp, $json, (New-Object System.Text.UTF8Encoding($false)))
+    Move-Item -Path $tmp -Destination $f -Force
+}
+function Remove-STStateFile([string]$Id) {
+    $f = Join-Path $Global:STHome "state-$Id.json"
+    if (Test-Path $f) { Remove-Item $f -Force }
+}
+
 function Get-STServiceState([string]$Name) {
     try {
         $s = Get-Service -Name $Name -ErrorAction Stop
@@ -211,6 +229,7 @@ function Start-STWizard {
         Write-STLine "  $(T 'run.undo')" 'cyan'
         $reboots = @($sel | Where-Object { $_.reinicio })
         if ($reboots.Count) { Write-STWarn "Requiere reinicio: $($reboots.id -join ', ')" }
+
     }
 }
 
@@ -318,9 +337,10 @@ function Select-STActions {
 
 # ---------- undo ----------
 function Invoke-STUndo {
-    param([string]$Id = '', [switch]$Yes)
+    param([string]$Id = '', [string]$Category = '', [switch]$Yes)
     $pend = @(Get-STJournalPending)
     if ($Id) { $pend = @($pend | Where-Object { $_.id -eq $Id }) }
+    if ($Category) { $pend = @($pend | Where-Object { $_.categoria -eq $Category }) }
     if ($pend.Count -eq 0) { Write-STInfo (T 'undo.none'); return }
 
     Write-STLine ''
@@ -377,6 +397,178 @@ function Show-STHistory {
     $pend = @(Get-STJournalPending)
     Write-STLine ''
     Write-STInfo "$(T 'history.line'): $($entries.Count) entradas, $($pend.Count) activas (sparktune undo para deshacer)"
+}
+
+# ---------- apps (instalador tipo winutil, via winget) ----------
+function Get-STAppsCatalog {
+    $f = Join-Path $Global:STData 'apps.json'
+    if (-not (Test-Path $f)) { Write-STWarn 'apps.json no encontrado'; return $null }
+    try { return (Get-Content $f -Raw -Encoding UTF8) | ConvertFrom-Json } catch { Write-STErr "apps.json: $($_.Exception.Message)"; return $null }
+}
+function Test-STWinget {
+    $c = Get-Command winget.exe -ErrorAction SilentlyContinue
+    return [bool]$c
+}
+function Invoke-STAppsMenu {
+    Enable-STVirtualTerminal
+    if (-not (Test-STWinget)) {
+        Write-STWarn 'winget no esta disponible. Instalalo desde "Administrador de aplicaciones" (ms-windows-store:) o App Installer.'
+        return
+    }
+    $cat = Get-STAppsCatalog
+    if (-not $cat) { return }
+    $lang = if ($Global:STLang -eq 'en') { 'en' } else { 'es' }
+    while ($true) {
+        Clear-STScreen
+        Write-STLine ''
+        Write-STLine "  $(if ($lang -eq 'en') { 'Install apps (winget)' } else { 'Instalar apps (winget)' })" 'cyan' 'bold'
+        Write-STLine ''
+        $items = @()
+        foreach ($c in $cat.categories) {
+            $lbl = if ($lang -eq 'en') { $c.label_en } else { $c.label_es }
+            $n = @($cat.apps | Where-Object { $_.cat -eq $c.id -and -not $_.hidden }).Count
+            $items += [pscustomobject]@{ id = $c.id; label = "$lbl  ($n)" }
+        }
+        $items += [pscustomobject]@{ id = '_all'; label = $(if ($lang -eq 'en') { 'Update everything installed' } else { 'Actualizar todo lo instalado' }) }
+        $items += [pscustomobject]@{ id = '_quit'; label = 'q. ' + (T 'nav.quit') }
+        $idx = Show-STMenu -Title "  apps" -Items $items
+        if ($idx -lt 0) { return }
+        $pick = $items[$idx].id
+        switch ($pick) {
+            '_quit' { return }
+            '_all'  { Invoke-STWinget @('upgrade','--include-unknown','--accept-package-agreements','--accept-source-agreements','--disable-interactivity') }
+            default { Invoke-STAppsCategory $cat $pick $lang }
+        }
+    }
+}
+function Invoke-STWinget([array]$WArgs) {
+    Write-STLine ''
+    Write-STInfo "winget $($WArgs -join ' ')"
+    try { & winget.exe @WArgs } catch { Write-STErr $_.Exception.Message }
+    Write-STLine ''
+    Read-STKey | Out-Null
+}
+function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
+    $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId -and -not $_.hidden })
+    if ($apps.Count -eq 0) { $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId }) }
+    $installed = @{}
+    try {
+        $lst = (& winget.exe list --accept-source-agreements --disable-interactivity 2>$null) -join "`n"
+        foreach ($ln in ($lst -split "`n")) {
+            foreach ($a in $apps) { if ($ln -match [regex]::Escape($a.name)) { $installed[$a.id] = $true } }
+        }
+    } catch { }
+    $sel = New-Object 'bool[]' $apps.Count
+    $cur = 0
+    while ($true) {
+        Clear-STScreen
+        Write-STLine ''
+        Write-STLine "  $(if ($Lang -eq 'en') { 'Apps' } else { 'Apps' })  ·  ✔=$(if ($Lang -eq 'en') {'installed'} else {'instalada'})" 'cyan' 'bold'
+        Write-STLine ''
+        for ($i = 0; $i -lt $apps.Count; $i++) {
+            $box = '[ ]'; if ($sel[$i]) { $box = '[x]' }
+            $tick = if ($installed.ContainsKey($apps[$i].id)) { ' ✔' } else { '' }
+            $mark = '  '; $col = ''
+            if ($i -eq $cur) { $mark = '> '; $col = 'yellow' }
+            Write-STLine "  $mark$box $($apps[$i].name)$tick" $col $(if ($i -eq $cur) { 'bold' } else { '' })
+        }
+        $nSel = 0; foreach ($b in $sel) { if ($b) { $nSel++ } }
+        Write-STLine ''
+        Write-STLine "  $nSel $(if ($Lang -eq 'en') {'selected'} else {'seleccionadas'})   Espacio=$(T 'nav.space')  Enter=$(T 'nav.enter')  Esc=$(T 'nav.esc')" 'gray'
+        $k = Read-STKey
+        switch ($k.Key) {
+            'Up' { $cur--; if ($cur -lt 0) { $cur = $apps.Count - 1 } }
+            'Down' { $cur++; if ($cur -ge $apps.Count) { $cur = 0 } }
+            'Space' { $sel[$cur] = -not $sel[$cur] }
+            'Esc' { return }
+            'Enter' {
+                $todo = @()
+                for ($i = 0; $i -lt $apps.Count; $i++) { if ($sel[$i]) { $todo += $apps[$i] } }
+                if ($todo.Count -eq 0) { Read-STKey | Out-Null; continue }
+                if ($Global:STDryRun) { foreach ($t in $todo) { Write-STInfo "[dry-run] winget install -e --id $($t.winget)" }; Read-STKey | Out-Null; return }
+                if (-not (Read-STConfirm -Question $(if ($Lang -eq 'en') { "Install $($todo.Count) apps via winget? (y/n)" } else { "Instalar $($todo.Count) apps via winget? (s/n)" }))) { continue }
+                foreach ($t in $todo) {
+                    Write-STInfo "-> $($t.name)"
+                    try { & winget.exe install -e --id $t.winget --accept-package-agreements --accept-source-agreements --disable-interactivity } catch { Write-STErr "$($t.name): $($_.Exception.Message)" }
+                    try { $installed[$t.id] = $true } catch { }
+                }
+                Write-STLine ''
+                Read-STKey | Out-Null
+                return
+            }
+        }
+    }
+}
+
+# ---------- doctor ----------
+function Invoke-STDoctor {
+    Write-STLine ''
+    Write-STLine "  $(T 'doctor.title')" 'cyan' 'bold'
+    Write-STLine ''
+    $issues = 0; $oks = 0
+    # 1) coherencia journal (comprobable sin admin)
+    $pend = @(Get-STJournalPending)
+    Load-STCatalog
+    $all = Get-STCatalogActions
+    $known = @{}; foreach ($a in $all) { $known[$a.id] = $true }
+    foreach ($e in $pend) {
+        if (-not $known.ContainsKey($e.id)) { Write-STWarn "$($e.id): accion ya no existe en el catalogo (undo manual: $($e.undoCmd))"; $issues++ }
+    }
+    if ($pend.Count -ge 1) { Write-STOk "$($pend.Count) cambios activos, todos reconocidos"; $oks++ }
+    else { Write-STInfo 'sin cambios activos en el journal' }
+    # 2) espacio en C:
+    $hw = Get-STHardware
+    if ($hw.SpaceTotalGB -gt 0 -and $hw.SpaceFreeGB -lt 5) {
+        Write-STWarn "C: solo $($hw.SpaceFreeGB) GB libres. Usa sparktune --perfil=limpieza"
+        $issues++
+    } elseif ($hw.SpaceTotalGB -gt 0) { Write-STOk "C: $($hw.SpaceFreeGB) GB libres"; $oks++ }
+    # 3) journal grande
+    $j = @(Read-STJournal)
+    if ($j.Count -gt 200) { Write-STWarn "journal con $($j.Count) entradas: borra las antiguas a mano (~/.sparktune/journal.json) o usa undo" }
+    Write-STLine ''
+    if ($issues -eq 0 -and $oks -gt 0) { Write-STOk (T 'doctor.clean') }
+    elseif ($issues -gt 0) { Write-STWarn "$(T 'doctor.issues') $issues" }
+    else { Write-STInfo 'nada que comprobar' }
+    if (-not (Is-STAdmin)) { Write-STInfo 'algunas comprobaciones requieren admin (ejecuta como administrador para el informe completo)' }
+}
+
+# ---------- report ----------
+function Show-STReport {
+    param([string]$Out = '')
+    $hw = Get-STHardware
+    $pend = @(Get-STJournalPending)
+    $journal = @(Read-STJournal)
+    $path = if ($Out) { $Out } else { Join-Path $Global:STHome "report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html" }
+    $e = { param($s) "$s".Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;') }
+    $rows = ($journal | ForEach-Object { "<tr><td>$(& $e $_.seq)</td><td>$(& $e $_.id)</td><td>$(& $e $_.status)</td><td>$(& $e $_.titulo)</td></tr>" }) -join ''
+    $diskRows = ($hw.Disks | ForEach-Object { "<tr><td>$(& $e $_.Model)</td><td>$($_.SizeGB) GB</td><td>$(& $e $_.Type)</td></tr>" }) -join ''
+    $html = @"
+<!doctype html><html><head><meta charset='utf-8'><title>SparkTune report</title>
+<style>body{font-family:Segoe UI,Arial;background:#111;color:#ddd;padding:2em;max-width:900px}
+h1{color:#22d3ee}h2{color:#22d3ee;margin-top:2em;border-bottom:1px solid #333}
+table{border-collapse:collapse;width:100%}td,th{padding:4px 8px;border-bottom:1px solid #333;text-align:left}
+.ok{color:#4ade80}.warn{color:#facc15}.bad{color:#f87171}</style></head><body>
+<h1>⚡ SparkTune v$Global:STVersion</h1>
+<p>Generado: $(Get-Date)</p>
+<h2>Sistema</h2>
+<table>
+<tr><th>Sistema</th><td>$(& $e $hw.OsName) (build $($hw.Build))</td></tr>
+<tr><th>CPU</th><td>$(& $e $hw.Cpu) [$($hw.CpuCores)C/$($hw.CpuThreads)T]</td></tr>
+<tr><th>RAM</th><td>$($hw.RamGB) GB</td></tr>
+<tr><th>GPU</th><td>$(& $e (($hw.Gpu | ForEach-Object { $_.Name }) -join ' + '))</td></tr>
+<tr><th>Bateria</th><td>$(if ($hw.Battery) { "$($hw.BatteryPct)% $(if($hw.Plugged){'enchufado'}else{'bateria'})" } else { 'sobremesa' })</td></tr>
+<tr><th>Disco C:</th><td>$($hw.SpaceFreeGB) GB libres de $($hw.SpaceTotalGB) GB</td></tr>
+<tr><th>Plan</th><td>$(& $e $hw.PowerPlan)</td></tr>
+</table>
+<h2>Discos</h2><table><tr><th>Modelo</th><th>Tamaño</th><th>Tipo</th></tr>$diskRows</table>
+<h2>Journal ($($journal.Count) entradas, $($pend.Count) activas)</h2>
+<table><tr><th>seq</th><th>id</th><th>estado</th><th>titulo</th></tr>$rows</table>
+<p style='margin-top:3em;color:#666'>SparkTune · by @josemidev1 · MIT</p>
+</body></html>
+"@
+    [System.IO.File]::WriteAllText($path, $html, (New-Object System.Text.UTF8Encoding($false)))
+    Write-STOk "informe generado: $path"
+    if (-not [string]::IsNullOrEmpty($Out)) { Write-STInfo "--out usado: $Out" }
 }
 
 # ---------- status ----------

@@ -28,9 +28,8 @@ function Get-NetworkCatalogActions {
         perfiles=@('ofimatica','gaming','portatil-ahorro','personalizado')
         niveles=@{ medio=1; agresivo=1 }
         detect={ param($hw) $hw.Build -ge 19628 }
-        preview={ 'DNS: sistema -> DoH Cloudflare (1.1.1.1)' }
+        preview={ 'DNS: sistema -> DoH (Cloudflare/Google/Quad9), indexades per adaptador' }
         apply={
-            # pide proveedor
             Write-STInfo 'Proveedores: 1=Cloudflare 2=Google 3=Quad9'
             $pick = Read-Host '  elige'
             switch ($pick) {
@@ -38,16 +37,35 @@ function Get-NetworkCatalogActions {
                 '3' { $p = 'dns.quad9.net'; $ip = '9.9.9.9' }
                 default { $p = 'cloudflare-dns.com'; $ip = '1.1.1.1' }
             }
-            Add-DnsClientDohServerAddress -ServerAddress $ip -DohTemplate "https://$p/dns-query" -AllowFallbackToUdpTCP $true -DohSelection PreferDoh -ErrorAction Stop
-            Set-DnsClientServerAddress -InterfaceIndex 0 -ServerAddresses ($ip) -ErrorAction SilentlyContinue
+            $ifaces = @(Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -ExpandProperty IfIndex)
+            if (-not $ifaces) { $ifaces = @(Get-NetAdapter | Select-Object -First 1 -ExpandProperty IfIndex) }
+            $prev = @()
+            foreach ($i in $ifaces) {
+                try {
+                    $cur = @(Get-DnsClientServerAddress -InterfaceIndex $i -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses
+                    $prev += @{ iface = $i; dns = @($cur) }
+                } catch { }
+                Add-DnsClientDohServerAddress -ServerAddress $ip -DohTemplate "https://$p/dns-query" -AllowFallbackToUdpTCP $true -DohSelection PreferDoh -ErrorAction Stop
+                Set-DnsClientServerAddress -InterfaceIndex $i -ServerAddresses ($ip) -ErrorAction SilentlyContinue
+            }
+            Set-STStateFile 'net.doh' @{ prev = $prev }
         }
         undo={
-            try { Remove-DnsClientDohServerAddress -ServerAddress 1.1.1.1 -Force -ErrorAction SilentlyContinue } catch { }
-            try { Remove-DnsClientDohServerAddress -ServerAddress 8.8.8.8 -Force -ErrorAction SilentlyContinue } catch { }
-            try { Remove-DnsClientDohServerAddress -ServerAddress 9.9.9.9 -Force -ErrorAction SilentlyContinue } catch { }
-            Set-DnsClientServerAddress -InterfaceIndex 0 -ResetServerAddresses -ErrorAction SilentlyContinue
+            $st = Get-STStateFile 'net.doh'
+            if ($st -and $st.prev) {
+                foreach ($e in $st.prev) {
+                    try {
+                        if (@($e.dns).Count -gt 0) { Set-DnsClientServerAddress -InterfaceIndex ([int]$e.iface) -ServerAddresses @($e.dns) -ErrorAction SilentlyContinue }
+                        else { Set-DnsClientServerAddress -InterfaceIndex ([int]$e.iface) -ResetServerAddresses -ErrorAction SilentlyContinue }
+                    } catch { }
+                }
+                Remove-STStateFile 'net.doh'
+            }
+            foreach ($ip in @('1.1.1.1','8.8.8.8','9.9.9.9')) {
+                try { Remove-DnsClientDohServerAddress -ServerAddress $ip -Force -ErrorAction SilentlyContinue } catch { }
+            }
         }
-        undoCmd='Remove-DnsClientDohServerAddress + ResetServerAddresses'
+        undoCmd='restaura DNS por adaptador desde ~/.sparktune/state-net.doh.json'
     }
     $A += @{
         id='net.tcp-autotune'

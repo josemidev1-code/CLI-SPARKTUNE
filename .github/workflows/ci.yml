@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  contract:
+    name: Contract tests (metadatos, sin aplicar nada)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run contract tests (Windows PowerShell 5.1)
+        shell: powershell
+        run: ./tests/run-tests.ps1
+
+  dryrun:
+    name: Dry-run wizard (todos los perfiles x niveles)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dry-run each profile/level
+        shell: powershell
+        run: |
+          $profiles = 'gaming','ofimatica','limpieza','bajos-recursos','portatil-ahorro','portatil-rendimiento','red-privacidad','personalizado'
+          $levels = 'suave','medio','agresivo'
+          foreach ($p in $profiles) {
+            foreach ($l in $levels) {
+              Write-Host "=== $p / $l ==="
+              # stdin vacio: los Read-Host reciben EOF y el wizard aborta antes de aplicar (proteccion doble con --dry-run)
+              '' | powershell -NoProfile -ExecutionPolicy Bypass -File ./sparktune.ps1 --perfil=$p --nivel=$l --dry-run --no-banner
+              if ($LASTEXITCODE -gt 1) { throw "dry-run fallo para $p/$l (exit $LASTEXITCODE)" }
+            }
+          }
+          Write-Host 'dry-runs OK'

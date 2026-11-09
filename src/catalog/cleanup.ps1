@@ -55,7 +55,7 @@ function Get-CleanupCatalogActions {
         titulo_en='Flush DNS cache'
         descripcion='Resuelve dominios obsoletos o mal resueltos.'
         descripcion_en='Fixes stale or wrong DNS entries.'
-        categoria='cleanup'; riesgo='sin'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        categoria='cleanup'; riesgo='sin'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
         perfiles=@('limpieza','gaming','ofimatica','portatil-ahorro','portatil-rendimiento','bajos-recursos','personalizado')
         niveles=@{ suave=1; medio=1; agresivo=1 }
         detect={ param($hw) $true }

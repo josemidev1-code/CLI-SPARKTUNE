@@ -1,0 +1,33 @@
+# Changelog
+
+Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
+
+## [1.2.0] - 2026-11-09
+
+### Añadido
+- **`sparktune apps`**: instalador de apps por categorías via winget (estilo Christophe's winutil): internet, social, herramientas, gaming, diseño, programación, documentos, música, seguridad. Marcado ✔ instaladas, selección múltiple, `--dry-run` seguro. Catálogo en `src/data/apps.json`.
+- **Catálogo de seguridad** (`sec.*`): informe Defender, PUA protection, reactivar notificaciones OEM, logs firewall, desactivar SMBv1 (reversible), restaurar opciones ocultas. SparkTune nunca desactiva Defender/firewall/UAC.
+- **`sparktune doctor`**: coherencia journal↔catálogo, espacio en disco, journal grande, aviso de no-admin.
+- **`sparktune report [--out=]`**: informe HTML autocontenido (sistema, discos, journal) para compartir.
+- **`undo --category=priv`**: deshacer solo una categoría.
+- Perfil **red-privacidad** (v1.1) ahora incluye `sec.*` en ofimatica y red-privacidad.
+- **Tests de contrato** `tests/run-tests.ps1` (sin dependencias) + **CI** de GitHub Actions: job Windows 5.1 con tests + dry-run de los 8 perfiles × 3 niveles.
+
+### Cambiado
+- `globals.ps1`: home portable (`HOME` en no-Windows para CI).
+- `install.ps1`: copia selectiva (sin `.git`/tests), journal portable, `WM_SETTINGCHANGE` con `lParam='Environment'` (arregla el refresco de PATH), borrado robusto con `-Force`.
+- `net.doh`: ahora guarda y restaura el DNS real por adaptador (`state-net.doh.json`); antes usaba `InterfaceIndex 0` inválido.
+- `power.ps1`: GUIDs de PCI Express/ASPM corregidos; eliminados los GUIDs inventados de Power Throttling.
+- `clean.dns` no requiere admin.
+
+## [1.1.0] - 2026-11-06
+
+### Añadido
+- Perfil `red-privacidad` (suave/medio/agresivo).
+- Acciones: `net.wol-off`, `net.netbios-off`, `net.llmnr-off`, `priv.ads`, `priv.input-personalization`, `priv.preapps`.
+- Comando `sparktune history`.
+
+## [1.0.0] - 2026-11-05
+
+### Añadido
+- Versión inicial: wizard por perfiles/niveles, catálogo de ~50 acciones con fichas (riesgo/reversible/admin), journal con undo, planes de energía SparkTune (powercfg), status/analyze/battery/power, ES/EN, banner animado, instalador sin admin.
