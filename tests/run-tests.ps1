@@ -15,7 +15,11 @@ function Check([string]$Name, [scriptblock]$Body) {
         & $Body
         Write-Host "  ok    $Name" -ForegroundColor Green
     } catch {
-        Write-Host "  FAIL  $Name : $($_.Exception.Message)" -ForegroundColor Red
+        $ex = $_
+        $msg = ''
+        try { $msg = $ex.Exception.ToString() } catch { }
+        if (-not $msg) { try { $msg = "$($ex.ErrorDetails.Message) $($ex.InvocationInfo.PositionMessage)" } catch { $msg = 'error desconocido' } }
+        Write-Host "  FAIL  $Name : $msg" -ForegroundColor Red
         $script:fails += $Name
     }
 }
