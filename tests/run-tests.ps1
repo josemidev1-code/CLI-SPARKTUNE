@@ -54,7 +54,7 @@ Check 'catalog loads' {
 
 Check 'unique ids' {
     $dups = $all | Group-Object id | Where-Object { $_.Count -gt 1 }
-    if ($dups) { throw ($dups | ForEach-Object { $_.Name }) -join ', ' }
+    if ($dups) { throw (($dups | ForEach-Object { $_.Name }) -join ', ') }
 }
 
 Check 'required fields per action' {
@@ -95,7 +95,7 @@ Check 'ui dictionary ES/EN symmetric' {
     $kEs = @([regex]::Matches($a, "'([\w.\-]+)'\s*=") | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
     $kEn = @([regex]::Matches($b, "'([\w.\-]+)'\s*=") | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
     $diff = Compare-Object $kEs $kEn
-    if ($diff) { throw ($diff | ForEach-Object { "$($_.InputObject) ($($_.SideIndicator))" }) -join ', ' }
+    if ($diff) { throw (($diff | ForEach-Object { "$($_.InputObject) ($($_.SideIndicator))" }) -join ', ') }
 }
 
 Check 'apps.json valid' {

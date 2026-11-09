@@ -368,14 +368,17 @@ function Read-STConfirm {
     $Yes = [bool]$Yes
     Write-STPlain "  $Question "
     if ($Yes) { Write-STLine "(pre-confirmed --yes)"; return $true }
-    $ans = (Read-Host).Trim().ToLowerInvariant()
+    try { $raw = Read-Host } catch { Write-STLine ''; return $false }
+    if ($null -eq $raw) { return $false }
+    $ans = $raw.Trim().ToLowerInvariant()
     return ($ans -eq 's' -or $ans -eq 'y' -or $ans -eq 'si' -or $ans -eq 'yes')
 }
 
 function Read-STTypedYes {
     # confirmacion de riesgo alto: exigir SI / YES literal
     Write-STWarn (T 'confirm.type')
-    $ans = Read-Host
+    try { $ans = Read-Host } catch { return $false }
+    if ($null -eq $ans) { return $false }
     return ($ans -cmatch '^(SI|YES)$')
 }
 
