@@ -142,5 +142,27 @@ function Get-GpuCatalogActions {
         undo={ Write-STInfo 'nada que deshacer en Windows' }
         undoCmd='n/a (BIOS)'
     }
+    $A += @{
+        id='gpu.power-mode'
+        titulo='Maximo rendimiento de GPU en plan de energia (AC)'
+        titulo_en='Maximum GPU performance in power plan (AC)'
+        descripcion='Sube la GPU al maximo dentro del plan activo cuando estas con corriente (powercfg: Prefer maximum performance). En bateria no cambia nada.'
+        descripcion_en='Boosts the GPU to maximum inside the active plan when plugged in (powercfg: Prefer maximum performance). On battery, untouched.'
+        categoria='gpu'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','gaming','portatil-rendimiento','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) ($hw.HasNvidia -or $hw.HasAmd) }
+        preview={ 'GPU power mode (AC) -> Prefer maximum performance' }
+        apply={
+            # PowerMgmtPolicy GUID del subgrupo PCI Express {4d36e968-...} con valor 0=MaxPerf
+            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e968-e325-11ce-bfc1-08002be10318 ee00939b-2e7b-4e7c-a4e6-2c8f7e1f0f4d 0 | Out-Null
+            powercfg.exe -setactive SCHEME_CURRENT | Out-Null
+        }
+        undo={
+            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e968-e325-11ce-bfc1-08002be10318 ee00939b-2e7b-4e7c-a4e6-2c8f7e1f0f4d 1 | Out-Null
+            powercfg.exe -setactive SCHEME_CURRENT | Out-Null
+        }
+        undoCmd='powercfg -setacvalueindex SCHEME_CURRENT 4d36e968-... ee00939b... 1'
+    }
     return $A
 }

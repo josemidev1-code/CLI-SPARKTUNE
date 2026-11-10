@@ -176,7 +176,7 @@ function Invoke-STApply {
 # ---------- wizard ----------
 function Start-STWizard {
     param([switch]$NoBanner, [switch]$Yes, [string]$Perfil = '', [string]$Nivel = '')
-
+    $NoBanner = [bool]($NoBanner -or -not $Global:STBanner)
     Show-STBanner -NoBanner:$NoBanner
     Write-STInfo "$(T 'hw.detect')."
     $hw = Get-STHardware
@@ -189,6 +189,7 @@ function Start-STWizard {
 
     if (-not $Perfil) { $Perfil = Select-STProfile }
     if (-not $Perfil) { return }
+    if (-not $Nivel -and $Global:STNivelDefault) { $Nivel = $Global:STNivelDefault }
     if (-not $Nivel)  { $Nivel = Select-STLevel }
     if (-not $Nivel)  { return }
 

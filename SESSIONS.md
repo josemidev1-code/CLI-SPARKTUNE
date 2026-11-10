@@ -2,6 +2,31 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-10 — Sesion 4 (v1.4.0: config persistente + apps ampliadas)
+
+### Hecho
+
+- **Config persistente** (`~/.sparktune/config.json`): nuevos flags `--set-lang`,
+  `--set-banner=on|off`, `--set-nivel=...` que escriben el config y salen. `globals.ps1`
+  lo lee al arrancar: idioma por defecto, banner on/off, y nivel preseleccionado en el
+  wizard. Verificado en pwsh Linux (guarda y aplica).
+- **apps.json**: de 35 a 61 apps en 11 categorias (nuevas: oficina, emulacion,
+  streaming/creacion). Eliminadas entradas con winget id no verificado (yuzu, Figma,
+  Canva, Adobe, Photopea, Element, Glary…) para no ofrecer installs rotos.
+- **`gpu.power-mode`** en gaming/creativo: maxima potencia GPU en el plan (powercfg
+  SCHEME_CURRENT PCI-E PowerMgmtPolicy=0 AC, undo a 1).
+- CHANGELOG, README (flags nuevos) y version 1.4.0.
+
+### Pendiente / siguiente sesion
+
+- [ ] **Windows real**: probar `--set-*` y wizard con config, `gpu.power-mode`,
+      `net.wsl-nat` (con WSL real), `clean.thumbnails`, e `apps` con winget.
+- [ ] **apps**: ofrecer `--scope=user` y `--interactive` opcional; detectar "no encontrado"
+      de winget y avisar por app en vez de solo log.
+- [ ] **apps**: comando `sparktune apps --install=chrome,vlc` no interactivo (scripts).
+- [ ] GPU power mode por plan SparkTune (los planes podrian fijar PowerMgmtPolicy ellos mismos).
+- [ ] Taggear v1.4.0 + zip (hoy se ha probado en local; CI verde).
+
 ## 2026-11-10 — Sesion 3 (v1.3.0: perfiles creativo/desarrollo + asset zip)
 
 Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)

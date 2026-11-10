@@ -53,7 +53,10 @@ Flags:
 --nivel=suave|medio|agresivo
 --yes                              # sin confirmaciones (usalo solo si sabes lo que haces)
 --dry-run                          # simulacion: muestra lo que haria, no toca nada
---lang=es|en
+--lang=es|en                       # idioma de esta ejecucion
+--set-lang=es|en                   # guarda idioma por defecto (persistente)
+--set-banner=on|off                # banner por defecto
+--set-nivel=suave|medio|agresivo   # nivel por defecto en el wizard
 --no-banner
 ```
 
@@ -136,6 +139,8 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 - [x] Instalador de apps estilo winutil via winget (`sparktune apps`) — v1.2.0
 - [x] Smoke-test automatizado en --dry-run (CI en runner de Windows) — v1.2.0
 - [x] Perfiles creativo/edicion y desarrollo — v1.3.0
+- [x] Config persistente (`--set-lang/--set-banner/--set-nivel`) y 61 apps — v1.4.0
+- [ ] Pruebas en Windows real de las acciones nuevas (ver SESSIONS.md)
 - [ ] Mas acciones de apps (paquetes portables, actualizar solo seleccionadas)
 - [ ] Capturas en el README
 - [ ] Paquete winget

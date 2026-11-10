@@ -2,6 +2,18 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.4.0] - 2026-11-10
+
+### Añadido
+- **Config persistente** `~/.sparktune/config.json`: `sparktune --set-lang=en`, `--set-banner=off`,
+  `--set-nivel=medio` guardan preferencias (banner e idioma se aplican desde el arranque;
+  `nivel` preselecciona el nivel del wizard).
+- **`gpu.power-mode`**: potencia maxima de GPU en el plan activo (powercfg), para gaming/perfiles de rendimiento.
+- **apps.json ampliado**: 61 apps en 11 categorias — anadidas oficina (draw.io, Obsidian, Foxit),
+  emulacion (RetroArch, PCSX2, Dolphin, LaunchBox), streaming/creacion (Streamlabs, Kdenlive,
+  Inkscape) y herramientas (Rufus, Ventoy, Etcher, Speccy, BleachBit, AIDA64). Se eliminaron
+  entradas con IDs de winget no verificados (yuzu, Figma, Canva, Adobe, Photopea, etc.).
+
 ## [1.3.0] - 2026-11-10
 
 ### Añadido

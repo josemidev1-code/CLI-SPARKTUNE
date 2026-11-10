@@ -31,11 +31,6 @@
       "label_en": "Development"
     },
     {
-      "id": "docs",
-      "label_es": "Documentos y PDF",
-      "label_en": "Documents & PDF"
-    },
-    {
       "id": "music",
       "label_es": "Musica y video",
       "label_en": "Music & video"
@@ -44,6 +39,21 @@
       "id": "security",
       "label_es": "Seguridad",
       "label_en": "Security"
+    },
+    {
+      "id": "office",
+      "label_es": "Oficina y PDF",
+      "label_en": "Office & PDF"
+    },
+    {
+      "id": "emulacion",
+      "label_es": "Emulacion y retro",
+      "label_en": "Emulation & retro"
+    },
+    {
+      "id": "streaming",
+      "label_es": "Streaming y creacion",
+      "label_en": "Streaming & creation"
     }
   ],
   "apps": [
@@ -228,26 +238,26 @@
     },
     {
       "id": "acrobat",
-      "cat": "docs",
+      "cat": "office",
       "name": "Adobe Acrobat Reader",
       "winget": "Adobe.Acrobat.Reader.64-bit"
     },
     {
       "id": "libre",
-      "cat": "docs",
+      "cat": "office",
       "name": "LibreOffice",
       "winget": "TheDocumentFoundation.LibreOffice"
     },
     {
       "id": "msoffice",
-      "cat": "docs",
+      "cat": "office",
       "name": "Microsoft 365 (Office)",
       "winget": "Microsoft.Office",
       "hidden": true
     },
     {
       "id": "msoffice2021",
-      "cat": "docs",
+      "cat": "office",
       "name": "Office 2021",
       "winget": "Microsoft.Office.2021",
       "hidden": true
@@ -264,6 +274,179 @@
       "cat": "security",
       "name": "KeePassXC",
       "winget": "KeePassXC.KeePassXC",
+      "hidden": true
+    },
+    {
+      "id": "foxit",
+      "cat": "office",
+      "name": "Foxit PDF Reader",
+      "winget": "FoxitSoftware.FoxitPDFReader"
+    },
+    {
+      "id": "drawio",
+      "cat": "office",
+      "name": "draw.io (diagramas)",
+      "winget": "JGraph.Draw"
+    },
+    {
+      "id": "obsidian",
+      "cat": "office",
+      "name": "Obsidian (notas)",
+      "winget": "Obsidian.Obsidian"
+    },
+    {
+      "id": "retroarch",
+      "cat": "emulacion",
+      "name": "RetroArch",
+      "winget": "Libretro.RetroArch"
+    },
+    {
+      "id": "pcsx2",
+      "cat": "emulacion",
+      "name": "PCSX2 (PS2)",
+      "winget": "PCSX2.PCSX2"
+    },
+    {
+      "id": "dolphin",
+      "cat": "emulacion",
+      "name": "Dolphin (GameCube/Wii)",
+      "winget": "DolphinTeam.Dolphin"
+    },
+    {
+      "id": "melon",
+      "cat": "emulacion",
+      "name": "melonDS (DS)",
+      "winget": "melonDS.melonDS",
+      "hidden": true
+    },
+    {
+      "id": "epsxe",
+      "cat": "emulacion",
+      "name": "ePSXe (PSX)",
+      "winget": "ePSXe.ePSXe",
+      "hidden": true
+    },
+    {
+      "id": "launchbox",
+      "cat": "emulacion",
+      "name": "LaunchBox (frontend retro)",
+      "winget": "Unchained.LaunchBox",
+      "hidden": true
+    },
+    {
+      "id": "streamlabs",
+      "cat": "streaming",
+      "name": "Streamlabs Desktop",
+      "winget": "Streamlabs.Streamlabs"
+    },
+    {
+      "id": "prism",
+      "cat": "streaming",
+      "name": "Prism Live Studio",
+      "winget": "NVPrismLiveStudio.PrismLiveStudio",
+      "hidden": true
+    },
+    {
+      "id": "kdenlive",
+      "cat": "streaming",
+      "name": "Kdenlive (video)",
+      "winget": "KDE.Kdenlive"
+    },
+    {
+      "id": "shotcut",
+      "cat": "streaming",
+      "name": "Shotcut (video)",
+      "winget": "Meltytech.Shotcut",
+      "hidden": true
+    },
+    {
+      "id": "rufus",
+      "cat": "tools",
+      "name": "Rufus (USB booteables)",
+      "winget": "Rufus.Rufus"
+    },
+    {
+      "id": "ventoy",
+      "cat": "tools",
+      "name": "Ventoy (multi-ISO USB)",
+      "winget": "Ventoy.Ventoy",
+      "hidden": true
+    },
+    {
+      "id": "balena",
+      "cat": "tools",
+      "name": "balenaEtcher",
+      "winget": "Balena.Etcher",
+      "hidden": true
+    },
+    {
+      "id": "speccy",
+      "cat": "tools",
+      "name": "Speccy",
+      "winget": "Piriform.Speccy",
+      "hidden": true
+    },
+    {
+      "id": "bleachbit",
+      "cat": "tools",
+      "name": "BleachBit",
+      "winget": "Piriform.BleachBit",
+      "hidden": true
+    },
+    {
+      "id": "cpuident",
+      "cat": "tools",
+      "name": "CPUID HWMonitor",
+      "winget": "CPUID.HWMonitor",
+      "hidden": true
+    },
+    {
+      "id": "aida64",
+      "cat": "tools",
+      "name": "AIDA64",
+      "winget": "FinalWire.AIDA64.Extreme",
+      "hidden": true
+    },
+    {
+      "id": "mumble",
+      "cat": "social",
+      "name": "Mumble",
+      "winget": "Mumble.Mumble",
+      "hidden": true
+    },
+    {
+      "id": "signal",
+      "cat": "social",
+      "name": "Signal",
+      "winget": "OpenWhispr.Signal",
+      "hidden": true
+    },
+    {
+      "id": "http-server",
+      "cat": "dev",
+      "name": "Httpie (client API)",
+      "winget": "httpie.cli",
+      "hidden": true
+    },
+    {
+      "id": "postman",
+      "cat": "dev",
+      "name": "Postman",
+      "winget": "Postman.Postman",
+      "hidden": true
+    },
+    {
+      "id": "dbeaver",
+      "cat": "dev",
+      "name": "DBeaver (bases de dades)",
+      "winget": "dbeaver-org.DBeaver",
+      "hidden": true
+    },
+    {
+      "id": "inkscape",
+      "cat": "design",
+      "name": "Inkscape",
+      "winget": "Inkscape.Inkscape",
       "hidden": true
     }
   ]

@@ -14,6 +14,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $Global:STVerboseErr = ($env:SPARKTUNE_DEBUG -eq '1')
 $Global:STReportOut = ''
+$Global:STConfigPath = $null
 $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 . (Join-Path $Global:STSrc 'globals.ps1')
 . (Join-Path $Global:STSrc 'ui.ps1')
@@ -26,6 +27,7 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 # ---- parseo manual de flags (compatible CMD + PS5.1) ----
 $cmd = ''
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
+$setLang = ''; $setBanner = ''; $setNivel = ''
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
@@ -36,6 +38,9 @@ foreach ($a in $RawArgs) {
         '^(--no-banner|--nobanner)$' { $flagNoBanner = $true; $matched = $true; continue }
         '^(--help|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
         '^(--lang=.+)$' { $optLang = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--set-lang=.+)$' { $setLang = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--set-banner=(0|1|on|off|true|false))$' { $setBanner = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--set-nivel=.+|--set-level=.+)$' { $setNivel = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--perfil=.+|--profile=.+)$' { $optPerfil = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--nivel=.+|--level=.+)$' { $optNivel = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--id=.+)$' { $optId = ($a -split '=', 2)[1]; $matched = $true; continue }
@@ -50,6 +55,29 @@ foreach ($a in $RawArgs) {
     if ($a.StartsWith('-')) { Write-STWarn ("flag desconocido: $a") }
 }
 if ($optLang -eq 'en' -or $optLang -eq 'es') { $Global:STLang = $optLang }
+
+# config persistente: --set-lang / --set-banner / --set-nivel
+if ($setLang -or $setBanner -or $setNivel) {
+    $homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { [Environment]::GetFolderPath('UserProfile') }
+    $stHome = Join-Path $homeDir '.sparktune'
+    if (-not (Test-Path $stHome)) { New-Item -ItemType Directory -Path $stHome -Force | Out-Null }
+    $cfgPath = if ($Global:STConfigPath) { $Global:STConfigPath } else { Join-Path $stHome 'config.json' }
+    $cfg = @{}
+    if (Test-Path $cfgPath) {
+        try { $c = (Get-Content $cfgPath -Raw -Encoding UTF8) | ConvertFrom-Json; foreach ($p in $c.PSObject.Properties) { $cfg[$p.Name] = $p.Value } } catch { }
+    }
+    if ($setLang -eq 'en' -or $setLang -eq 'es') { $cfg['lang'] = $setLang }
+    if ($setBanner) {
+        $b = "$setBanner".ToLowerInvariant()
+        $cfg['banner'] = ($b -in @('1','on','true'))
+    }
+    if ($setNivel -in @('suave','medio','agresivo')) { $cfg['nivel'] = $setNivel }
+    $json = ConvertTo-Json $cfg
+    [System.IO.File]::WriteAllText($cfgPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+    Write-STOk "config guardada: $cfgPath"
+    exit 0
+}
+
 Set-STLang $Global:STLang
 $Global:STDryRun = $flagDry
 
@@ -58,6 +86,7 @@ if ($flagHelp) { Show-STHelp; exit 0 }
 try {
     switch ($cmd) {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
+
         'status'    { Show-STStatus }
         'battery'   { Show-STBatteryReport }
         'power'     { Invoke-STPowerMenu }

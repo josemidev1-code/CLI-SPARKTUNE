@@ -10,6 +10,7 @@
       "priv.tips"
     ],
     "medio": [
+      "gpu.power-mode",
       "clean.temp-user",
       "clean.dns",
       "clean.wu-cache",
@@ -29,6 +30,7 @@
       "lap.adaptive"
     ],
     "agresivo": [
+      "gpu.power-mode",
       "clean.temp-user",
       "clean.temp-system",
       "clean.dns",
