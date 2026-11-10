@@ -213,5 +213,60 @@ function Get-NetworkCatalogActions {
         }
         undoCmd='EnableMulticast=1; EnableMDNS=1 (o borrar politicas)'
     }
+    $A += @{
+        id='net.wsl-nat'
+        titulo='WSL2 en modo NAT (evita exponer servicios WSL a la LAN)'
+        titulo_en='WSL2 in NAT mode (avoid exposing WSL services to the LAN)'
+        descripcion='Cambia WSL2 a networkingMode=NAT para que los puertos que abras en WSL (dev servers, bases de datos) no queden accesibles desde toda la red local.'
+        descripcion_en='Switches WSL2 to networkingMode=NAT so ports you open in WSL (dev servers, DBs) are not reachable from the whole LAN.'
+        aviso='Requiere WSL2 (no WSL1). Si usas mirrored (acceso directo desde LAN a proposito), NO lo cambies.'
+        aviso_en='Requires WSL2 (not WSL1). If you deliberately use mirrored (intentional LAN access), do NOT change it.'
+        categoria='network'; riesgo='medio'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
+        perfiles=@('desarrollo','red-privacidad','personalizado')
+        niveles=@{ agresivo=1 }
+        detect={ param($hw) $c = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.wslconfig' } else { '' }; $w = if ($env:WINDIR) { Join-Path $env:WINDIR 'System32\wsl.exe' } else { '' }; [bool](($c -and (Test-Path $c)) -or ($w -and (Test-Path $w))) }
+        preview={ '.wslconfig: networkingMode -> NAT' }
+        apply={
+            $f = Join-Path $env:USERPROFILE '.wslconfig'
+            $prev = if (Test-Path $f) { Get-Content $f -Raw } else { '' }
+            Set-STStateFile 'net.wsl-nat' @{ prev = $prev }
+            $body = "[wsl2]`nnetworkingMode=NAT`n"
+            if ($prev -and $prev -notmatch '(?i)\[wsl2\]') { $body = $prev.TrimEnd() + "`n`n" + $body }
+            [System.IO.File]::WriteAllText($f, $body, (New-Object System.Text.UTF8Encoding($false)))
+        }
+        undo={
+            $st = Get-STStateFile 'net.wsl-nat'
+            $f = Join-Path $env:USERPROFILE '.wslconfig'
+            if ($st -and $st.prev) { [System.IO.File]::WriteAllText($f, $st.prev, (New-Object System.Text.UTF8Encoding($false))) }
+            elseif (Test-Path $f) { Remove-Item $f -Force }
+            Remove-STStateFile 'net.wsl-nat'
+        }
+        undoCmd='restaura ~/.wslconfig desde state-net.wsl-nat.json'
+    }
+    $A += @{
+        id='net.smb-hardening'
+        titulo='Endurecer SMB: desactivar guest (insecure guest logons)'
+        titulo_en='Harden SMB: disable insecure guest logons'
+        descripcion='Bloquea conexiones SMB "guest" sin credenciales (NAS mal configurados, ataques de LAN). SMB normal con usuario/clave funciona igual.'
+        descripcion_en='Blocks credential-less SMB guest connections (misconfigured NAS, LAN attacks). Normal SMB with user/password still works.'
+        categoria='network'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('red-privacidad','desarrollo','ofimatica','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'AllowInsecureGuestAuth: ? -> 0' }
+        apply={
+            $g='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation'
+            $cur = Get-STRegValue $g 'AllowInsecureGuestAuth' $null
+            Set-STRegValue $g '__ST_prev_AllowInsecureGuestAuth' ([int]$(if ($null -eq $cur) { 1 } else { [int]$cur }))
+            Set-STRegValue $g 'AllowInsecureGuestAuth' 0
+        }
+        undo={
+            $g='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation'
+            $prev = Get-STRegValue $g '__ST_prev_AllowInsecureGuestAuth' 1
+            Set-STRegValue $g 'AllowInsecureGuestAuth' ([int]$prev)
+            Remove-ItemProperty $g '__ST_prev_AllowInsecureGuestAuth' -ErrorAction SilentlyContinue
+        }
+        undoCmd='AllowInsecureGuestAuth=<prev>'
+    }
     return $A
 }

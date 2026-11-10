@@ -47,7 +47,9 @@ sparktune --help
 Flags:
 
 ```
---perfil=gaming|ofimatica|limpieza|bajos-recursos|portatil-ahorro|portatil-rendimiento|red-privacidad|personalizado
+--perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|
+                       portatil-ahorro|portatil-rendimiento|
+                       red-privacidad|creativo|desarrollo|personalizado
 --nivel=suave|medio|agresivo
 --yes                              # sin confirmaciones (usalo solo si sabes lo que haces)
 --dry-run                          # simulacion: muestra lo que haria, no toca nada
@@ -61,9 +63,49 @@ Ejemplo recomendado la primera vez:
 sparktune --perfil=gaming --nivel=medio --dry-run
 ```
 
+## Capturas (simuladas)
+
+Asistente: perfil gaming / medio — cada accion con ficha de riesgo y reversible:
+
+```
+> SparkTune v1.2.0
+███████╗ █████╗ ██████╗ ██████╗  █████╗ ████████╗████████╗██╗   ██╗███╗   ██╗
+██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝╚██╗ ██╔╝████╗ ████║████╗ ████║
+███████╗███████║██████╔╝██████╔╝███████║   ██║    ╚████╔╝ ██╔████╔██║██╔████╔██║
+╚════██║██╔══██║██╔═══╝ ██╔══██╗██╔══██║   ██║     ╚██╔╝  ██║╚██╔╝██║██║╚██╔╝██║
+███████║██║  ██║██║     ██║  ██║██║  ██║   ██║      ██║   ██║ ╚═╝ ██║██║ ╚═╝ ██║
+╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝     ╚═╝╚═╝     ╚═╝
+   ⚡ Optimizacion de Windows · v1.2.0 · por @josemidev1 ⚡
+
+Sistema: Windows 11 Pro (build 22631)
+CPU:     AMD Ryzen 7 5800X [8C/16T]     RAM: 32 GB
+Disco:   931GB SSD                       GPU: NVIDIA GeForce RTX 3070 + Intel UHD
+Bateria: sobremesa
+
+Que quieres optimizar?
+  > 1. Gaming
+      2. Ofimatica / Productividad
+      3. Portatil - Ahorro de bateria
+      ...
+```
+
+Instalador de apps (menu `sparktune apps` → Herramientas del sistema):
+
+```
+  Apps  ·  ✔=instalada
+
+  [ ] 7-Zip                          ✔
+  [x] PowerToys
+  [ ] Notepad++
+  [ ] ShareX (capturas)
+  [ ] TeamViewer
+
+  1 seleccionadas   Espacio=Seleccionar  Enter=Continuar  Esc=Volver
+```
+
 ## Que hace (y que no)
 
-- **Perfiles por caso de uso** (gaming, ofimatica, portatil ahorro/rendimiento, limpieza, PC antiguo) en 3 niveles de agresividad.
+- **Perfiles por caso de uso** (gaming, ofimatica, portatil ahorro/rendimiento, limpieza, PC antiguo, **creativo**, **desarrollo**, **red-privacidad**) en 3 niveles de agresividad.
 - **Deteccion de hardware**: aplica o filtra acciones segun SSD/HDD, bateria, GPU discreta, RAM, portatil/sobremesa.
 - **Fichas antes de aplicar**: descripcion, aviso, valor actual -> propuesto, riesgo, reversible, admin, reinicio.
 - **Riesgo alto = confirmacion tipando SI**, y aviso de punto de restauracion.
@@ -93,6 +135,7 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 - [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0
 - [x] Instalador de apps estilo winutil via winget (`sparktune apps`) — v1.2.0
 - [x] Smoke-test automatizado en --dry-run (CI en runner de Windows) — v1.2.0
+- [x] Perfiles creativo/edicion y desarrollo — v1.3.0
 - [ ] Mas acciones de apps (paquetes portables, actualizar solo seleccionadas)
 - [ ] Capturas en el README
 - [ ] Paquete winget

@@ -242,7 +242,9 @@ function Select-STProfile {
         @{ id='limpieza';            icon='5' }
         @{ id='bajos-recursos';      icon='6' }
         @{ id='red-privacidad';      icon='7' }
-        @{ id='personalizado';       icon='8' }
+        @{ id='creativo';            icon='8' }
+        @{ id='desarrollo';          icon='9' }
+        @{ id='personalizado';       icon='10' }
     )
     $items = @()
     foreach ($p in $profs) { $items += [pscustomobject]@{ id = $p.id; label = "$(T "prof.$($p.id)")" } }

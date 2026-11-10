@@ -99,6 +99,8 @@ $script:ST_ES = @{
     'prof.limpieza'  = 'Limpieza de disco'
     'prof.bajos-recursos' = 'Bajos recursos (PC antiguo)'
     'prof.red-privacidad' = 'Red y privacidad'
+    'prof.creativo' = 'Creativo / Edicion (foto, video, 3D)'
+    'prof.desarrollo' = 'Desarrollo (IDEs, WSL, compiles)'
     'prof.personalizado' = 'Personalizado (elige tu mismo)'
     'prof.custom'    = 'Personalizado'
     'list.title'     = 'Acciones disponibles (filtra hardware/perfil). Espacio=seleccionar  Enter=continuar  F=ficha  Esc=volver'
@@ -182,6 +184,8 @@ $script:ST_EN = @{
     'prof.limpieza'  = 'Disk cleanup'
     'prof.bajos-recursos' = 'Low resources (old PC)'
     'prof.red-privacidad' = 'Network & privacy'
+    'prof.creativo' = 'Creative / Editing (photo, video, 3D)'
+    'prof.desarrollo' = 'Development (IDEs, WSL, builds)'
     'prof.personalizado' = 'Custom (pick yourself)'
     'prof.custom'    = 'Custom'
     'list.title'     = 'Available actions (filtered by HW/profile). Space=toggle Enter=continue F=card Esc=back'
@@ -290,7 +294,8 @@ function Show-STHelp {
         '',
         '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
         '                         portatil-ahorro|portatil-rendimiento|',
-        '                         red-privacidad|personalizado',
+        '                         red-privacidad|creativo|desarrollo|',
+        '                         personalizado',
         '  --nivel=suave          suave|medio|agresivo',
         '  --yes                  Sin confirmaciones (cuidado)',
         '  --dry-run              Simulacion: muestra, no ejecuta',
@@ -319,7 +324,8 @@ function Show-STHelp {
             '',
             '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
             '                         portatil-ahorro|portatil-rendimiento|',
-            '                         red-privacidad|personalizado',
+            '                         red-privacidad|creativo|desarrollo|',
+            '                         personalizado',
             '  --nivel=suave          suave|medio|agresivo',
             '  --yes                  Skip confirmations (careful)',
             '  --dry-run              Simulation: show, do not execute',

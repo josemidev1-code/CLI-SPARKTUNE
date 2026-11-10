@@ -2,6 +2,24 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.3.0] - 2026-11-10
+
+### Añadido
+- Perfiles **`creativo`** (foto/video/3D) y **`desarrollo`** (IDEs, WSL, compiles), con niveles suave/medio/agresivo.
+- Nuevas acciones:
+  - `cpu.coreparking-off` — core parking off (AC) via powercfg CPCONCURRENCY, sobremesa.
+  - `gpu.resbar` — informe/guia Resizable BAR (informativo, se configura en BIOS).
+  - `off.storage-sense` — activar Sensor de almacenamiento (auto-limpieza).
+  - `off.hibernation` — `powercfg /h off` (libera ~0.75xRAM; no en portatiles por detect).
+  - `clean.minisave` — vaciar cache MiniSave (capturas OneDrive).
+  - `clean.thumbnails` — borrar thumbcache_*.db (se regeneran; no toca originales).
+  - `net.wsl-nat` — WSL2 a NAT (`~/.wslconfig`, con estado previo y undo).
+  - `net.smb-hardening` — bloquear SMB guest inseguro (AllowInsecureGuestAuth=0 con prev).
+  - `priv.cloud-content` — off sugerencias Explorer (OneDrive/Office en carpetas).
+  - `priv.feedback-all-off` — off popups "How likely to recommend".
+- Capturas simuladas (ASCII) del wizard y del menu apps en el README.
+- Release con asset **zip** (`git archive`) en la release de GitHub.
+
 ## [1.2.0] - 2026-11-09
 
 ### Añadido

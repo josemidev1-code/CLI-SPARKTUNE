@@ -23,7 +23,7 @@ jobs:
       - name: Dry-run each profile/level
         shell: powershell
         run: |
-          $profiles = 'gaming','ofimatica','limpieza','bajos-recursos','portatil-ahorro','portatil-rendimiento','red-privacidad','personalizado'
+          $profiles = 'gaming','ofimatica','limpieza','bajos-recursos','portatil-ahorro','portatil-rendimiento','red-privacidad','creativo','desarrollo','personalizado'
           $levels = 'suave','medio','agresivo'
           foreach ($p in $profiles) {
             foreach ($l in $levels) {

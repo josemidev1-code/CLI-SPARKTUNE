@@ -218,5 +218,47 @@ function Get-PrivacyCatalogActions {
         }
         undoCmd='borra claves PreInstalled/SilentInstalled'
     }
+    $A += @{
+        id='priv.cloud-content'
+        titulo='Off: sugerencias de contenido en Explorer (OneDrive/Store en Mis Documentos)'
+        titulo_en='Off: Explorer content suggestions (OneDrive/Store in My Documents)'
+        descripcion='Quita los popups de Explorer que sugieren subir carpetas a OneDrive o comprar plantillas de Office.'
+        descripcion_en='Removes Explorer popups suggesting OneDrive folder upload or buying Office templates.'
+        categoria='privacy'; riesgo='bajo'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','desarrollo','red-privacidad','ofimatica','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'sugerencias contenido explorer ON -> OFF' }
+        apply={
+            Set-STRegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'ShowSyncProviderNotifications' 0
+            Set-STRegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' 'SubscribedContent-314544Enabled' 0
+        }
+        undo={
+            Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'ShowSyncProviderNotifications' -ErrorAction SilentlyContinue
+            Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' 'SubscribedContent-314544Enabled' -ErrorAction SilentlyContinue
+        }
+        undoCmd='borra ShowSyncProviderNotifications + SubscribedContent-314544Enabled'
+    }
+    $A += @{
+        id='priv.feedback-all-off'
+        titulo='Off: peticiones de feedback (mostradores de valoracion)'
+        titulo_en='Off: feedback prompts (rating popups)'
+        descripcion='Desactiva los "How likely are you to recommend...?" dentro de apps/Windows.'
+        descripcion_en='Disables "How likely are you to recommend...?" popups inside apps/Windows.'
+        categoria='privacy'; riesgo='sin'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','desarrollo','red-privacidad','ofimatica','gaming','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'AllowFeedbackHub: ? -> OFF (politica + HKLM)' }
+        apply={
+            Set-STRegValue 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection' 'AllowFeedbackHub' 0
+            Set-STRegValue 'HKCU:\Software\Microsoft\Siuf\Rules' 'NumberOfSIUFInPeriod' 0
+        }
+        undo={
+            Remove-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection' 'AllowFeedbackHub' -ErrorAction SilentlyContinue
+            Remove-ItemProperty 'HKCU:\Software\Microsoft\Siuf\Rules' 'NumberOfSIUFInPeriod' -ErrorAction SilentlyContinue
+        }
+        undoCmd='borra AllowFeedbackHub + NumberOfSIUFInPeriod'
+    }
     return $A
 }

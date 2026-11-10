@@ -354,6 +354,100 @@
       "priv.deep-telemetry"
     ]
   },
+  "creativo": {
+    "suave": [
+      "clean.temp-user",
+      "clean.dns",
+      "off.storage-sense",
+      "priv.tips",
+      "priv.cloud-content",
+      "priv.feedback-all-off"
+    ],
+    "medio": [
+      "clean.temp-user",
+      "clean.dns",
+      "clean.minisave",
+      "off.storage-sense",
+      "gpu.resbar",
+      "cpu.coreparking-off",
+      "off.startup-bloat",
+      "priv.tips",
+      "priv.cloud-content",
+      "priv.feedback-all-off",
+      "priv.teletrack",
+      "priv.preapps",
+      "power.spark-equili",
+      "power.spark-rendi"
+    ],
+    "agresivo": [
+      "clean.temp-user",
+      "clean.temp-system",
+      "clean.dns",
+      "clean.minisave",
+      "clean.thumbnails",
+      "off.storage-sense",
+      "off.hibernation",
+      "gpu.resbar",
+      "cpu.coreparking-off",
+      "cpu.fgboost",
+      "gamemode",
+      "gpu.hags",
+      "off.startup-bloat",
+      "priv.tips",
+      "priv.cloud-content",
+      "priv.feedback-all-off",
+      "priv.teletrack",
+      "priv.diagsvc-off",
+      "priv.preapps",
+      "svc.xbox",
+      "power.spark-rendi",
+      "power.spark-turbo",
+      "power.spark-equili"
+    ]
+  },
+  "desarrollo": {
+    "suave": [
+      "clean.temp-user",
+      "clean.dns",
+      "off.storage-sense",
+      "priv.tips",
+      "priv.feedback-all-off"
+    ],
+    "medio": [
+      "clean.temp-user",
+      "clean.dns",
+      "off.storage-sense",
+      "cpu.coreparking-off",
+      "off.startup-bloat",
+      "priv.tips",
+      "priv.feedback-all-off",
+      "priv.teletrack",
+      "net.smb-hardening",
+      "priv.cloud-content",
+      "power.spark-equili",
+      "power.spark-rendi"
+    ],
+    "agresivo": [
+      "clean.temp-user",
+      "clean.temp-system",
+      "clean.dns",
+      "off.storage-sense",
+      "off.hibernation",
+      "cpu.coreparking-off",
+      "cpu.fgboost",
+      "off.startup-bloat",
+      "priv.tips",
+      "priv.feedback-all-off",
+      "priv.teletrack",
+      "priv.diagsvc-off",
+      "net.smb-hardening",
+      "net.wsl-nat",
+      "priv.cloud-content",
+      "svc.wsearch",
+      "power.spark-rendi",
+      "power.spark-equili"
+    ]
+  },
   "personalizado": {
     "suave": [
       "*"

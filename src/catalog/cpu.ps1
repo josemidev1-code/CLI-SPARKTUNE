@@ -141,5 +141,26 @@ function Get-CpuCatalogActions {
         }
         undoCmd='powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 0'
     }
+    $A += @{
+        id='cpu.coreparking-off'
+        titulo='Core parking deshabilitado (todas los nucleos despiertos)'
+        titulo_en='Disable core parking (all cores awake)'
+        descripcion='Evita que Windows "aparque" nucleos en reposo: menos latencia al recuperar carga (editores, compiles, IDEs pesadas). Consume un poco mas.'
+        descripcion_en='Stops Windows parking idle cores: lower latency when load returns (editors, compiles, heavy IDEs). Uses slightly more power.'
+        categoria='cpu'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','desarrollo','gaming','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) (-not $hw.IsLaptop) }
+        preview={ 'core parking: por defecto -> 0 nucleos aparcados (AC)' }
+        apply={
+            powercfg.exe -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPCONCURRENCY 100 | Out-Null
+            powercfg.exe -setactive SCHEME_CURRENT | Out-Null
+        }
+        undo={
+            powercfg.exe -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPCONCURRENCY 0 | Out-Null
+            powercfg.exe -setactive SCHEME_CURRENT | Out-Null
+        }
+        undoCmd='powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPCONCURRENCY 0 + setactive'
+    }
     return $A
 }

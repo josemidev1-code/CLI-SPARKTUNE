@@ -106,5 +106,37 @@ function Get-OfficeCatalogActions {
         undo={ Set-STRegValue 'HKLM:\SOFTWARE\Microsoft\Windows Search' 'AllowNetworkLocations' 1 }
         undoCmd='AllowNetworkLocations=1'
     }
+    $A += @{
+        id='off.storage-sense'
+        titulo='Sensor de almacenamiento activado (auto-limpieza de temporales)'
+        titulo_en='Storage Sense enabled (auto-clean temp files)'
+        descripcion='Windows limpia solo temporales y papelera cada 30 dias. Configurable en Configuracion > Sistema > Almacenamiento.'
+        descripcion_en='Windows auto-cleans temp and recycle bin every 30 days. Configurable in Settings > System > Storage.'
+        categoria='office'; riesgo='sin'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','desarrollo','ofimatica','gaming','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $true }
+        preview={ 'Sensor de almacenamiento: ? -> ON (cada 30 dias)' }
+        apply={ Set-STRegValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy' '01' 1 }
+        undo={ Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy' '01' -ErrorAction SilentlyContinue }
+        undoCmd='borra StoragePolicy 01'
+    }
+    $A += @{
+        id='off.hibernation'
+        titulo='Hibernacion desactivada (libera varios GB en C:)'
+        titulo_en='Disable hibernation (frees several GB on C:)'
+        descripcion='Borra hiberfil.sys: recupera 0.75x tu RAM en espacio. Pierdes la hibernacion (la suspension sigue disponible).'
+        descripcion_en='Deletes hiberfil.sys: recovers ~0.75x your RAM in space. You lose hibernate (sleep still works).'
+        aviso='Si usas hibernacion a diario en portatil, NO actives esto.'
+        aviso_en='If you hibernate daily on a laptop, do NOT enable this.'
+        categoria='office'; riesgo='medio'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
+        perfiles=@('creativo','desarrollo','bajos-recursos','limpieza','personalizado')
+        niveles=@{ agresivo=1 }
+        detect={ param($hw) (-not $hw.IsLaptop) }
+        preview={ 'hiberfil.sys -> eliminado (powercfg /h off)' }
+        apply={ powercfg.exe /h off | Out-Null }
+        undo={ powercfg.exe /h on | Out-Null }
+        undoCmd='powercfg /h on'
+    }
     return $A
 }

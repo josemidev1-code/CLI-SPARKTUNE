@@ -2,6 +2,34 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-10 — Sesion 3 (v1.3.0: perfiles creativo/desarrollo + asset zip)
+
+Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
+
+### Hecho
+
+- **Perfiles nuevos** `creativo` y `desarrollo` (suave/medio/agresivo) en profiles.json,
+  wizard (opcion 8 y 9), etiquetas ES/EN y ayuda.
+- **10 acciones nuevas**: `cpu.coreparking-off`, `gpu.resbar` (informativo),
+  `off.storage-sense`, `off.hibernation`, `clean.minisave`, `clean.thumbnails`,
+  `net.wsl-nat` (con `.wslconfig` guardado y undo), `net.smb-hardening` (guest SMB off
+  con valor previo), `priv.cloud-content`, `priv.feedback-all-off`. Todos con contract
+  completo y detect tolerantes a rutas nulas (no petan fuera de Windows).
+- README con **capturas simuladas** (banner + wizard + menu apps) y lista de perfiles completa.
+- **Release v1.2.0 con asset zip** (`git archive`) — descarga directa lista para `install.ps1`.
+- Version 1.3.0 + CHANGELOG.
+
+### Pendiente / siguiente sesion
+
+- [ ] **Windows real**: probar apps (winget), sec.*, doctor, y las 10 acciones de esta sesion
+      (sobre todo `net.wsl-nat` con WSL instalado y `clean.thumbnails` con Explorer abierto).
+- [ ] El workflow dry-run usa lista de 8 perfiles hardcoded: anadir `creativo` y `desarrollo`
+      (ahora fallaria el test de menu pero no el dryrun).
+- [ ] Ampliar `apps.json` (mas categorias: emulacion, office completo, portables).
+- [ ] Paquetes winget con `--scope=user` cuando exista para evitar admin en `apps`.
+- [ ] Perfil `creativo` podria ganar accion propia de GPU (power GPU plan por perfil).
+- [ ] Actualizar el asset zip cuando se taggee v1.3.0.
+
 ## 2026-11-09 — Sesion 2 (v1.2.0 "final boss": apps, seguridad, CI)
 
 Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)

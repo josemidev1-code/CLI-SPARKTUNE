@@ -118,5 +118,29 @@ function Get-GpuCatalogActions {
         undo={ Write-STInfo 'nada que deshacer (informativo).' }
         undoCmd='n/a'
     }
+    $A += @{
+        id='gpu.resbar'
+        titulo='Resizable BAR activo (si la GPU/CPU lo soportan)'
+        titulo_en='Resizable BAR enabled (if GPU/CPU support it)'
+        descripcion='Permite que la CPU acceda a toda la VRAM de golpe: +5-10% en juegos modernos. Depende de BIOS (Re-Size BAR Enable) y driver actualizado.'
+        descripcion_en='Lets the CPU access all VRAM at once: +5-10% in modern games. Needs BIOS "Re-Size BAR Enable" and up-to-date driver.'
+        aviso='Si tu placa no lo soporta, la accion informa y no toca nada. No hay registro que revertir: se configura en BIOS.'
+        aviso_en='If the board lacks support, the action reports and changes nothing. Nothing to revert: it is configured in BIOS.'
+        categoria='gpu'; riesgo='sin'; reversible=$true; admin=$true; reinicio=$true; needsRP=$false
+        perfiles=@('creativo','gaming','personalizado')
+        niveles=@{ medio=1; agresivo=1 }
+        detect={ param($hw) $hw.HasNvidia -or $hw.HasAmd }
+        preview={
+            $r = 'soporte: desconocido (comprueba en MSI Afterburner/HWiNFO: Resizable BAR)'
+            try {
+                $gpu = (Get-CimInstance -ClassName Win32_VideoController -ErrorAction Stop | Where-Object { "$($_.Name)" -match 'NVIDIA|GeForce|Radeon' } | Select-Object -First 1)
+                if ($gpu) { $r = "GPU: $($gpu.Name) - el estado real de BAR se lee en HWiNFO; esta accion solo da el aviso y enlace" }
+            } catch { }
+            $r
+        }
+        apply={ Write-STInfo 'Resizable BAR se activa en la BIOS (Re-Size BAR / SMART Access). Driver >= 496 (NVIDIA) o Adrenalin 22.x (AMD).' }
+        undo={ Write-STInfo 'nada que deshacer en Windows' }
+        undoCmd='n/a (BIOS)'
+    }
     return $A
 }
