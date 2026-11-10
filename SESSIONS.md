@@ -1,4 +1,4 @@
-# SparkTune — registro de sesiones de desarrollo
+﻿# SparkTune — registro de sesiones de desarrollo
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
@@ -23,8 +23,6 @@ Repo: https://github.com/josemidev1-code/CLI-SPARKTUNE (rama `main`)
 
 - [ ] **Windows real**: probar apps (winget), sec.*, doctor, y las 10 acciones de esta sesion
       (sobre todo `net.wsl-nat` con WSL instalado y `clean.thumbnails` con Explorer abierto).
-- [ ] El workflow dry-run usa lista de 8 perfiles hardcoded: anadir `creativo` y `desarrollo`
-      (ahora fallaria el test de menu pero no el dryrun).
 - [ ] Ampliar `apps.json` (mas categorias: emulacion, office completo, portables).
 - [ ] Paquetes winget con `--scope=user` cuando exista para evitar admin en `apps`.
 - [ ] Perfil `creativo` podria ganar accion propia de GPU (power GPU plan por perfil).
