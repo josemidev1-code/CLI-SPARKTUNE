@@ -2,6 +2,16 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.6.0] - 2026-11-12
+
+### Añadido
+- **`sparktune apps --update=vlc,firefox`**: actualiza solo las apps indicadas (antes solo
+  "actualizar todo"). Apps no instaladas se omiten con aviso, no cuentan como fallo.
+- **Paquetes portables en apps.json**: FileZilla, IrfanView y Notepad++ (`.Portable` oficial de
+  winget) — marcados `(p)` en el menu y con aviso al instalar; test que exige que lo `portable`
+  acabe en `.Portable`. Anadidos FreeCAD y QGIS (66 apps).
+- `--scope` rechazado explicitamente con `--update` (solo aplica a install).
+
 ## [1.5.0] - 2026-11-12
 
 ### Añadido

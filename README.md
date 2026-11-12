@@ -39,6 +39,7 @@ sparktune battery                  # informe de bateria + planes recomendados
 sparktune history                  # historial de cambios del journal (estado por entrada)
 sparktune apps                     # instalar apps populares (menu estilo winutil, via winget)
 sparktune apps --install=chrome,vlc --scope=user   # instalacion no interactiva (scripts)
+sparktune apps --update=vlc             # actualizar solo apps concretas
 sparktune doctor                   # salud del sistema y coherencia journal/catalogo
 sparktune report [--out=archivo]   # informe HTML (sistema, discos, journal) para compartir
 sparktune undo                     # deshace cambios (en orden inverso), --id=xxx o --category=priv
@@ -59,6 +60,7 @@ Flags:
 --set-banner=on|off                # banner por defecto
 --set-nivel=suave|medio|agresivo   # nivel por defecto en el wizard
 --install=a,b                      # (apps) instalar sin interactuar; --scope=user, --interactive
+--update=a,b                       # (apps) actualizar solo esas apps
 --no-banner
 ```
 
@@ -142,9 +144,9 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 - [x] Perfiles creativo/edicion y desarrollo — v1.3.0
 - [x] Config persistente (`--set-lang/--set-banner/--set-nivel`) y 61 apps — v1.4.0
 - [x] `apps --install=...` no interactivo + `--scope=user`/`--interactive` + avisos de fallo por app — v1.5.0
+- [x] `apps --update=...` (solo seleccionadas) + paquetes portables winget — v1.6.0
 - [ ] Pruebas en Windows real de las acciones nuevas (ver SESSIONS.md)
-- [ ] Mas acciones de apps (paquetes portables, actualizar solo seleccionadas)
-- [ ] Capturas en el README
+- [ ] Capturas nuevas del menu apps actualizado
 - [ ] Paquete winget
 
 ## Registro de sesiones

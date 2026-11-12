@@ -448,6 +448,39 @@
       "name": "Inkscape",
       "winget": "Inkscape.Inkscape",
       "hidden": true
+    },
+    {
+      "id": "freecad",
+      "cat": "design",
+      "name": "FreeCAD",
+      "winget": "FreeCAD.FreeCAD"
+    },
+    {
+      "id": "qgis",
+      "cat": "dev",
+      "name": "QGIS",
+      "winget": "QGIS.QGIS"
+    },
+    {
+      "id": "filezilla-portable",
+      "cat": "tools",
+      "name": "FileZilla (portable)",
+      "winget": "FileZilla-Client.FileZilla-Client.Portable",
+      "portable": true
+    },
+    {
+      "id": "irfanview-portable",
+      "cat": "tools",
+      "name": "IrfanView (portable)",
+      "winget": "IrfanSkiljan.IrfanView.Portable",
+      "portable": true
+    },
+    {
+      "id": "notepadpp-portable",
+      "cat": "tools",
+      "name": "Notepad++ (portable)",
+      "winget": "Notepad++.Notepad++.Portable",
+      "portable": true
     }
   ]
 }

@@ -476,35 +476,63 @@ function Get-STAppsByToken($Cat, [string]$Tok) {
     if (-not $hit) { foreach ($a in $Cat.apps) { if ("$($a.name)".ToLowerInvariant() -match [regex]::Escape($t)) { $hit = $a; break } } }
     return $hit
 }
+function Update-STWingetApp($App, [bool]$Interactive) {
+    # actualiza 1 app; 'ok' | 'notfound' (no instalada/desconocida) | 'fail' | 'error'.msg
+    $w = @('upgrade','-e','--id',$App.winget,'--accept-package-agreements','--accept-source-agreements')
+    if (-not $Interactive) { $w += '--disable-interactivity' }
+    try {
+        if ($Interactive) { & winget.exe @w; if ($LASTEXITCODE -eq 0) { return 'ok' }; return 'fail' }
+        $out = (& winget.exe @w 2>&1) -join "`n"
+        if ($LASTEXITCODE -eq 0) { return 'ok' }
+        if ($LASTEXITCODE -eq -1978335189) { return 'ok' }   # 0x8A15002B: no se encontro aplicacion para actualizar (no instalada)
+        if ($out -match '0x8A150014|no found|no se encontr|No installed package found') { return 'notfound' }
+        return 'fail'
+    } catch { return "error.$($_.Exception.Message)" }
+}
 function Invoke-STAppsInstall {
-    param([string]$List, [string]$Scope, [bool]$Interactive)
+    param([string]$List, [string]$Scope, [bool]$Interactive, [string]$Mode = 'install')
     if ($Scope -and $Scope -ne 'user') { Write-STErr "apps: --scope no valido: $Scope (soportado: user)"; exit 1 }
+    if ($Mode -eq 'update' -and $Scope) { Write-STErr 'apps: --scope solo aplica a install'; exit 1 }
     if (-not $Global:STDryRun -and -not (Test-STWinget)) { Write-STWarn 'winget no esta disponible.'; exit 1 }
     $cat = Get-STAppsCatalog
     if (-not $cat) { exit 1 }
     $toks = @($List -split ',' | ForEach-Object { "$_".Trim() } | Where-Object { $_ })
-    if ($toks.Count -eq 0) { Write-STErr 'apps: --install vacio'; exit 1 }
+    if ($toks.Count -eq 0) { Write-STErr "apps: lista vacia (usa --install=a,b o --update=a,b)"; exit 1 }
     $found = @(); $missing = @()
     foreach ($t in $toks) { $a = Get-STAppsByToken $cat $t; if ($a) { $found += $a } else { $missing += $t } }
     foreach ($m in $missing) { Write-STWarn "desconocida: $m (usa sparktune apps para ver el catalogo)" }
     if ($found.Count -eq 0) { exit 1 }
-    $fail = @()
+    $fail = @(); $skip = @()
     foreach ($a in $found) {
-        if ($Global:STDryRun) { Write-STInfo "[dry-run] winget install -e --id $($a.winget)$(if ($Scope -eq 'user') { ' --scope=user' } else { '' })$(if ($Interactive) { ' --interactive' } else { '' })"; continue }
+        if ($Global:STDryRun) {
+            if ($Mode -eq 'update') { Write-STInfo "[dry-run] winget upgrade -e --id $($a.winget)$(if ($Interactive) { ' --interactive' } else { '' })" }
+            else { Write-STInfo "[dry-run] winget install -e --id $($a.winget)$(if ($Scope -eq 'user') { ' --scope=user' } else { '' })$(if ($Interactive) { ' --interactive' } else { '' })" }
+            continue
+        }
         Write-STInfo "-> $($a.name)"
-        $r = Install-STWingetApp -App $a -Scope $Scope -Interactive:$Interactive
+        if ($a.portable) { Write-STInfo "  portable: winget lo instala en tu carpeta de apps de usuario (sin registro/instalador)" }
+        if ($Mode -eq 'update') { $r = Update-STWingetApp -App $a -Interactive:$Interactive }
+        else { $r = Install-STWingetApp -App $a -Scope $Scope -Interactive:$Interactive }
         if ($r -eq 'ok') { Write-STOk $a.name }
+        elseif ($r -eq 'notfound') {
+            if ($Mode -eq 'update') { Write-STInfo "no instalada, se omite: $($a.name)"; $skip += $a.name }
+            else { Write-STWarn "no encontrada en winget: $($a.name) [$($a.winget)]"; $fail += $a.name }
+        }
         else {
             $cod = ''; if ($r -match '^fail\.(.+)$') { $cod = " ($($matches[1]))" }
-            if ($r -eq 'notfound') { Write-STWarn "no encontrada en winget: $($a.name) [$($a.winget)]" }
-            else { Write-STErr "fallo: $($a.name)$cod" }
+            if ($Mode -eq 'update') { Write-STErr "fallo actualizando: $($a.name)$cod" } else { Write-STErr "fallo: $($a.name)$cod" }
             $fail += $a.name
         }
     }
     Write-STLine ''
     if ($Global:STDryRun) { Write-STInfo "dry-run: $($found.Count) apps"; return }
-    if ($fail.Count -gt 0) { Write-STWarn "$($found.Count - $fail.Count)/$($found.Count) instaladas; pendientes: $($fail -join ', ')" }
-    else { Write-STOk "$($found.Count) apps instaladas" }
+    $verb = @{ install = 'instaladas'; update = 'actualizadas' }[$Mode]
+    if ($fail.Count -gt 0) { Write-STWarn "$($found.Count - $fail.Count)/$($found.Count) $verb; pendientes: $($fail -join ', ')" }
+    else {
+        $msg = "$($found.Count) $verb"
+        if ($skip.Count -gt 0) { $msg += " ($($skip.Count) omitidas por no instaladas)" }
+        Write-STOk $msg
+    }
 }
 function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
     $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId -and -not $_.hidden })
@@ -526,13 +554,14 @@ function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
         for ($i = 0; $i -lt $apps.Count; $i++) {
             $box = '[ ]'; if ($sel[$i]) { $box = '[x]' }
             $tick = if ($installed.ContainsKey($apps[$i].id)) { ' ✔' } else { '' }
+            $tagp = if ($apps[$i].portable) { ' (p)' } else { '' }
             $mark = '  '; $col = ''
             if ($i -eq $cur) { $mark = '> '; $col = 'yellow' }
-            Write-STLine "  $mark$box $($apps[$i].name)$tick" $col $(if ($i -eq $cur) { 'bold' } else { '' })
+            Write-STLine "  $mark$box $($apps[$i].name)$tick$tagp" $col $(if ($i -eq $cur) { 'bold' } else { '' })
         }
         $nSel = 0; foreach ($b in $sel) { if ($b) { $nSel++ } }
         Write-STLine ''
-        Write-STLine "  $nSel $(if ($Lang -eq 'en') {'selected'} else {'seleccionadas'})   Espacio=$(T 'nav.space')  Enter=$(T 'nav.enter')  Esc=$(T 'nav.esc')" 'gray'
+        Write-STLine "  $nSel $(if ($Lang -eq 'en') {'selected'} else {'seleccionadas'})   (p)=$(if ($Lang -eq 'en') {'portable'} else {'portable'})   Espacio=$(T 'nav.space')  Enter=$(T 'nav.enter')  Esc=$(T 'nav.esc')" 'gray'
         $k = Read-STKey
         switch ($k.Key) {
             'Up' { $cur--; if ($cur -lt 0) { $cur = $apps.Count - 1 } }

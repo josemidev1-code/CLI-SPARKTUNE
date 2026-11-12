@@ -113,6 +113,7 @@ Check 'apps.json valid' {
     foreach ($a in $j.apps) {
         if (-not $a.id -or -not $a.name -or -not $a.winget -or -not $a.cat) { throw "app incompleta: $($a.id)" }
         if ($cats -notcontains $a.cat) { throw "$($a.id): categoria desconocida $($a.cat)" }
+        if ($a.portable -and "$($a.winget)" -notmatch '\.Portable$') { throw "$($a.id): portable pero winget no acaba en .Portable" }
     }
     $dupes = @()
     foreach ($g in ($j.apps | Group-Object id)) { if ($g.Count -gt 1) { $dupes += $g.Name } }

@@ -2,6 +2,30 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-12 — Sesion 6 (v1.6.0: apps --update + portables)
+
+### Hecho
+
+- **`apps --update=a,b`**: actualiza solo las apps listadas (`winget upgrade -e --id` por app).
+  No instalada => omitida con aviso (no fallo); resumen `X/N actualizadas (K omitidas)`.
+  `--scope` con `--update` = error explicito. Comparte `Invoke-STAppsInstall` con `-Mode update`.
+- **Portables**: 3 paquetes winget `.Portable` en tools (FileZilla, IrfanView, Notepad++) con flag
+  `"portable": true`; el menu muestra `(p)` y `--install` avisa del comportamiento. Nuevas apps
+  normales: FreeCAD, QGIS (66 en total). Test extra: `portable` exige winget id acabadado en
+  `.Portable`.
+- Cuidado con JSON: reescribir `apps.json` puede dejar BOM duplicado (`efbbbf efbbbf`); leer con
+  `utf-8-sig` y escribir un unico BOM (verificado: tests de BOM/JSON lo detectan).
+- CHANGELOG, README (uso+flags+roadmap), ayuda ES/EN, version 1.6.0.
+
+### Pendiente / siguiente sesion
+
+- [ ] **Windows real** (acumulado v1.4-1.6): `apps --install/--update` reales, `--scope=user`,
+      `--interactive`, portables `(p)`; `gpu.power-mode` + `powercfg /query`; wizard con config;
+      `net.wsl-nat`; `clean.thumbnails`; `--set-*`.
+- [ ] CI: anadir job en PowerShell 5.1 explícito si alguna vez falla algo solo en 5.1
+      (el job contract ya corre en 5.1 del runner).
+- [ ] Taggear v1.6.0 + asset zip tras CI verde.
+
 ## 2026-11-12 — Sesion 5 (v1.5.0: apps no interactivo + fix GUIDs GPU)
 
 ### Hecho
@@ -26,7 +50,7 @@ Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el ma
 - [ ] **Windows real** (acumulado v1.4-1.5): probar `apps --install` (incl. `--scope=user`),
       `--interactive`, avisos de "no encontrada"; `gpu.power-mode` real + `powercfg /query`
       para confirmar el setting; wizard con config; `net.wsl-nat`; `clean.thumbnails`; `--set-*`.
-- [ ] **apps**: actualizar solo seleccionadas; paquetes portables.
+- [x] **apps**: actualizar solo seleccionadas; paquetes portables. (v1.6.0)
 - [ ] Taggear v1.5.0 + asset zip tras CI verde.
 
 ## 2026-11-10 — Sesion 4 (v1.4.0: config persistente + apps ampliadas)
