@@ -38,6 +38,7 @@ sparktune power                    # planes SparkTune: listar / crear / aplicar 
 sparktune battery                  # informe de bateria + planes recomendados
 sparktune history                  # historial de cambios del journal (estado por entrada)
 sparktune apps                     # instalar apps populares (menu estilo winutil, via winget)
+sparktune apps --install=chrome,vlc --scope=user   # instalacion no interactiva (scripts)
 sparktune doctor                   # salud del sistema y coherencia journal/catalogo
 sparktune report [--out=archivo]   # informe HTML (sistema, discos, journal) para compartir
 sparktune undo                     # deshace cambios (en orden inverso), --id=xxx o --category=priv
@@ -57,6 +58,7 @@ Flags:
 --set-lang=es|en                   # guarda idioma por defecto (persistente)
 --set-banner=on|off                # banner por defecto
 --set-nivel=suave|medio|agresivo   # nivel por defecto en el wizard
+--install=a,b                      # (apps) instalar sin interactuar; --scope=user, --interactive
 --no-banner
 ```
 
@@ -134,12 +136,12 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 
 ## Roadmap
 
-- [ ] Mas perfiles (creativo/edicion, desarrollo)
 - [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0
 - [x] Instalador de apps estilo winutil via winget (`sparktune apps`) — v1.2.0
 - [x] Smoke-test automatizado en --dry-run (CI en runner de Windows) — v1.2.0
 - [x] Perfiles creativo/edicion y desarrollo — v1.3.0
 - [x] Config persistente (`--set-lang/--set-banner/--set-nivel`) y 61 apps — v1.4.0
+- [x] `apps --install=...` no interactivo + `--scope=user`/`--interactive` + avisos de fallo por app — v1.5.0
 - [ ] Pruebas en Windows real de las acciones nuevas (ver SESSIONS.md)
 - [ ] Mas acciones de apps (paquetes portables, actualizar solo seleccionadas)
 - [ ] Capturas en el README

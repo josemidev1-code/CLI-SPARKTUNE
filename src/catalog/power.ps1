@@ -29,6 +29,9 @@ $STSUB = @{
     SubPci='eeabc0fe-811e-11d5-b4d9-00a0242541e9'         # PCI Express subgrupo
     AspmAc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'         # ASPM Policies (mismo set GUID en AC y DC)
     AspmDc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'
+    SubPciAdmin='4d36e967-e325-11ce-bfc1-08002be10318'    # subgrupo PCI Express Link State Power Management
+    PciAdminAc='eeabc0fe-811e-11d5-b4d9-00a0242541e9'    # setting Link State Power Management (Off=0; mismo GUID AC/DC)
+    PciAdminDc='eeabc0fe-811e-11d5-b4d9-00a0242541e9'
     SubGPU='44f76c74-876a-482b-9b8c-7c00af9bc5a5'
     DgpuMinAc='48f03ac5-cf51-4766-8fd5-0a1db1999fd1'; DgpuMaxAc='ec8d00b4-65e9-4b1b-83cc-001e81eee0ae'
     DgpuMinDc='b8f44f6f-53e4-4a3f-a33f-9f8744a060e0'; DgpuMaxDc='ea8c88e8-f68b-4e0e-a3d3-4b1e5b5515a3'
@@ -140,13 +143,13 @@ function Get-STPlanSpec([string]$Key, $hw) {
                  "$($P.SubBatt)|$($P.SleepIdleDc)"=300} } }
         'spark-turbo' { return @{
             Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=100;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubPci)|$($P.AspmAc)"=0
+                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubPciAdmin)|$($P.PciAdminAc)"=0
                  "$($P.SubGPU)|$($P.DgpuMinAc)"=98;"$($P.SubGPU)|$($P.DgpuMaxAc)"=100}
             Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=80;"$($P.SubProc)|$($P.ProcMaxDc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
                  "$($P.SubGPU)|$($P.DgpuMinDc)"=50;"$($P.SubGPU)|$($P.DgpuMaxDc)"=100} } }
         'spark-max' { return @{
             Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=100;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubPci)|$($P.AspmAc)"=0
+                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubPciAdmin)|$($P.PciAdminAc)"=0
                  "$($P.SubGPU)|$($P.DgpuMinAc)"=99;"$($P.SubGPU)|$($P.DgpuMaxAc)"=100}
             Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=100;"$($P.SubProc)|$($P.ProcMaxDc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2} } }
     }

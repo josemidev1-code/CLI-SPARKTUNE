@@ -2,6 +2,27 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.5.0] - 2026-11-12
+
+### Añadido
+- **`sparktune apps --install=chrome,vlc`**: instalacion no interactiva por scripts (ids, nombres o
+  winget ids, separados por comas). Unknown tokens avisados sin abortar el resto.
+- **apps flags**: `--scope=user` (pide a winget instalacion sin admin cuando el paquete lo
+  soporta) y `--interactive` (muestra la UI de winget en vez de modo silencioso).
+- **Aviso de fallos por app**: deteccion de "no encontrada en winget" (0x8A150014) y codigos de
+  error por app; resumen final `X/N instaladas; pendientes: ...`. Antes el error solo se veia
+  en el log de winget.
+
+### Arreglado
+- **`gpu.power-mode`**: GUIDs de powercfg corregidos (los de v1.4.0 apuntaban al subgrupo
+  Video Priority {4d36e968} con un setting inexistente — no aplicaba nada). Ahora usa el
+  subgrupo PCI Express {4d36e967} + Link State Power Management {eeabc0fe} = Off (AC), undo a
+  Moderate Power. Descripcion actualizada.
+
+### Cambiado
+- Planes **spark-turbo** y **spark-max**: fijan ellos mismos PCI-E Link State = Off (0) en AC,
+  sin depender de `gpu.power-mode`.
+
 ## [1.4.0] - 2026-11-10
 
 ### Añadido

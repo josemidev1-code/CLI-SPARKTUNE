@@ -28,6 +28,7 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 $cmd = ''
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
+$appsInstall = ''; $appsScope = ''; $appsInteractive = $false
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
@@ -46,6 +47,9 @@ foreach ($a in $RawArgs) {
         '^(--id=.+)$' { $optId = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--category=.+|--cat=.+)$' { $optCat = ($a -split '=', 2)[1]; $matched = $true; continue }
         '^(--out=.+)$' { $Global:STReportOut = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--install=.+)$' { $appsInstall = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--scope=.+)$' { $appsScope = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--interactive)$' { $appsInteractive = $true; $matched = $true; continue }
         '^(--perfil|--profile)$' { Write-STWarn ("usa --perfil=valor"); $flagHelp = $true; $matched = $true; continue }
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
@@ -93,7 +97,11 @@ try {
         'undo'      { Invoke-STUndo -Id:$optId -Category:$optCat -Yes:$flagYes }
         'analyze'   { Invoke-STAnalyze }
         'history'   { Show-STHistory }
-        'apps'     { Invoke-STAppsMenu }
+        'apps'     {
+            if ($appsInstall) { Invoke-STAppsInstall -List $appsInstall -Scope $appsScope -Interactive $appsInteractive }
+            elseif ($appsScope -or $appsInteractive) { Write-STErr 'apps: --scope/--interactive requieren --install=lista'; exit 1 }
+            else { Invoke-STAppsMenu }
+        }
         'doctor'   { Invoke-STDoctor }
         'report'   { Show-STReport -Out $Global:STReportOut }
         'help'      { Show-STHelp }

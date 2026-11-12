@@ -146,23 +146,24 @@ function Get-GpuCatalogActions {
         id='gpu.power-mode'
         titulo='Maximo rendimiento de GPU en plan de energia (AC)'
         titulo_en='Maximum GPU performance in power plan (AC)'
-        descripcion='Sube la GPU al maximo dentro del plan activo cuando estas con corriente (powercfg: Prefer maximum performance). En bateria no cambia nada.'
-        descripcion_en='Boosts the GPU to maximum inside the active plan when plugged in (powercfg: Prefer maximum performance). On battery, untouched.'
+        descripcion='Quita el ahorro de energia PCI Express (Link State Power Management = Off) en el plan activo cuando estas con corriente: la GPU/disco NVMe responden sin latencia de reactivacion. En bateria no cambia nada.'
+        descripcion_en='Turns off PCI Express Link State Power Management in the active plan when plugged in: GPU/NVMe respond without wake-up latency. On battery, untouched.'
         categoria='gpu'; riesgo='bajo'; reversible=$true; admin=$true; reinicio=$false; needsRP=$false
         perfiles=@('creativo','gaming','portatil-rendimiento','personalizado')
         niveles=@{ medio=1; agresivo=1 }
         detect={ param($hw) ($hw.HasNvidia -or $hw.HasAmd) }
-        preview={ 'GPU power mode (AC) -> Prefer maximum performance' }
+        preview={ 'PCI-E Link State Power Management (AC) -> Off (maxima potencia)' }
         apply={
-            # PowerMgmtPolicy GUID del subgrupo PCI Express {4d36e968-...} con valor 0=MaxPerf
-            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e968-e325-11ce-bfc1-08002be10318 ee00939b-2e7b-4e7c-a4e6-2c8f7e1f0f4d 0 | Out-Null
+            # PCI Express Link State Power Management: subgrupo {4d36e967-...}, setting {eeabc0fe-...} = 0 (Off)
+            # (los GUIDs anteriores estaban mal: 4d36e968 es Video Priority, no PCI-E)
+            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9 0 | Out-Null
             powercfg.exe -setactive SCHEME_CURRENT | Out-Null
         }
         undo={
-            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e968-e325-11ce-bfc1-08002be10318 ee00939b-2e7b-4e7c-a4e6-2c8f7e1f0f4d 1 | Out-Null
+            powercfg.exe -setacvalueindex SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9 2 | Out-Null
             powercfg.exe -setactive SCHEME_CURRENT | Out-Null
         }
-        undoCmd='powercfg -setacvalueindex SCHEME_CURRENT 4d36e968-... ee00939b... 1'
+        undoCmd='powercfg -setacvalueindex SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9 2'
     }
     return $A
 }

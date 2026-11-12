@@ -2,6 +2,33 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-12 — Sesion 5 (v1.5.0: apps no interactivo + fix GUIDs GPU)
+
+### Hecho
+
+- **`sparktune apps --install=chrome,vlc`**: instalacion no interactiva (ids/nombres/winget-ids,
+  coma separada). Tokens desconocidos avisados sin abortar el resto; `--scope=user` y
+  `--interactive` (UI de winget visible). Flag `--scope`/`--interactive` sin `--install` = error.
+- **Fallos por app**: helper `Install-STWingetApp` mira `$LASTEXITCODE` + salida; distingue
+  "no encontrada" (0x8A150014), codigo de error concreto y fallo generico; resumen final
+  `X/N instaladas; pendientes: ...`. El menu interactivo usa el mismo helper (antes marcaba
+  como instalada cualquier app aunque winget fallase).
+- **`gpu.power-mode` arreglado**: los GUIDs de v1.4.0 eran incorrectos (subgrupo 4d36e968 =
+  Video Priority + setting inexistente: powercfg no aplicaba nada). Ahora PCI Express
+  {4d36e967} + Link State Power Management {eeabc0fe} = 0/Off en AC, undo a 2 (Moderate).
+  Descripcion/preview actualizados.
+- **Planes spark-turbo / spark-max**: fijan PCI-E Link State = 0 (AC) en su propia spec, sin
+  depender de la accion `gpu.power-mode`.
+- CHANGELOG, README (uso+flags+roadmap), ayuda ES/EN, version 1.5.0.
+
+### Pendiente / siguiente sesion
+
+- [ ] **Windows real** (acumulado v1.4-1.5): probar `apps --install` (incl. `--scope=user`),
+      `--interactive`, avisos de "no encontrada"; `gpu.power-mode` real + `powercfg /query`
+      para confirmar el setting; wizard con config; `net.wsl-nat`; `clean.thumbnails`; `--set-*`.
+- [ ] **apps**: actualizar solo seleccionadas; paquetes portables.
+- [ ] Taggear v1.5.0 + asset zip tras CI verde.
+
 ## 2026-11-10 — Sesion 4 (v1.4.0: config persistente + apps ampliadas)
 
 ### Hecho
@@ -21,11 +48,11 @@ Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el ma
 
 - [ ] **Windows real**: probar `--set-*` y wizard con config, `gpu.power-mode`,
       `net.wsl-nat` (con WSL real), `clean.thumbnails`, e `apps` con winget.
-- [ ] **apps**: ofrecer `--scope=user` y `--interactive` opcional; detectar "no encontrado"
-      de winget y avisar por app en vez de solo log.
-- [ ] **apps**: comando `sparktune apps --install=chrome,vlc` no interactivo (scripts).
-- [ ] GPU power mode por plan SparkTune (los planes podrian fijar PowerMgmtPolicy ellos mismos).
-- [ ] Taggear v1.4.0 + zip (hoy se ha probado en local; CI verde).
+- [x] **apps**: ofrecer `--scope=user` y `--interactive` opcional; detectar "no encontrado"
+      de winget y avisar por app en vez de solo log. (v1.5.0)
+- [x] **apps**: comando `sparktune apps --install=chrome,vlc` no interactivo (scripts). (v1.5.0)
+- [x] GPU power mode por plan SparkTune (los planes podrian fijar PowerMgmtPolicy ellos mismos). (v1.5.0)
+- [x] Taggear v1.4.0 + zip (tag v1.4.0 publicado, CI verde).
 
 ## 2026-11-10 — Sesion 3 (v1.3.0: perfiles creativo/desarrollo + asset zip)
 

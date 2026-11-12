@@ -451,6 +451,61 @@ function Invoke-STWinget([array]$WArgs) {
     Write-STLine ''
     Read-STKey | Out-Null
 }
+function Install-STWingetApp($App, [string]$Scope, [bool]$Interactive) {
+    # instala 1 app; devuelve 'ok' | 'notfound' | 'fail'.wingetCode | 'error'.mensaje
+    $w = @('install','-e','--id',$App.winget,'--accept-package-agreements','--accept-source-agreements')
+    if (-not $Interactive) { $w += '--disable-interactivity' }
+    if ($Scope -eq 'user') { $w += '--scope=user' }
+    try {
+        if ($Interactive) { & winget.exe @w; if ($LASTEXITCODE -eq 0) { return 'ok' }; return 'fail' }
+        $out = (& winget.exe @w 2>&1) -join "`n"
+        if ($LASTEXITCODE -eq 0) { return 'ok' }
+        if ($out -match '0x8A150014|no found|no se encontr|Package status Unknown') { return 'notfound' }
+        if ($out -match '(0x[0-9A-Fa-f]{8})') { return "fail.$($matches[1])" }
+        return 'fail'
+    } catch { return "error.$($_.Exception.Message)" }
+}
+function Get-STAppsByToken($Cat, [string]$Tok) {
+    # resuelve token por id de app, nombre (substring) o winget id
+    $t = "$Tok".Trim().ToLowerInvariant()
+    $hit = $null
+    foreach ($a in $Cat.apps) {
+        if ("$($a.id)".ToLowerInvariant() -eq $t) { $hit = $a; break }
+        if ("$($a.winget)".ToLowerInvariant() -eq $t) { $hit = $a; break }
+    }
+    if (-not $hit) { foreach ($a in $Cat.apps) { if ("$($a.name)".ToLowerInvariant() -match [regex]::Escape($t)) { $hit = $a; break } } }
+    return $hit
+}
+function Invoke-STAppsInstall {
+    param([string]$List, [string]$Scope, [bool]$Interactive)
+    if ($Scope -and $Scope -ne 'user') { Write-STErr "apps: --scope no valido: $Scope (soportado: user)"; exit 1 }
+    if (-not $Global:STDryRun -and -not (Test-STWinget)) { Write-STWarn 'winget no esta disponible.'; exit 1 }
+    $cat = Get-STAppsCatalog
+    if (-not $cat) { exit 1 }
+    $toks = @($List -split ',' | ForEach-Object { "$_".Trim() } | Where-Object { $_ })
+    if ($toks.Count -eq 0) { Write-STErr 'apps: --install vacio'; exit 1 }
+    $found = @(); $missing = @()
+    foreach ($t in $toks) { $a = Get-STAppsByToken $cat $t; if ($a) { $found += $a } else { $missing += $t } }
+    foreach ($m in $missing) { Write-STWarn "desconocida: $m (usa sparktune apps para ver el catalogo)" }
+    if ($found.Count -eq 0) { exit 1 }
+    $fail = @()
+    foreach ($a in $found) {
+        if ($Global:STDryRun) { Write-STInfo "[dry-run] winget install -e --id $($a.winget)$(if ($Scope -eq 'user') { ' --scope=user' } else { '' })$(if ($Interactive) { ' --interactive' } else { '' })"; continue }
+        Write-STInfo "-> $($a.name)"
+        $r = Install-STWingetApp -App $a -Scope $Scope -Interactive:$Interactive
+        if ($r -eq 'ok') { Write-STOk $a.name }
+        else {
+            $cod = ''; if ($r -match '^fail\.(.+)$') { $cod = " ($($matches[1]))" }
+            if ($r -eq 'notfound') { Write-STWarn "no encontrada en winget: $($a.name) [$($a.winget)]" }
+            else { Write-STErr "fallo: $($a.name)$cod" }
+            $fail += $a.name
+        }
+    }
+    Write-STLine ''
+    if ($Global:STDryRun) { Write-STInfo "dry-run: $($found.Count) apps"; return }
+    if ($fail.Count -gt 0) { Write-STWarn "$($found.Count - $fail.Count)/$($found.Count) instaladas; pendientes: $($fail -join ', ')" }
+    else { Write-STOk "$($found.Count) apps instaladas" }
+}
 function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
     $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId -and -not $_.hidden })
     if ($apps.Count -eq 0) { $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId }) }
@@ -492,8 +547,13 @@ function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
                 if (-not (Read-STConfirm -Question $(if ($Lang -eq 'en') { "Install $($todo.Count) apps via winget? (y/n)" } else { "Instalar $($todo.Count) apps via winget? (s/n)" }))) { continue }
                 foreach ($t in $todo) {
                     Write-STInfo "-> $($t.name)"
-                    try { & winget.exe install -e --id $t.winget --accept-package-agreements --accept-source-agreements --disable-interactivity } catch { Write-STErr "$($t.name): $($_.Exception.Message)" }
-                    try { $installed[$t.id] = $true } catch { }
+                    $r = Install-STWingetApp -App $t -Scope ''
+                    if ($r -eq 'ok') { Write-STOk $t.name; try { $installed[$t.id] = $true } catch { } }
+                    else {
+                        $cod = ''; if ($r -match '^fail\.(.+)$') { $cod = " ($($matches[1]))" }
+                        if ($r -eq 'notfound') { Write-STWarn "no encontrada en winget: $($t.name) [$($t.winget)]" }
+                        else { Write-STErr "fallo: $($t.name)$cod" }
+                    }
                 }
                 Write-STLine ''
                 Read-STKey | Out-Null

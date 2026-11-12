@@ -291,6 +291,7 @@ function Show-STHelp {
         '  analyze                Que ocupa espacio (no borra nada)',
         '  history                Historial de cambios del journal',
         '  apps                   Instalar apps populares via winget (menu interactivo)',
+        '  apps --install=a,b     Instalar sin interactuar (ids o nombres, comma separados)',
         '',
         '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
         '                         portatil-ahorro|portatil-rendimiento|',
@@ -305,11 +306,14 @@ function Show-STHelp {
         '  --set-nivel=medio      Nivel por defecto en el wizard (suave|medio|agresivo)',
         '  --no-banner            Sin animacion de arranque',
         '  --id=xxx               (undo) solo el cambio con ese id',
+        '  --scope=user           (apps) pedir winget --scope=user',
+        '  --interactive          (apps) mostrar UI de winget en vez de silencioso',
         '',
         'Ejemplos:',
         '  sparktune',
         '  sparktune --perfil=gaming --nivel=medio --dry-run',
         '  sparktune undo',
+        '  sparktune apps --install=chrome,vlc',
         '  sparktune power'
     )
     if ($L -eq 'en') {
@@ -324,6 +328,7 @@ function Show-STHelp {
             '  analyze                What takes space (deletes nothing)',
             '  history                Change history from the journal',
             '  apps                   Install popular apps via winget (interactive menu)',
+            '  apps --install=a,b     Non-interactive install (ids or names, comma separated)',
             '',
             '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
             '                         portatil-ahorro|portatil-rendimiento|',
@@ -338,11 +343,14 @@ function Show-STHelp {
             '  --set-nivel=medio      Default wizard level (suave|medio|agresivo)',
             '  --no-banner            Skip boot animation',
             '  --id=xxx               (undo) only the change with that id',
+            '  --scope=user           (apps) request winget --scope=user',
+            '  --interactive          (apps) show winget UI instead of silent',
             '',
             'Examples:',
             '  sparktune',
             '  sparktune --perfil=gaming --nivel=medio --dry-run',
             '  sparktune undo',
+            '  sparktune apps --install=chrome,vlc',
             '  sparktune power'
         )
     }
