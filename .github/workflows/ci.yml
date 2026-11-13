@@ -49,13 +49,14 @@ jobs:
           if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION.txt mal: $v" }
           & "$env:LOCALAPPDATA\SparkTune\sparktune.ps1" --help --no-banner | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "sparktune --help exit $LASTEXITCODE" }
-          $prevEAP = $ErrorActionPreference
-          $ErrorActionPreference = 'Continue'   # exit 0 + mensaje "ya instalado" -> Stop lo convertia en error (PS 5.1)
-          $out = @()
-          ./install.ps1 | Tee-Object -Variable out | Out-Null
-          $hay = ($out -join "`n") -match 'Ya instalado'
+          # reinstall misma version: exit 0 y PATH intacto (Stop convertia el exit-0 en error; Tee no capturaba Write-Host)
+          $pathBefore = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
+          ./install.ps1
+          if ($LASTEXITCODE -ne 0) { throw "reinstall misma version exit $LASTEXITCODE (esperado 0)" }
+          $pathAfter = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
+          if ($pathBefore -ne $pathAfter) { throw 'reinstall misma version modifico el PATH (deberia salir sin tocar nada)' }
           ./install.ps1 -Force | Out-Null
-          $ErrorActionPreference = $prevEAP
-          if (-not $hay) { throw 'reinstall misma version no detectado' }
           if (-not (Test-Path "$env:LOCALAPPDATA\SparkTune\sparktune.ps1")) { throw 'force reinstall fallo' }
+          $v2 = (Get-Content "$env:LOCALAPPDATA\SparkTune\VERSION.txt" -First 1).Trim()
+          if ($v2 -ne $v) { throw "force reinstall cambio la version: $v -> $v2" }
           Write-Host 'installer smoke OK'
