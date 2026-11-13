@@ -38,18 +38,18 @@ foreach ($a in $RawArgs) {
         '^(--dry-run|-n|--dryrun)$' { $flagDry = $true; $matched = $true; continue }
         '^(--no-banner|--nobanner)$' { $flagNoBanner = $true; $matched = $true; continue }
         '^(--help|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
-        '^(--lang=.+)$' { $optLang = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--set-lang=.+)$' { $setLang = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--set-banner=(0|1|on|off|true|false))$' { $setBanner = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--set-nivel=.+|--set-level=.+)$' { $setNivel = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--perfil=.+|--profile=.+)$' { $optPerfil = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--nivel=.+|--level=.+)$' { $optNivel = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--id=.+)$' { $optId = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--category=.+|--cat=.+)$' { $optCat = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--out=.+)$' { $Global:STReportOut = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--install=.+)$' { $appsInstall = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--update=.+)$' { $appsUpdate = ($a -split '=', 2)[1]; $matched = $true; continue }
-        '^(--scope=.+)$' { $appsScope = ($a -split '=', 2)[1]; $matched = $true; continue }
+        '^(--lang=.+)$' { $optLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--set-lang=.+)$' { $setLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--set-banner=(0|1|on|off|true|false))$' { $setBanner = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--set-nivel=.+|--set-level=.+)$' { $setNivel = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--perfil=.+|--profile=.+)$' { $optPerfil = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--nivel=.+|--level=.+)$' { $optNivel = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--id=.+)$' { $optId = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--category=.+|--cat=.+)$' { $optCat = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--out=.+)$' { $Global:STReportOut = ($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--install=.+)$' { $appsInstall = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--update=.+)$' { $appsUpdate = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--scope=.+)$' { $appsScope = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--interactive)$' { $appsInteractive = $true; $matched = $true; continue }
         '^(--perfil|--profile)$' { Write-STWarn ("usa --perfil=valor"); $flagHelp = $true; $matched = $true; continue }
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }

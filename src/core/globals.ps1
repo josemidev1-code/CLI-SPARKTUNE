@@ -6,7 +6,7 @@ if (-not $Global:STProjRoot -or -not (Test-Path (Join-Path $Global:STProjRoot 's
     $cand = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Global:STSrc))
     if (Test-Path (Join-Path $cand 'sparktune.ps1')) { $Global:STProjRoot = $cand }
 }
-$Global:STVersion = '1.6.0'
+$Global:STVersion = '1.7.0'
 $homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { [Environment]::GetFolderPath('UserProfile') }
 $Global:STHome = Join-Path $homeDir '.sparktune'
 if (-not (Test-Path $Global:STHome)) { New-Item -ItemType Directory -Path $Global:STHome -Force | Out-Null }

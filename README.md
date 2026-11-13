@@ -1,7 +1,7 @@
 # SparkTune
 
 Optimizador CLI de Windows. Sin instalar nada, sin registros raros, sin promesas raras:
-detecta tu hardware, te ensena **una ficha por cambio** (quÃ© hace, riesgo, reversible), y aplicas
+detecta tu hardware, te ensena **una ficha por cambio** (qué hace, riesgo, reversible), y aplicas
 solo lo que quieras. Cada cambio queda en un journal y se puede deshacer con un comando.
 
 by **@josemidev1**
@@ -13,6 +13,15 @@ by **@josemidev1**
 - No hace falta admin para el wizard completo, pero las acciones que lo necesitan se marcan y se omiten si no lo eres
 
 ## Instalacion
+
+Opcion rapida (PowerShell, sin admin — descarga la release y ejecuta install.ps1; repitiendola
+con una version nueva se actualiza solo):
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/josemidev1-code/CLI-SPARKTUNE/main/install.ps1 -o $env:TEMP\sparktune-install.ps1; & $env:TEMP\sparktune-install.ps1; rm $env:TEMP\sparktune-install.ps1"
+```
+
+O manual:
 
 ```powershell
 # descarga/zip y dentro de la carpeta:
@@ -118,7 +127,7 @@ Instalador de apps (menu `sparktune apps` → Herramientas del sistema):
 - **Riesgo alto = confirmacion tipando SI**, y aviso de punto de restauracion.
 - **Journal** en `~/.sparktune/journal.json` y **undo** de todo o de un cambio concreto.
 - **Planes de energia** propios (Ultra Ahorro -> Turbo GPU) creados con `powercfg` duplicando los de fabrica, y restaurables.
-- **Instalador de apps** (`sparktune apps`): 35 apps organizadas por categorias (navegadores, social, herramientas, gaming, diseno, programacion, docs, musica, seguridad) instaladas con **winget oficial**; nada de mirrors ni instaladores sueltos.
+- **Instalador de apps** (`sparktune apps`): 66 apps organizadas por categorias (navegadores, social, herramientas, gaming, diseno, programacion, docs, musica, seguridad, oficina, emulacion, streaming) instaladas con **winget oficial**; nada de mirrors ni instaladores sueltos. Incluye paquetes **portables** (marcados `(p)`) que no tocan el registro.
 - **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catalogo `sec.*` informa y endurece (PUA, SMBv1, logs), todo reversible.
 
 No hace "tweaks magicos" que rompen Windows: cada accion tiene undo documentado, y lo que no se
@@ -145,9 +154,9 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 - [x] Config persistente (`--set-lang/--set-banner/--set-nivel`) y 61 apps — v1.4.0
 - [x] `apps --install=...` no interactivo + `--scope=user`/`--interactive` + avisos de fallo por app — v1.5.0
 - [x] `apps --update=...` (solo seleccionadas) + paquetes portables winget — v1.6.0
-- [ ] Pruebas en Windows real de las acciones nuevas (ver SESSIONS.md)
+- [ ] Pruebas en Windows real de las acciones nuevas: `tests/verify-windows.ps1` (ver SESSIONS.md)
 - [ ] Capturas nuevas del menu apps actualizado
-- [ ] Paquete winget
+- [ ] Paquete winget del propio SparkTune (PR a microsoft/winget-pkgs) — ver nota en SESSIONS.md
 
 ## Registro de sesiones
 

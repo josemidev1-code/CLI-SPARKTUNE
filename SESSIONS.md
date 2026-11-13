@@ -2,6 +2,34 @@
 
 Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el mas reciente primero.
 
+## 2026-11-13 — Sesion 7 (Unreleased: one-line install, verify-windows, job installer)
+
+### Hecho
+
+- **Instalacion en una linea** documentada (README): `irm` a `$env:TEMP` + ejecutar + borrar
+  (variante resistente a AMSI de `| iex`). `install.ps1`: sin `$PSScriptRoot` (pipado) muestra
+  la instruccion correcta; `VERSION.txt` en la instalacion → update detectado (misma version =
+  no reinstala, `-Force` siempre); fallback `HOME` sin `USERPROFILE` (permitio smoke-test en
+  Linux: fresh install + same-version + force update OK).
+- **`tests/verify-windows.ps1`** (battery para Windows real): auto PASS/FAIL de help, status,
+  dry-run 10 perfiles, catalogo apps, config `--set-*` (con backup/restore), doctor, history,
+  report; `-Admin` verifica `gpu.power-mode` con `powercfg /query SCHEME_CURRENT 4d36e967…
+  eeabc0fe…` (AC=Off); `-Live` instala/actualiza 7-Zip; bloque MANUAL (wsl-nat, thumbnails,
+  hibernacion, sec.*). En Linux sin winget: 9 PASS 4 WARN 0 FAIL (los WARN son de winget/admin).
+- **CI job `installer`** (PS 5.1): install real → `--help` desde la ruta instalada → reinstall
+  misma version → `-Force`. Test BOM ampliado a `tests/*.ps1`.
+- Fix mojibake README (`quÃ©`→`qué`). Nota winget-pkgs propio: el manifest pide installer con
+  URL+SHA256 — un zip de release suelto no vale; habria que empaquetar exe/MSIX (Burn). Queda
+  como decision pendiente.
+
+### Pendiente / siguiente sesion
+
+- [ ] Ejecutar `tests/verify-windows.ps1` (y `-Admin`, `-Live`) en Windows real y pegar el log;
+      corregir lo que salga FAIL/WARN.
+- [ ] Capturas nuevas del menu apps (con `(p)`) para el README.
+- [ ] Decidir paquete winget propio: empaquetar zip→exe (Burn/MSIX) o cerrar el item.
+- [ ] Taggear v1.7.0 cuando todo esto este en verde.
+
 ## 2026-11-12 — Sesion 6 (v1.6.0: apps --update + portables)
 
 ### Hecho

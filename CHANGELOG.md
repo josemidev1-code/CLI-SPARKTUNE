@@ -2,6 +2,23 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.7.0] - 2026-11-13
+
+### Añadido
+- **Instalacion en una linea** (README/install.ps1): `irm` del script + guardado a temp + ejecucion
+  (variante segura de `| iex` frente a AMSI). `install.ps1` sin `$PSScriptRoot` (pipado) da la
+  instruccion correcta en vez de petar; deteccion de **update** por `VERSION.txt`
+  (misma version = no reinstala; `-Force` siempre); `USERPROFILE` con fallback a `HOME`.
+- **`tests/verify-windows.ps1`**: battery de verificacion en Windows real (help/status/dry-runs/
+  apps/config/doctor/history/report automaticos + checks `-Admin` de `gpu.power-mode` via
+  `powercfg /query` + bloque MANUAL para wsl-nat/thumbnails/hibernacion/sec.*). `-Live` ejecuta
+  install/update real de 7-Zip. Exit code para CI/scripts.
+- **CI**: job `installer` (PS 5.1): install → `sparktune --help` desde `%LOCALAPPDATA%` →
+  reinstall misma version detectado → `-Force`. El test de BOM ahora cubre `tests/*.ps1`.
+
+### Arreglado
+- README: caracter corrupto (`quÃ©`) revertido a `qué`.
+
 ## [1.6.0] - 2026-11-12
 
 ### Añadido

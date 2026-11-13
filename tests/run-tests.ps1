@@ -26,9 +26,10 @@ function Check([string]$Name, [scriptblock]$Body) {
 
 Write-Host "SparkTune contract tests" -ForegroundColor Cyan
 $files = @(Get-ChildItem -Recurse -Path $root -Include *.ps1 -File | Where-Object { $_.FullName -notlike '*\tests\*' -or $_.Name -ne 'run-tests.ps1' })
+$bomFiles = @($files + @((Join-Path $root 'tests') | ForEach-Object { Get-ChildItem -Path $_ -Filter *.ps1 -File }))
 
 Check 'ps1 files carry UTF-8 BOM' {
-    foreach ($f in $files) {
+    foreach ($f in $bomFiles) {
         $b = [System.IO.File]::ReadAllBytes($f.FullName)
         if ($b.Length -lt 3 -or $b[0] -ne 0xEF -or $b[1] -ne 0xBB -or $b[2] -ne 0xBF) { throw "$($f.Name) sin BOM" }
     }

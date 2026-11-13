@@ -34,3 +34,23 @@ jobs:
             }
           }
           Write-Host 'dry-runs OK'
+
+  installer:
+    name: install.ps1 smoke (PS 5.1, user scope)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install, run, reinstall same version (PS 5.1)
+        shell: powershell
+        run: |
+          ./install.ps1
+          if (-not (Test-Path "$env:LOCALAPPDATA\SparkTune\sparktune.ps1")) { throw 'falta sparktune.ps1 instalado' }
+          $v = (Get-Content "$env:LOCALAPPDATA\SparkTune\VERSION.txt" -First 1).Trim()
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION.txt mal: $v" }
+          & "$env:LOCALAPPDATA\SparkTune\sparktune.ps1" --help --no-banner | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "sparktune --help exit $LASTEXITCODE" }
+          ./install.ps1 | Tee-Object -Variable out | Out-Null
+          if (($out -join "`n") -notmatch 'Ya instalado') { throw 'reinstall misma version no detectado' }
+          ./install.ps1 -Force | Out-Null
+          if (-not (Test-Path "$env:LOCALAPPDATA\SparkTune\sparktune.ps1")) { throw 'force reinstall fallo' }
+          Write-Host 'installer smoke OK'
