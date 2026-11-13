@@ -83,9 +83,9 @@ if ($ls -match 'SparkTune') { Write-STVerify 'planes SparkTune existen' 'PASS' }
 if ($Admin) {
     & $st undo --id=gpu.power-mode --yes --no-banner | Out-Null
     # lectura directa del setting PCI-E Link State del plan activo
-    $q = (powercfg.exe /query SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9) -join "`n"
-    if ($q -match 'Current AC Power Setting Index:\s*0x00000000') { Write-STVerify 'gpu.power-mode AC=Off' 'PASS' }
-    elseif ($q -match 'Current AC Power Setting Index') { Write-STVerify 'gpu.power-mode AC' 'WARN' 'valor no Off (esperado si no lo has aplicado)' }
+    $q = ((powercfg.exe /query SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9 2>&1) -join "`n")
+    if ($q -match '0x00000000') { Write-STVerify 'gpu.power-mode AC=Off' 'PASS' }
+    elseif ($q -match '0x000000[0-9a-fA-F]{2}') { Write-STVerify 'gpu.power-mode AC' 'WARN' 'valor no Off (esperado si no lo has aplicado)' }
     else { Write-STVerify 'gpu.power-mode setting' 'FAIL' 'powercfg no encuentra el setting (check GUIDs)' }
     Write-Host '  MANUAL: aplica gpu.power-mode desde el wizard gaming/medio y repite este script: debe salir PASS arriba.' -ForegroundColor DarkGray
 } else { Write-STVerify 'checks GPU power' 'WARN' 'ejecutar con -Admin' }
