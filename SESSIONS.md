@@ -28,7 +28,10 @@ Cada sesion registra **que se ha hecho** y **que queda pendiente**. Orden: el ma
       corregir lo que salga FAIL/WARN.
 - [ ] Capturas nuevas del menu apps (con `(p)`) para el README.
 - [ ] Decidir paquete winget propio: empaquetar zip→exe (Burn/MSIX) o cerrar el item.
-- [ ] Taggear v1.7.0 cuando todo esto este en verde.
+- [x] CI del job installer en verde (2 intentos fallidos por Stop+Write-Host y Tee; solucion:
+      assert por exit code + PATH invariante). Tag v1.7.0 + zip publicados.
+
+### Pendiente (heredado)
 
 ## 2026-11-12 — Sesion 6 (v1.6.0: apps --update + portables)
 
