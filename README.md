@@ -14,18 +14,27 @@ by **@josemidev1**
 
 ## Instalacion
 
-Opcion rapida (PowerShell, sin admin — descarga la release y ejecuta install.ps1; repitiendola
-con una version nueva se actualiza solo):
+**Instalación rápida desde PowerShell** (sin administrador). Descarga el instalador
+y deja que instale la última versión publicada. Para actualizar, repite el bloque.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/josemidev1-code/CLI-SPARKTUNE/main/install.ps1 -o $env:TEMP\sparktune-install.ps1; & $env:TEMP\sparktune-install.ps1; rm $env:TEMP\sparktune-install.ps1"
+$dir = Join-Path $env:TEMP ('sparktune-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $dir -ErrorAction Stop | Out-Null
+try {
+    $script = Join-Path $dir 'install.ps1'
+    Invoke-WebRequest -UseBasicParsing -ErrorAction Stop -Uri 'https://raw.githubusercontent.com/josemidev1-code/CLI-SPARKTUNE/main/install.ps1' -OutFile $script
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script
+    if ($LASTEXITCODE -ne 0) { throw "La instalación falló (código $LASTEXITCODE)." }
+} finally {
+    Remove-Item -LiteralPath $dir -Recurse -Force
+}
 ```
 
-O manual:
+**Instalación manual.** Extrae el ZIP de la [última versión](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/latest),
+abre PowerShell en la carpeta extraída y ejecuta:
 
 ```powershell
-# descarga/zip y dentro de la carpeta:
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 Eso copia a `%LOCALAPPDATA%\SparkTune` y anade la carpeta al PATH de usuario (sin admin).
@@ -35,7 +44,7 @@ Abre una **nueva** ventana de CMD o PowerShell y escribe:
 sparktune
 ```
 
-Desinstalar: `powershell -File "%LOCALAPPDATA%\SparkTune\uninstall.ps1"`
+Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\SparkTune\uninstall.ps1"`.
 
 ## Uso
 

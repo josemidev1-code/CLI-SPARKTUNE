@@ -2,6 +2,12 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.7.1] - 2026-11-17
+
+- La instalación rápida descarga el ZIP de la versión publicada y comprueba sus archivos antes de instalar.
+- El instalador prepara la copia nueva antes de sustituir la anterior y repara instalaciones incompletas de la misma versión.
+- CI verifica la instalación desde el script suelto y desde el repositorio, junto con la actualización y la reinstalación.
+
 ## [1.7.0] - 2026-11-13
 
 ### Añadido
