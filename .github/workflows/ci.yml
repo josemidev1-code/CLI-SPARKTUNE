@@ -98,3 +98,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'la instalacion ya no funciona' }
           if ((Get-Content -LiteralPath $versionFile) -ne $expected) { throw 'cambio inesperado de version' }
           if ((Get-FileHash -LiteralPath $journal).Hash -ne $journalHash) { throw 'cambio inesperado del journal' }
+
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$dst\uninstall.ps1"
+          if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $dst)) { throw 'fallo la desinstalacion' }
+          $userPath = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
+          if (($userPath -split ';') -contains $dst) { throw 'la desinstalacion dejo SparkTune en PATH' }
+          if ((Get-FileHash -LiteralPath $journal).Hash -ne $journalHash) { throw 'la desinstalacion cambio el journal' }
