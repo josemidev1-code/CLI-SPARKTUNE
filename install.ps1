@@ -1,74 +1,39 @@
 ﻿<#
 .SYNOPSIS
   Instala SparkTune en %LOCALAPPDATA%\SparkTune y lo añade al PATH de usuario.
-  No requiere admin.
 .DESCRIPTION
-  Instalar desde GitHub (recomendado, sin admin):
-
-    powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/josemidev1-code/CLI-SPARKTUNE/main/install.ps1 -o $env:TEMP\sparktune-install.ps1; & $env:TEMP\sparktune-install.ps1; rm $env:TEMP\sparktune-install.ps1"
-
-  Tambien vale "iwr ... | iex", pero si algun dia el script se ejecuta dentro de una
-  sesion restringida (AMSI/EDR), la variante -o & ejecutar es mas fiable.
-  Modo offline: ejecuta install.ps1 desde la carpeta del zip de la release.
+  Desde el ZIP o el repositorio, instala la copia local. Si ejecutas solo
+  install.ps1, descarga e instala el ZIP de la última versión publicada.
+  Consulta el README para el comando de instalación rápida.
 #>
 [CmdletBinding()]
 param([switch]$Force)
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 if (-not $PSScriptRoot) {
-    Write-Error "SparkTune install: descarga primero el zip de la release. Una linea (PowerShell):"
-    Write-Host '  powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/josemidev1-code/CLI-SPARKTUNE/main/install.ps1 -o $env:TEMP\sparktune-install.ps1; & $env:TEMP\sparktune-install.ps1; rm $env:TEMP\sparktune-install.ps1"' -ForegroundColor Cyan
-    exit 1
-}
-$src = $PSScriptRoot
-$dst = Join-Path $env:LOCALAPPDATA 'SparkTune'
-
-Write-Host "SparkTune install" -ForegroundColor Cyan
-# version actual para deteccion de update
-$newVer = try { (Select-String -Path (Join-Path $src 'src\core\globals.ps1') -Pattern "STVersion = '([\d.]+)'").Matches[0].Groups[1].Value } catch { '' }
-if ((Test-Path $dst) -and (-not $Force)) {
-    $verFile = Join-Path $dst 'VERSION.txt'
-    $oldVer = if (Test-Path $verFile) { (Get-Content $verFile -First 1).Trim() } else { '' }
-    if ($oldVer -and $oldVer -eq $newVer) {
-        Write-Host "Ya instalado v$oldVer en $dst (usa -Force para reinstalar)" -ForegroundColor Yellow
-        exit 0
-    }
-    if ($oldVer) { Write-Host "Actualizando v$oldVer -> v$newVer" -ForegroundColor Cyan }
-}
-if (Test-Path $dst) {
-    try { Remove-Item $dst -Recurse -Force } catch {
-        Write-Host "No se pudo borrar la instalacion previa (archivos abiertos?). Cierra SparkTune y reintenta." -ForegroundColor Red
-        exit 1
-    }
-}
-New-Item -ItemType Directory -Path $dst -Force | Out-Null
-foreach ($item in @('src', 'sparktune.ps1', 'sparktune.cmd', 'uninstall.ps1', 'LICENSE', 'README.md')) {
-    $p = Join-Path $src $item
-    if (Test-Path $p) {
-        if ($item -eq 'src') {
-            Copy-Item $p -Destination $dst -Recurse -Force
-            $testsDst = Join-Path $dst 'tests'
-            if (Test-Path $testsDst) { Remove-Item $testsDst -Recurse -Force }
-        } else {
-            Copy-Item $p -Destination $dst -Force
-        }
-    }
+    throw 'Guarda install.ps1 como archivo y ejecútalo con powershell.exe -File.'
 }
 
-# journal portable: ~/.sparktune/journal.json (los undoCmd usan rutas %USERPROFILE% y son portables)
-if ($newVer) { [System.IO.File]::WriteAllText((Join-Path $dst 'VERSION.txt'), $newVer, (New-Object System.Text.UTF8Encoding($false))) }
-$jh = Join-Path $(if ($env:USERPROFILE) { $env:USERPROFILE } else { $env:HOME }) '.sparktune'
-if (-not (Test-Path $jh)) { New-Item -ItemType Directory -Path $jh -Force | Out-Null }
-if (-not (Test-Path (Join-Path $jh 'journal.json'))) {
-    [System.IO.File]::WriteAllText((Join-Path $jh 'journal.json'), '{"version":1,"entries":[]}', (New-Object System.Text.UTF8Encoding($false)))
+function Test-InstallFiles([string]$Directory) {
+    foreach ($file in $requiredFiles) {
+        if (-not (Test-Path -LiteralPath (Join-Path $Directory $file) -PathType Leaf)) { return $false }
+    }
+    return (Test-Path -LiteralPath (Join-Path $Directory 'src\catalog') -PathType Container)
 }
 
-# PATH de usuario via registro (sin admin)
-$userPath = (Get-ItemProperty -Path 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
-if ($null -eq $userPath) { $userPath = '' }
-if (($userPath -split ';') -notcontains $dst) {
-    $newPath = if ($userPath) { "$dst;$userPath" } else { $dst }
-    Set-ItemProperty -Path 'HKCU:\Environment' -Name Path -Value $newPath
+function Add-InstallPath {
+    $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
+    try {
+        $userPath = $key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+        if (($userPath -split ';') -contains $dst) { return }
+        $newPath = if ($userPath) { "$dst;$userPath" } else { $dst }
+        # Conserva el tipo del valor existente, incluido REG_EXPAND_SZ.
+        $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
+        if ($key.GetValueNames() -contains 'Path') { $kind = $key.GetValueKind('Path') }
+        $key.SetValue('Path', $newPath, $kind)
+    } finally { $key.Dispose() }
+
     # notificar a las ventanas abiertas
     try {
         $sig = '[System.Runtime.InteropServices.DllImport("user32.dll",SetLastError=true,CharSet=CharSet.Auto)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);'
@@ -77,13 +42,125 @@ if (($userPath -split ';') -notcontains $dst) {
         # HWND_BROADCAST=0xFFFF, WM_SETTINGCHANGE=0x1A, lParam="Environment"
         [ST.Win32]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$r) | Out-Null
     } catch { }
-    Write-Host "Anadido al PATH de usuario: $dst" -ForegroundColor Green
-} else {
-    Write-Host "Ya estaba en el PATH." -ForegroundColor Green
+    Write-Host "Añadido al PATH de usuario: $dst" -ForegroundColor Green
 }
 
-Write-Host ""
-Write-Host "Instalado en: $dst" -ForegroundColor Green
-Write-Host "Abre una NUEVA ventana de CMD o PowerShell y escribe: sparktune" -ForegroundColor Cyan
-Write-Host "Sin cerrar/reabrir tambien vale:  & '$dst\sparktune.ps1'" -ForegroundColor DarkGray
-Write-Host "Desinstalar:  powershell -File '$dst\uninstall.ps1'" -ForegroundColor DarkGray
+$requiredFiles = @(
+    'sparktune.cmd', 'sparktune.ps1', 'uninstall.ps1',
+    'src\core\globals.ps1', 'src\core\ui.ps1', 'src\core\banner.ps1',
+    'src\core\detect.ps1', 'src\core\journal.ps1', 'src\core\engine.ps1',
+    'src\core\catalog.ps1', 'src\data\profiles.json', 'src\data\apps.json'
+)
+$dst = Join-Path $env:LOCALAPPDATA 'SparkTune'
+$work = Join-Path $env:LOCALAPPDATA ('SparkTune-install-' + [guid]::NewGuid().ToString('N'))
+$backup = Join-Path $work 'previous'
+$versionFile = 'src\core\globals.ps1'
+$src = $PSScriptRoot
+$releaseVersion = $null
+$sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$lock = [System.Threading.Mutex]::new($false, "Global\SparkTuneInstall-$sid")
+$locked = $false
+$keepBackup = $false
+
+try {
+    try { $locked = $lock.WaitOne(0) }
+    catch [System.Threading.AbandonedMutexException] { $locked = $true }
+    if (-not $locked) { throw 'Ya hay otra instalación de SparkTune en curso.' }
+
+    if (-not ((Test-Path -LiteralPath (Join-Path $src 'src')) -or
+              (Test-Path -LiteralPath (Join-Path $src 'sparktune.ps1')) -or
+              (Test-Path -LiteralPath (Join-Path $src 'sparktune.cmd')))) {
+        New-Item -ItemType Directory -Path $work | Out-Null
+        $archive = Join-Path $work 'release.zip'
+        $extract = Join-Path $work 'release'
+        $repo = 'josemidev1-code/CLI-SPARKTUNE'
+        $tls = [Net.ServicePointManager]::SecurityProtocol
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = $tls -bor [Net.SecurityProtocolType]::Tls12
+            $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -UseBasicParsing -TimeoutSec 60
+            if ($release.tag_name -notmatch '^v(\d+\.\d+\.\d+)$') {
+                throw "Etiqueta de versión no válida: $($release.tag_name)"
+            }
+            $releaseVersion = $Matches[1]
+            $assetName = "SparkTune-$releaseVersion.zip"
+            $asset = $release.assets | Where-Object { $_.name -eq $assetName }
+            if (-not $asset) { throw "La versión $releaseVersion no incluye $assetName." }
+            Write-Host "Descargando SparkTune v$releaseVersion..." -ForegroundColor Cyan
+            $url = "https://github.com/$repo/releases/download/$($release.tag_name)/$assetName"
+            Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 120 -OutFile $archive
+        } finally { [Net.ServicePointManager]::SecurityProtocol = $tls }
+
+        if ($asset.digest -match '^sha256:([a-f0-9]{64})$') {
+            if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $Matches[1]) {
+                throw 'La suma SHA-256 del ZIP de SparkTune no coincide con la de GitHub.'
+            }
+        }
+        Expand-Archive -LiteralPath $archive -DestinationPath $extract
+        $src = if (Test-InstallFiles $extract) { $extract } else { Join-Path $extract "SparkTune-$releaseVersion" }
+    }
+
+    if (-not (Test-InstallFiles $src)) { throw "La copia de SparkTune está incompleta: $src" }
+    $version = Select-String -LiteralPath (Join-Path $src $versionFile) -Pattern "STVersion = '(\d+\.\d+\.\d+)'"
+    if (-not $version) { throw 'No se pudo identificar la versión de SparkTune.' }
+    $newVer = $version.Matches[0].Groups[1].Value
+    if ($releaseVersion -and $newVer -ne $releaseVersion) {
+        throw "El ZIP contiene v$newVer y la versión publicada es v$releaseVersion."
+    }
+
+    $verFile = Join-Path $dst 'VERSION.txt'
+    $oldVer = if (Test-Path -LiteralPath $verFile) { ([string](Get-Content -LiteralPath $verFile -First 1)).Trim() }
+    if (-not $Force -and $oldVer -eq $newVer -and (Test-InstallFiles $dst)) {
+        Add-InstallPath
+        Write-Host "Ya instalado v$oldVer en $dst (usa -Force para reinstalar)." -ForegroundColor Yellow
+        exit 0
+    }
+
+    $stage = Join-Path $work 'new'
+    New-Item -ItemType Directory -Path $stage -Force | Out-Null
+    foreach ($item in @('src', 'sparktune.ps1', 'sparktune.cmd', 'uninstall.ps1', 'LICENSE', 'README.md')) {
+        $path = Join-Path $src $item
+        if (Test-Path -LiteralPath $path) { Copy-Item -LiteralPath $path -Destination $stage -Recurse }
+    }
+    if (-not (Test-InstallFiles $stage)) { throw 'No se copiaron todos los archivos de SparkTune.' }
+    [System.IO.File]::WriteAllText((Join-Path $stage 'VERSION.txt'), $newVer)
+
+    # Reutiliza el journal de usuario durante la instalación y las actualizaciones.
+    $jh = Join-Path $env:USERPROFILE '.sparktune'
+    New-Item -ItemType Directory -Path $jh -Force | Out-Null
+    $journal = Join-Path $jh 'journal.json'
+    if (-not (Test-Path -LiteralPath $journal)) {
+        [System.IO.File]::WriteAllText($journal, '{"version":1,"entries":[]}')
+    }
+
+    if (Test-Path -LiteralPath $dst) { [System.IO.Directory]::Move($dst, $backup) }
+    $installed = $false
+    try {
+        [System.IO.Directory]::Move($stage, $dst)
+        $installed = $true
+        Add-InstallPath
+    } catch {
+        try {
+            if ($installed) { [System.IO.Directory]::Move($dst, $stage) }
+            if (Test-Path -LiteralPath $backup) { [System.IO.Directory]::Move($backup, $dst) }
+        } catch {
+            $keepBackup = $true
+            throw "No se pudo restaurar la instalación anterior. Archivos de recuperación en $work. $_"
+        }
+        throw
+    }
+
+    Write-Host "Instalado SparkTune v$newVer en $dst." -ForegroundColor Green
+    Write-Host 'Abre una nueva ventana de CMD o PowerShell y ejecuta sparktune.' -ForegroundColor Cyan
+    Write-Host "En esta ventana: & '$dst\sparktune.cmd'" -ForegroundColor DarkGray
+} finally {
+    try {
+        if (-not $keepBackup -and (Test-Path -LiteralPath $work)) {
+            Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    } finally {
+        if ($locked) { $lock.ReleaseMutex() }
+        $lock.Dispose()
+    }
+}
+
+exit 0
