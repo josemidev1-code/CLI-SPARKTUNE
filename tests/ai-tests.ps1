@@ -51,6 +51,7 @@ try {
 
     $goal = 'Batería = más duración'
     $preview = & $entry ai "--objetivo=$goal" --dry-run
+    Assert-AI ($LASTEXITCODE -eq 0) 'El modo simulación retornó un código de error.'
     $context = ConvertFrom-Json -InputObject ($preview -join "`n")
     Assert-AI ($mock.Calls -eq 0) 'El modo simulación llamó a la API.'
     Assert-AI ($context.goal -ceq $goal) 'Se perdió parte del objetivo.'
@@ -65,7 +66,7 @@ try {
 
     $env:OPENAI_API_KEY = 'mock-secret'
     $answer = (& $entry ai "--goal=$goal" --perfil=gaming --nivel=suave --lang=en 6>&1) -join "`n"
-    Assert-AI ($null -ne $mock.LastRequest) "La solicitud simulada no se registró. Salida: $answer"
+    Assert-AI ($LASTEXITCODE -eq 0 -and $null -ne $mock.LastRequest) "La solicitud simulada no se registró. Salida: $answer"
     $requestContext = ConvertFrom-Json -InputObject $mock.LastRequest.input
     Assert-AI ($mock.Calls -eq 1 -and $mock.LastHttp.Uri -eq 'https://api.openai.com/v1/responses' -and $mock.LastHttp.Method -eq 'Post') 'Solicitud enviada al destino incorrecto.'
     Assert-AI ($mock.LastHttp.Authorization -ceq 'Bearer mock-secret' -and $mock.LastRequest.model -eq 'mock-model') 'Clave o modelo incorrectos.'
@@ -92,3 +93,4 @@ try {
     $env:SPARKTUNE_AI_MODEL = $oldModel
     if (Test-Path -LiteralPath $testHome) { Remove-Item -LiteralPath $testHome -Recurse -Force }
 }
+exit 0
