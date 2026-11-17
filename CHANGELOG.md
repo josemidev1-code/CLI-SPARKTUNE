@@ -2,6 +2,12 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.8.0] - 2026-11-17
+
+- `sparktune ai` consulta a OpenAI para recomendar ajustes reversibles del catálogo según el equipo y el objetivo.
+- `sparktune ai --dry-run` muestra el contexto sin enviarlo. La clave se lee de `OPENAI_API_KEY` y el modelo se puede elegir con `SPARKTUNE_AI_MODEL`.
+- CI comprueba el comando, la solicitud y el manejo de respuestas con un servicio simulado en Windows PowerShell 5.1.
+
 ## [1.7.1] - 2026-11-17
 
 - La instalación rápida descarga el ZIP de la versión publicada y comprueba sus archivos antes de instalar.

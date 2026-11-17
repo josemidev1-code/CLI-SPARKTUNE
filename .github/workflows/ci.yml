@@ -14,6 +14,9 @@ jobs:
       - name: Run contract tests (Windows PowerShell 5.1)
         shell: powershell
         run: ./tests/run-tests.ps1
+      - name: Run AI advisor tests (mocked API)
+        shell: powershell
+        run: ./tests/ai-tests.ps1
 
   dryrun:
     name: Dry-run wizard (todos los perfiles x niveles)
