@@ -40,23 +40,61 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install, run, reinstall same version (PS 5.1)
+      - name: Install from standalone script (PS 5.1)
         shell: powershell
         run: |
+          $temp = Join-Path $env:RUNNER_TEMP 'SparkTune standalone'
+          New-Item -ItemType Directory -Path $temp | Out-Null
+          $script = Join-Path $temp 'install.ps1'
+          Copy-Item -LiteralPath ./install.ps1 -Destination $script
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script
+          if ($LASTEXITCODE -ne 0) { throw "standalone install exit $LASTEXITCODE" }
+
+          $dst = Join-Path $env:LOCALAPPDATA 'SparkTune'
+          $userPath = (Get-ItemProperty 'HKCU:\Environment' -Name Path).Path
+          if (($userPath -split ';') -notcontains $dst) { throw 'falta SparkTune en PATH de usuario' }
+          & "$dst\sparktune.cmd" --help --no-banner
+          if ($LASTEXITCODE -ne 0) { throw "sparktune.cmd --help exit $LASTEXITCODE" }
+
+      - name: Update, repair, reinstall and reject incomplete source (PS 5.1)
+        shell: powershell
+        run: |
+          $dst = Join-Path $env:LOCALAPPDATA 'SparkTune'
+          $versionFile = Join-Path $dst 'VERSION.txt'
+          $expected = (Select-String -Path ./src/core/globals.ps1 -Pattern "STVersion = '(\d+\.\d+\.\d+)'").Matches[0].Groups[1].Value
+          $journal = Join-Path $env:USERPROFILE '.sparktune\journal.json'
+          Add-Content -LiteralPath $journal -Value ''
+          $journalHash = (Get-FileHash -LiteralPath $journal).Hash
+          $marker = Join-Path $dst 'test-marker.txt'
+          Set-Content -LiteralPath $versionFile -Value '0.0.0' -Encoding Ascii
+          New-Item -ItemType File -Path $marker | Out-Null
           ./install.ps1
-          if (-not (Test-Path "$env:LOCALAPPDATA\SparkTune\sparktune.ps1")) { throw 'falta sparktune.ps1 instalado' }
-          $v = (Get-Content "$env:LOCALAPPDATA\SparkTune\VERSION.txt" -First 1).Trim()
-          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION.txt mal: $v" }
-          & "$env:LOCALAPPDATA\SparkTune\sparktune.ps1" --help --no-banner | Out-Null
-          if ($LASTEXITCODE -ne 0) { throw "sparktune --help exit $LASTEXITCODE" }
-          # reinstall misma version: exit 0 y PATH intacto (Stop convertia el exit-0 en error; Tee no capturaba Write-Host)
-          $pathBefore = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
+          if ($LASTEXITCODE -ne 0 -or (Get-Content -LiteralPath $versionFile) -ne $expected -or (Test-Path -LiteralPath $marker)) {
+            throw 'no se sustituyo la version anterior'
+          }
+
+          New-Item -ItemType File -Path $marker | Out-Null
+          $pathBefore = (Get-ItemProperty 'HKCU:\Environment' -Name Path).Path
           ./install.ps1
-          if ($LASTEXITCODE -ne 0) { throw "reinstall misma version exit $LASTEXITCODE (esperado 0)" }
-          $pathAfter = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
-          if ($pathBefore -ne $pathAfter) { throw 'reinstall misma version modifico el PATH (deberia salir sin tocar nada)' }
-          ./install.ps1 -Force | Out-Null
-          if (-not (Test-Path "$env:LOCALAPPDATA\SparkTune\sparktune.ps1")) { throw 'force reinstall fallo' }
-          $v2 = (Get-Content "$env:LOCALAPPDATA\SparkTune\VERSION.txt" -First 1).Trim()
-          if ($v2 -ne $v) { throw "force reinstall cambio la version: $v -> $v2" }
-          Write-Host 'installer smoke OK'
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $marker)) { throw 'se reinstalo la misma version' }
+          if ((Get-ItemProperty 'HKCU:\Environment' -Name Path).Path -ne $pathBefore) { throw 'cambio inesperado del PATH' }
+
+          Remove-Item -LiteralPath "$dst\sparktune.cmd"
+          ./install.ps1
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath "$dst\sparktune.cmd")) { throw 'no se reparo el lanzador' }
+
+          New-Item -ItemType File -Path $marker | Out-Null
+          ./install.ps1 -Force
+          if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $marker)) { throw 'fallo la reinstalacion forzada' }
+
+          $partial = Join-Path $env:RUNNER_TEMP 'SparkTune incomplete'
+          New-Item -ItemType Directory -Path $partial | Out-Null
+          Copy-Item -Path ./install.ps1, ./sparktune.ps1 -Destination $partial
+          $script = Join-Path $partial 'install.ps1'
+          $process = Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $script + '"') -NoNewWindow -Wait -PassThru
+          if ($process.ExitCode -eq 0) { throw 'se acepto una copia incompleta' }
+
+          & "$dst\sparktune.cmd" --help --no-banner
+          if ($LASTEXITCODE -ne 0) { throw 'la instalacion ya no funciona' }
+          if ((Get-Content -LiteralPath $versionFile) -ne $expected) { throw 'cambio inesperado de version' }
+          if ((Get-FileHash -LiteralPath $journal).Hash -ne $journalHash) { throw 'cambio inesperado del journal' }
