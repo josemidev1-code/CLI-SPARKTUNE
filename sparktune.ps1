@@ -110,7 +110,10 @@ try {
         }
         'doctor'   { Invoke-STDoctor }
         'report'   { Show-STReport -Out $Global:STReportOut }
-        'ai'        { Invoke-STAIAdvisor -Goal $aiGoal -Perfil $optPerfil -Nivel $optNivel -DryRun:$flagDry }
+        'ai'        {
+            Invoke-STAIAdvisor -Goal $aiGoal -Perfil $optPerfil -Nivel $optNivel -DryRun:$flagDry
+            exit 0
+        }
         'help'      { Show-STHelp }
         default     { Write-STErr ("comando desconocido: $cmd"); Show-STHelp; exit 1 }
     }
