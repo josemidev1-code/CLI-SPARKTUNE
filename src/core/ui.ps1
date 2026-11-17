@@ -110,6 +110,15 @@ $script:ST_ES = @{
     'card.why'       = 'Por que / aviso'
     'card.cur'       = 'Actual -> Propuesto'
     'card.risk'      = 'Riesgo'
+    'ai.goalLength'  = 'El objetivo debe tener 500 caracteres o menos.'
+    'ai.invalidLevel'= 'Usa --nivel=suave|medio|agresivo junto a un perfil concreto.'
+    'ai.missingKey'  = 'Configura OPENAI_API_KEY en esta terminal o usa sparktune ai --dry-run para ver el contexto.'
+    'ai.noCandidates'= 'No hay ajustes reversibles compatibles. Revisa el perfil o vuelve a probar sin ese filtro.'
+    'ai.httpError'   = 'OpenAI devolvió HTTP {0}. Comprueba la clave, el acceso al modelo y la cuota de la API.'
+    'ai.networkError'= 'No se pudo conectar a OpenAI. Comprueba la conexión y vuelve a intentarlo.'
+    'ai.noResponse'  = 'El modelo no devolvió recomendaciones en el formato esperado.'
+    'ai.restart'     = 'Requiere reinicio.'
+    'ai.noRecommendations' = 'El modelo no encontró recomendaciones para este objetivo.'
     'card.rev'       = 'Reversible'
     'card.reboot'    = 'Requiere reinicio'
     'card.admin'     = 'Requiere admin'
@@ -195,6 +204,15 @@ $script:ST_EN = @{
     'card.why'       = 'Why / warning'
     'card.cur'       = 'Current -> Proposed'
     'card.risk'      = 'Risk'
+    'ai.goalLength'  = 'The objective must be 500 characters or fewer.'
+    'ai.invalidLevel'= 'Use --nivel=suave|medio|agresivo with a specific profile.'
+    'ai.missingKey'  = 'Set OPENAI_API_KEY in this terminal or run sparktune ai --dry-run to preview the context.'
+    'ai.noCandidates'= 'No compatible reversible actions. Check the profile or try again without that filter.'
+    'ai.httpError'   = 'OpenAI returned HTTP {0}. Check your key, model access and API quota.'
+    'ai.networkError'= 'Could not connect to OpenAI. Check your connection and try again.'
+    'ai.noResponse'  = 'The model did not return recommendations in the expected format.'
+    'ai.restart'     = 'Requires a restart.'
+    'ai.noRecommendations' = 'The model found no recommendations for this objective.'
     'card.rev'       = 'Reversible'
     'card.reboot'    = 'Needs reboot'
     'card.admin'     = 'Needs admin'
@@ -290,6 +308,8 @@ function Show-STHelp {
         '  undo                   Deshacer cambios (--id=xxx para uno concreto)',
         '  analyze                Que ocupa espacio (no borra nada)',
         '  history                Historial de cambios del journal',
+        '  ai                     Recomendar ajustes del catálogo con OpenAI',
+        '  ai --objetivo="texto"   Personalizar recomendaciones (--dry-run: ver contexto)',
         '  apps                   Instalar apps populares via winget (menu interactivo)',
         '  apps --install=a,b     Instalar sin interactuar (ids o nombres, comma separados)',
         '  apps --update=a,b      Actualizar solo las apps indicadas',
@@ -329,6 +349,8 @@ function Show-STHelp {
             '  undo                   Revert changes (--id=xxx for a single one)',
             '  analyze                What takes space (deletes nothing)',
             '  history                Change history from the journal',
+            '  ai                     Recommend catalog actions with OpenAI',
+            '  ai --goal="text"         Personalize advice (--dry-run: preview context)',
             '  apps                   Install popular apps via winget (interactive menu)',
             '  apps --install=a,b     Non-interactive install (ids or names, comma separated)',
             '  apps --update=a,b      Update only the listed apps',
