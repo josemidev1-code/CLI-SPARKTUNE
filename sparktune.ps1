@@ -23,12 +23,14 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 . (Join-Path $Global:STSrc 'journal.ps1')
 . (Join-Path $Global:STSrc 'engine.ps1')
 . (Join-Path $Global:STSrc 'catalog.ps1')
+. (Join-Path $Global:STSrc 'ai.ps1')
 
 # ---- parseo manual de flags (compatible CMD + PS5.1) ----
 $cmd = ''
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
+$aiGoal = ''
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
@@ -46,6 +48,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel=.+|--level=.+)$' { $optNivel = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--id=.+)$' { $optId = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--category=.+|--cat=.+)$' { $optCat = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
+        '^(--objetivo|--goal)=.*$' { $aiGoal = $a.Substring($a.IndexOf('=') + 1); $matched = $true; continue }
         '^(--out=.+)$' { $Global:STReportOut = ($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--install=.+)$' { $appsInstall = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--update=.+)$' { $appsUpdate = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -55,7 +58,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('status','battery','power','undo','analyze','history','apps','doctor','report','help')) { $cmd = $low; continue }
+    if ($low -in @('status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     if ($a.StartsWith('-')) { Write-STWarn ("flag desconocido: $a") }
 }
@@ -107,6 +110,10 @@ try {
         }
         'doctor'   { Invoke-STDoctor }
         'report'   { Show-STReport -Out $Global:STReportOut }
+        'ai'        {
+            Invoke-STAIAdvisor -Goal $aiGoal -Perfil $optPerfil -Nivel $optNivel -DryRun:$flagDry
+            exit 0
+        }
         'help'      { Show-STHelp }
         default     { Write-STErr ("comando desconocido: $cmd"); Show-STHelp; exit 1 }
     }

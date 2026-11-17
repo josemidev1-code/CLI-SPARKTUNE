@@ -50,6 +50,7 @@ Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -Execution
 
 ```
 sparktune                          # asistente interactivo (perfil -> nivel -> lista de acciones)
+sparktune ai                       # recomendaciones personalizadas de OpenAI
 sparktune status                   # CPU, RAM, discos, GPU, bateria, plan, servicios pesados
 sparktune analyze                  # que esta ocupando espacio (no borra nada)
 sparktune power                    # planes SparkTune: listar / crear / aplicar / restaurar
@@ -87,6 +88,35 @@ Ejemplo recomendado la primera vez:
 ```
 sparktune --perfil=gaming --nivel=medio --dry-run
 ```
+
+## Recomendaciones con IA
+
+`sparktune ai` pide a OpenAI hasta cuatro recomendaciones del catálogo compatibles
+con el equipo. Muestra el motivo, el riesgo y si hace falta reiniciar o abrir
+PowerShell como administrador. Tú decides qué ajustes aplicar desde el asistente.
+
+Primero puedes ver el contexto que se enviaría, sin clave y sin contactar a la API:
+
+```powershell
+sparktune ai --objetivo="Ahorrar batería" --dry-run
+```
+
+Para hacer la consulta, crea una [clave de API de OpenAI](https://platform.openai.com/api-keys)
+y cárgala en la sesión de PowerShell. El primer comando solicita la clave sin mostrarla
+en pantalla. Las consultas consumen cuota de la API.
+
+```powershell
+$key = Read-Host 'Clave de API de OpenAI' -AsSecureString
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
+sparktune ai --objetivo="Ahorrar batería" --perfil=portatil-ahorro --nivel=suave
+```
+
+La consulta envía el objetivo, categorías del hardware y metadatos de los ajustes
+candidatos. El historial, los nombres del equipo y las rutas locales se quedan
+en el PC. SparkTune lee la clave de la variable de entorno y no la guarda en
+su configuración. El modelo predeterminado es `gpt-4.1-mini`. Para usar otro
+modelo compatible con Responses y Structured Outputs, configura
+`SPARKTUNE_AI_MODEL`. Usa `--lang=en` para recibir recomendaciones en inglés.
 
 ## Capturas (simuladas)
 
