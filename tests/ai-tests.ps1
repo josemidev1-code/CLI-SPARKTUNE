@@ -20,14 +20,24 @@ function Invoke-RestMethod {
     $mock.Calls++
     $mock.LastRequest = ConvertFrom-Json -InputObject ([Text.Encoding]::UTF8.GetString($Body))
     $mock.LastHttp = @{ Uri = $Uri.AbsoluteUri; Method = $Method; Authorization = $Headers.Authorization }
-    $mock.Chosen = @($mock.LastRequest.text.format.schema.properties.recommendations.items.properties.id.enum)[0]
     if ($mock.Reply -eq 'http-error') { throw 'PRIVATE-API-DETAIL' }
-    $advice = @{
-        recommendations = @(
-            @{ id = 'unknown.fake'; reason = 'INVALID ADVICE' }
-            @{ id = $mock.Chosen; reason = "Mejora sugerida. $([char]27)CONTROL" }
-            @{ id = $mock.Chosen; reason = 'DUPLICATE ADVICE' }
-        )
+    if ($mock.LastRequest.text.format.name -eq 'sparktune_setup') {
+        $advice = @{
+            profile = if ($mock.Reply -eq 'bad-profile') { 'inventado' } else { 'desarrollo' }
+            plan = if ($mock.Reply -eq 'bad-plan') { 'power.restore-defaults' } else { 'ninguno' }
+            apps = $true
+            tweaks = $false
+            reason = "Propuesta de programación. $([char]27)CONTROL"
+        }
+    } else {
+        $mock.Chosen = @($mock.LastRequest.text.format.schema.properties.recommendations.items.properties.id.enum)[0]
+        $advice = @{
+            recommendations = @(
+                @{ id = 'unknown.fake'; reason = 'INVALID ADVICE' }
+                @{ id = $mock.Chosen; reason = "Mejora sugerida. $([char]27)CONTROL" }
+                @{ id = $mock.Chosen; reason = 'DUPLICATE ADVICE' }
+            )
+        }
     }
     $content = if ($mock.Reply -eq 'refusal') {
         @{ type = 'refusal'; refusal = 'No puedo responder.' }
@@ -85,6 +95,29 @@ try {
     $errorText = (& $entry ai --lang=es 6>&1) -join "`n"
     Assert-AI ($LASTEXITCODE -eq 1 -and $errorText -match 'No se pudo conectar' -and $errorText -notmatch 'PRIVATE-API-DETAIL') 'No se manejó el fallo de red.'
     Assert-AI (-not (Test-Path -LiteralPath (Join-Path $testHome '.sparktune/journal.json'))) 'El comando ai escribió el historial.'
+
+    $calls = $mock.Calls
+    $preview = & $entry setup "--objetivo=$goal" --sin-apps --dry-run
+    $context = ConvertFrom-Json -InputObject ($preview -join "`n")
+    Assert-AI ($LASTEXITCODE -eq 0 -and $mock.Calls -eq $calls -and $context.goal -ceq $goal) 'setup dry-run debe mostrar el contexto sin llamar a la API.'
+    Assert-AI (-not $context.apps_allowed -and @($context.profiles | Where-Object { $_.apps.Count }).Count -eq 0) 'setup dry-run incluyó apps que se pidieron omitir.'
+
+    $mock.Reply = 'normal'
+    $setup = (& $entry setup "--objetivo=$goal" --sin-apps --lang=es 6>&1) -join "`n"
+    Assert-AI ($LASTEXITCODE -eq 0 -and $mock.Calls -eq ($calls + 1) -and $setup -match 'Programación \[desarrollo\]') 'setup no usó el perfil elegido en la respuesta.'
+    Assert-AI ($setup -notmatch 'Visual Studio Code|SparkTune Equilibrado|setup.start-suggestions|mock-secret' -and -not $setup.Contains("$([char]27)CONTROL")) 'setup mostró un cambio omitido o texto de control.'
+    $props = $mock.LastRequest.text.format.schema.properties
+    Assert-AI ($props.profile.enum -ccontains 'desarrollo' -and $props.plan.enum -ccontains 'ninguno' -and $props.plan.enum -cnotcontains 'restore-defaults') 'La consulta de setup admite opciones incorrectas.'
+
+    foreach ($mockReply in @('bad-profile','bad-plan')) {
+        $mock.Reply = $mockReply
+        $rejected = (& $entry setup "--objetivo=$goal" --lang=es 6>&1) -join "`n"
+        Assert-AI ($LASTEXITCODE -eq 1 -and $rejected -match 'formato esperado' -and $rejected -match 'sin IA') 'setup no rechazó una opción ajena al catálogo.'
+    }
+    $calls = $mock.Calls
+    $null = & $entry setup "--objetivo=$goal" --yes
+    Assert-AI ($LASTEXITCODE -eq 2 -and $mock.Calls -eq $calls) 'setup aceptó --yes para una recomendación de IA.'
+    Assert-AI (-not (Test-Path -LiteralPath (Join-Path $testHome '.sparktune/journal.json'))) 'setup con IA escribió el historial sin aplicar ajustes.'
 
     Write-Host 'AI advisor tests OK'
 } finally {

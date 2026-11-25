@@ -68,6 +68,14 @@ sparktune setup --perfil=gaming --sin-apps --sin-ajustes --plan=spark-portatil-m
 
 Con `--dry-run` puedes revisar el plan sin instalar ni aplicar cambios. `--yes` acepta todas las propuestas del perfil. Puedes usar `--interactive` si quieres ver los instaladores de las aplicaciones que lo admiten. Las apps automáticas se instalan desde la fuente `winget`.
 
+Si prefieres explicarlo con tus palabras, elige **Cuéntale tu objetivo a la IA** en `sparktune setup` o pasa el texto en el comando:
+
+```powershell
+sparktune setup '--objetivo=Quiero programar en mi portátil y que la batería me dure más' --sin-apps
+```
+
+La IA explica qué perfil y plan propone. SparkTune prepara la lista a partir de su catálogo y te pide confirmación antes de instalar o aplicar. Usa la misma variable `OPENAI_API_KEY` que `sparktune ai`. Para revisar qué datos se enviarían sin llamar a OpenAI, añade `--dry-run` al ejemplo. Se envían tu objetivo, si el equipo tiene batería o está enchufado y las opciones del catálogo.
+
 **Portátil Máximo** favorece el rendimiento al enchufarlo y limita el estado máximo de CPU al 80 % con batería. También apaga antes la pantalla y suspende tras 15 minutos de inactividad con batería. Si priorizas la autonomía, puedes elegir `--plan=spark-ahorro` o `--plan=spark-ultra`. El efecto del plan depende del hardware y del firmware. Los ajustes y los cambios de plan hechos por `setup` se pueden deshacer con `sparktune undo`. Gestiona las aplicaciones instaladas por separado desde Windows o WinGet.
 
 Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.

@@ -31,7 +31,7 @@ $cmd = ''
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
-$aiGoal = ''
+$aiGoal = ''; $aiGoalSpecified = $false
 $setupPlan = ''; $skipApps = $false; $skipTweaks = $false
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
@@ -50,7 +50,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel=.+|--level=.+)$' { $optNivel = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--id=.+)$' { $optId = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--category=.+|--cat=.+)$' { $optCat = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
-        '^(--objetivo|--goal)=.*$' { $aiGoal = $a.Substring($a.IndexOf('=') + 1); $matched = $true; continue }
+        '^(--objetivo|--goal)=.*$' { $aiGoal = $a.Substring($a.IndexOf('=') + 1); $aiGoalSpecified = $true; $matched = $true; continue }
         '^--plan=.+$' { $setupPlan = $a.Substring($a.IndexOf('=') + 1).ToLowerInvariant(); $matched = $true; continue }
         '^--sin-apps$' { $skipApps = $true; $matched = $true; continue }
         '^--sin-ajustes$' { $skipTweaks = $true; $matched = $true; continue }
@@ -108,8 +108,13 @@ if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks)) {
     exit 2
 }
 
-if ($cmd -eq 'setup' -and ($optNivel -or $optId -or $optCat -or $appsInstall -or $appsUpdate -or $appsScope -or $Global:STReportOut -or $aiGoal)) {
+if ($cmd -eq 'setup' -and ($optNivel -or $optId -or $optCat -or $appsInstall -or $appsUpdate -or $appsScope -or $Global:STReportOut)) {
     Write-STErr 'setup no admite opciones de otros comandos. Consulta sparktune setup --help.'
+    exit 2
+}
+
+if ($cmd -eq 'setup' -and $aiGoalSpecified -and ($flagYes -or $optPerfil -or $setupPlan -or -not $aiGoal.Trim())) {
+    Write-STErr 'En setup, usa --objetivo con texto y sin --perfil, --plan ni --yes.'
     exit 2
 }
 
@@ -117,7 +122,13 @@ try {
     switch ($cmd) {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
-        'setup'     { exit (Invoke-STSetup -Perfil $optPerfil -Plan $setupPlan -SkipApps:$skipApps -SkipTweaks:$skipTweaks -Interactive:$appsInteractive -Yes:$flagYes) }
+        'setup'     {
+            if ($flagDry -and $aiGoalSpecified) {
+                Invoke-STSetup -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks
+                exit 0
+            }
+            exit (Invoke-STSetup -Perfil $optPerfil -Plan $setupPlan -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks -Interactive:$appsInteractive -Yes:$flagYes)
+        }
         'status'    { Show-STStatus }
         'battery'   { Show-STBatteryReport }
         'power'     { Invoke-STPowerMenu }
