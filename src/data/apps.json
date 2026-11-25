@@ -231,6 +231,12 @@
       "winget": "Git.Git"
     },
     {
+      "id": "node-lts",
+      "cat": "dev",
+      "name": "Node.js LTS",
+      "winget": "OpenJS.NodeJS.LTS"
+    },
+    {
       "id": "python",
       "cat": "dev",
       "name": "Python 3",

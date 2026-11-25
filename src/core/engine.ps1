@@ -465,13 +465,14 @@ function Invoke-STWinget([array]$WArgs) {
     Write-STLine ''
     Read-STKey | Out-Null
 }
-function Install-STWingetApp($App, [string]$Scope, [bool]$Interactive) {
+function Install-STWingetApp($App, [string]$Scope, [bool]$Interactive, [string]$Source) {
     # instala 1 app; devuelve 'ok' | 'notfound' | 'fail'.wingetCode | 'error'.mensaje
     $w = @('install','-e','--id',$App.winget,'--accept-package-agreements','--accept-source-agreements')
-    if (-not $Interactive) { $w += '--disable-interactivity' }
+    if ($Interactive) { $w += '--interactive' } else { $w += '--disable-interactivity' }
+    if ($Source) { $w += @('--source', $Source) }
     if ($Scope -eq 'user') { $w += '--scope=user' }
     try {
-        if ($Interactive) { & winget.exe @w; if ($LASTEXITCODE -eq 0) { return 'ok' }; return 'fail' }
+        if ($Interactive) { & winget.exe @w | Out-Host; if ($LASTEXITCODE -eq 0) { return 'ok' }; return 'fail' }
         $out = (& winget.exe @w 2>&1) -join "`n"
         if ($LASTEXITCODE -eq 0) { return 'ok' }
         if ($out -match '0x8A150014|no found|no se encontr|Package status Unknown') { return 'notfound' }
