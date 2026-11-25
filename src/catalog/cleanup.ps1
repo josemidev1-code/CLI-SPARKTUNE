@@ -55,14 +55,14 @@ function Get-CleanupCatalogActions {
         titulo_en='Flush DNS cache'
         descripcion='Resuelve dominios obsoletos o mal resueltos.'
         descripcion_en='Fixes stale or wrong DNS entries.'
-        categoria='cleanup'; riesgo='sin'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
+        categoria='cleanup'; riesgo='sin'; reversible=$false; admin=$false; reinicio=$false; needsRP=$false
         perfiles=@('limpieza','gaming','ofimatica','portatil-ahorro','portatil-rendimiento','bajos-recursos','personalizado')
         niveles=@{ suave=1; medio=1; agresivo=1 }
         detect={ param($hw) $true }
         preview={ 'cache actual -> vacia' }
         apply={ ipconfig /flushdns | Out-Null }
-        undo={ ipconfig /flushdns | Out-Null }
-        undoCmd='ipconfig /flushdns'
+        undo={ Write-STWarn 'El contenido anterior de la cache DNS no se puede restaurar.' }
+        undoCmd='n/a'
     }
     $A += @{
         id='clean.wu-cache'

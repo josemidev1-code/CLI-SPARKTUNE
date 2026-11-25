@@ -135,7 +135,7 @@ Check 'power plan specs resolve' {
         $spec = Get-STPlanSpec $k $null
         if (-not $spec.Ac -and -not $spec.Dc) { throw "$k spec vacia" }
         foreach ($kv in @($spec.Ac.Keys) + @($spec.Dc.Keys)) {
-            if ($kv -notmatch '^[0-9a-fA-F-]{36}\|[0-9a-fA-F-]{36}$') { throw "$k par malformado: $kv" }
+            if ($kv -notmatch '^SUB_[A-Z]+\|[A-Z]+$') { throw "$k par malformado: $kv" }
         }
     }
 }

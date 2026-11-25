@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/windows-test/**']
   pull_request:
 
 jobs:
@@ -14,6 +14,15 @@ jobs:
       - name: Run contract tests (Windows PowerShell 5.1)
         shell: powershell
         run: ./tests/run-tests.ps1
+      - name: Run safety tests (mocked operations)
+        shell: powershell
+        run: ./tests/safety-tests.ps1
+      - name: Run journal tests
+        shell: powershell
+        run: ./tests/journal-tests.ps1
+      - name: Run power plan tests (mocked powercfg)
+        shell: powershell
+        run: ./tests/power-tests.ps1
       - name: Run AI advisor tests (mocked API)
         shell: powershell
         run: ./tests/ai-tests.ps1
@@ -107,3 +116,12 @@ jobs:
           $userPath = (Get-ItemProperty 'HKCU:\Environment' -Name Path -ErrorAction SilentlyContinue).Path
           if (($userPath -split ';') -contains $dst) { throw 'la desinstalacion dejo SparkTune en PATH' }
           if ((Get-FileHash -LiteralPath $journal).Hash -ne $journalHash) { throw 'la desinstalacion cambio el journal' }
+
+  power-integration:
+    name: Real power plan integration (disposable Windows runner)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create, inspect and restore a power plan
+        shell: powershell
+        run: ./tests/power-windows-integration.ps1

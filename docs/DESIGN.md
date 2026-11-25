@@ -49,8 +49,8 @@ Extras opcionales: `applyPre` (scriptblock antes de apply), estado auxiliar via
 
 1. `Load-STCatalog` dot-sourcea todos los `src/catalog/*.ps1` y agrega las acciones, normalizando campos.
 2. `Resolve-STProfile`: si `profiles.json` tiene el perfil+nivel, usa sus ids; si no, `perfiles`/`niveles` de la accion. En ambos casos filtra con `detect`.
-3. Wizard: menu perfil → nivel → lista multiselect (pre-seleccionados riesgo bajo/medio) → confirmacion global → apply secuencial con progress bar.
-4. `Invoke-STApply`: dry-run → restore point (si needsRP) → admin check → confirmacion (SI literal si alto) → apply → journal `applied`.
+3. Wizard: menu perfil → nivel → lista multiselect (sin acciones preseleccionadas) → confirmacion global → apply secuencial con progress bar.
+4. `Invoke-STApply`: dry-run → comprobacion del historial y admin → confirmacion (SI literal si alto) → restore point (si needsRP) → apply → journal `applied`.
 5. `sparktune undo`: pendientes en orden inverso, `--id` o `--category` para filtrar.
 
 ## Reglas de diseno (por algo existen)
@@ -80,3 +80,7 @@ Extras opcionales: `applyPre` (scriptblock antes de apply), estado auxiliar via
 3. `powershell tests/run-tests.ps1` debe pasar (tambien vale `pwsh` en Linux).
 4. Probar en Windows: `sparktune --perfil=X --nivel=Y --dry-run`, ver la ficha, y aplicar+undo real.
 5. Actualizar `CHANGELOG.md`.
+
+## Estado de la revision
+
+El contrato es un objetivo, no una garantia actual: hay acciones antiguas que restauran valores supuestos y otras que silencian errores. No se han validado todos los cambios en Windows. Hasta auditarlas y probarlas en una VM, no debe considerarse seguro aplicar perfiles completos en un equipo de uso diario. Las pruebas aisladas se ejecutan con `tests/safety-tests.ps1` y `tests/journal-tests.ps1`.

@@ -4,17 +4,14 @@
 function Read-STJournal {
     if (-not (Test-Path $Global:STJournalPath)) { return @() }
     try {
-        $txt = Get-Content -Path $Global:STJournalPath -Raw -Encoding UTF8
-        if (-not $txt) { return @() }
-        $obj = $txt | ConvertFrom-Json
-        if ($obj.entries) { return @($obj.entries) }
+        $txt = Get-Content -LiteralPath $Global:STJournalPath -Raw -Encoding UTF8 -ErrorAction Stop
+        if ([string]::IsNullOrWhiteSpace($txt)) { throw 'archivo vacio' }
+        $obj = $txt | ConvertFrom-Json -ErrorAction Stop
         if ($obj -is [array]) { return @($obj) }
-        return @()
+        if ($null -ne $obj -and ($obj.PSObject.Properties.Name -contains 'entries') -and $obj.entries -is [array]) { return @($obj.entries) }
+        throw 'formato de entradas invalido'
     } catch {
-        try {
-            Copy-Item $Global:STJournalPath "$($Global:STJournalPath).bad.$(Get-Date -Format yyyyMMddHHmmss)" -Force
-        } catch { }
-        return @()
+        throw "No se puede leer el historial $($Global:STJournalPath): $($_.Exception.Message). No se modificara; restaura una copia antes de continuar."
     }
 }
 
@@ -34,7 +31,7 @@ function Add-STJournalEntry {
     param($Action, [string]$Status, [string]$Detail = '', [string]$PrevState = '')
     $entries = @(Read-STJournal)
     $e = [ordered]@{
-        seq       = [DateTime]::Now.ToString('yyyyMMddHHmmssfff')
+        seq       = [guid]::NewGuid().ToString('N')
         id        = $Action.id
         titulo    = (STField $Action 'titulo')
         categoria = $Action.categoria
@@ -65,7 +62,7 @@ function Get-STJournalPending {
 function Mark-STJournalUndone([string]$Seq) {
     $entries = @(Read-STJournal)
     $entries += [pscustomobject]@{
-        seq    = [DateTime]::Now.ToString('yyyyMMddHHmmssfff')
+        seq    = [guid]::NewGuid().ToString('N')
         refSeq = $Seq
         id     = ''
         status = 'undo'

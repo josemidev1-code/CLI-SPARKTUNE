@@ -132,8 +132,27 @@ function Invoke-STApply {
     $Yes = [bool]$Yes
     if ($Global:STDryRun) {
         Write-STInfo "[dry-run] $(STField $Action 'titulo')"
-        Add-STJournalEntry -Action $Action -Status 'dryrun'
         return 'dry'
+    }
+    # No sobrescribir snapshots usados por una aplicacion anterior aun pendiente.
+    $pending = @(Get-STJournalPending)
+    if ($Action.reversible -and @($pending | Where-Object { $_.id -eq $id }).Count -gt 0) {
+        Write-STWarn "$id ya tiene un cambio pendiente; deshazlo antes de volver a aplicarlo."
+        return 'skip'
+    }
+    if ($Action.admin -and -not (Is-STAdmin)) {
+        Write-STWarn "$(T 'admin.need')  -> $($id)"
+        Add-STJournalEntry -Action $Action -Status 'failed' -Detail 'admin'
+        return 'skip'
+    }
+    # El wizard confirma el lote, pero el riesgo alto siempre requiere su propia confirmacion.
+    if (-not $Yes -and ($Action.riesgo -eq 'alto' -or -not $Action.reversible -or -not $NoConfirm)) {
+        Show-STCard $Action
+        if ($Action.riesgo -eq 'alto') {
+            if (-not (Read-STTypedYes)) { return 'skip' }
+        } else {
+            if (-not (Read-STConfirm -Question (T 'confirm.one'))) { return 'skip' }
+        }
     }
     if (-not $Global:STDryRun -and $Action.needsRP -and -not $script:STRpDone -and -not $Yes) {
         $en = Test-STRestoreEnabled
@@ -141,19 +160,6 @@ function Invoke-STApply {
             if (Read-STConfirm -Question (T 'rp.create')) { New-STRestorePoint | Out-Null }
         } else { Write-STWarn (T 'rp.nofeature') }
         $script:STRpDone = $true
-    }
-    if ($Action.admin -and -not (Is-STAdmin)) {
-        Write-STWarn "$(T 'admin.need')  -> $($id)"
-        Add-STJournalEntry -Action $Action -Status 'failed' -Detail 'admin'
-        return 'skip'
-    }
-    if (-not $NoConfirm -and -not $Yes) {
-        Show-STCard $Action
-        if ($Action.riesgo -eq 'alto') {
-            if (-not (Read-STTypedYes)) { Add-STJournalEntry -Action $Action -Status 'failed' -Detail 'cancel'; return 'skip' }
-        } else {
-            if (-not (Read-STConfirm -Question (T 'confirm.one'))) { return 'skip' }
-        }
     }
     $prev = ''
     try { $prev = (& $Action.preview) } catch { $prev = '' }
@@ -294,10 +300,7 @@ function Show-STMenu {
 function Select-STActions {
     param([array]$Actions)
     $sel = New-Object 'bool[]' $Actions.Count
-    # pre-seleccionar riesgo bajo/medio
-    for ($i = 0; $i -lt $Actions.Count; $i++) {
-        if ($Actions[$i].riesgo -in @('sin','bajo','medio')) { $sel[$i] = $true }
-    }
+    # Ningun cambio se selecciona automaticamente: el usuario elige cada accion.
     $cur = 0
     while ($true) {
         Clear-STScreen
@@ -351,6 +354,10 @@ function Invoke-STUndo {
     Write-STLine "  $(T 'undo.list')" 'gray'
     foreach ($e in $pend) { Write-STLine "    $($e.seq)  $($e.id)  — $($e.titulo)" }
     Write-STLine ''
+    if ($Global:STDryRun) {
+        Write-STInfo '[dry-run] No se deshara ningun cambio ni se modificara el journal.'
+        return
+    }
     if ($pend.Count -gt 1 -and -not $Yes) {
         Write-STWarn 'Vas a DESHACER varios cambios. Escribe DESACER (mayusculas) para confirmar:'
         $w = Read-Host
