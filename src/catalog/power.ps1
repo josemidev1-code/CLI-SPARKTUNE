@@ -165,7 +165,6 @@ function Get-PowerCatalogActions {
     $A = @()
     foreach ($key in ($script:STPowerSet.Keys | Sort-Object { $script:STPowerSet[$_].num })) {
         $meta = $script:STPowerSet[$key]
-        $thisKey = $key; $thisMeta = $meta
         $descEs = switch ($key) {
             'spark-portatil-max' { 'Enchufado: hasta 100% de CPU y preferencia por rendimiento en equipos compatibles. En batería: hasta 80%, pantalla a 5 min y suspensión a 15 min.' }
             'spark-ultra'  { 'En bateria: CPU hasta 60%, pantalla a 3 min y suspension a 10 min de inactividad.' }
@@ -194,36 +193,41 @@ function Get-PowerCatalogActions {
             'spark-turbo'  { @('gaming','portatil-rendimiento') }
             'spark-max'    { @('gaming','ofimatica') }
         }
-        $detect = { param($hw)
+        $detect = { param($hw, $action)
             if ($hw.IsLaptop) {
-                if ($thisKey -eq 'spark-max') { return $false }
-                if ($thisKey -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
+                if ($($action.planKey) -eq 'spark-max') { return $false }
+                if ($($action.planKey) -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
             } else {
-                if ($thisKey -in @('spark-ultra','spark-ahorro','spark-portatil-max')) { return $false }
-                if ($thisKey -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
+                if ($($action.planKey) -in @('spark-ultra','spark-ahorro','spark-portatil-max')) { return $false }
+                if ($($action.planKey) -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
             }
             return $true
-        }.GetNewClosure()
+        }
         $preview = {
+            param($action)
             $cur = ''
             $act2 = (powercfg.exe /getactivescheme 2>$null) -join "`n"
             if ($act2 -match '\(([^)]+)\)\s*$') { $cur = $matches[1] }
             elseif ($act2 -match ':\s*(.+?)\s*\(') { $cur = $matches[1] }
-            "$cur  ->  $($thisMeta.name)"
-        }.GetNewClosure()
+            "$cur  ->  $($action.planName)"
+        }
         $apply = {
+            param($action)
             $prev = Get-STActivePowerGuid
-            Set-STStateFile "power.$thisKey" @{ previous = $prev }
-            Install-STPowerPlan -Key $thisKey | Out-Null
-        }.GetNewClosure()
+            Set-STStateFile "power.$($action.planKey)" @{ previous = $prev }
+            Install-STPowerPlan -Key $action.planKey | Out-Null
+        }
         $undo = {
-            $state = Get-STStateFile "power.$thisKey"
+            param($action)
+            $state = Get-STStateFile "power.$($action.planKey)"
             if (-not $state -or -not $state.previous) { throw 'Sin plan previo para esta accion; restaura manualmente el plan original.' }
             Invoke-STPowerCfg @('/setactive', [string]$state.previous) | Out-Null
-            Remove-STStateFile "power.$thisKey"
-        }.GetNewClosure()
+            Remove-STStateFile "power.$($action.planKey)"
+        }
         $act = @{
             id    = "power.$key"
+            planKey = $key
+            planName = $meta.name
             titulo = "Aplicar plan $($meta.name)"
             titulo_en = "Apply plan $($meta.name)"
             descripcion = $descEs
