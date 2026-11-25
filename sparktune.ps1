@@ -24,6 +24,7 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 . (Join-Path $Global:STSrc 'engine.ps1')
 . (Join-Path $Global:STSrc 'catalog.ps1')
 . (Join-Path $Global:STSrc 'ai.ps1')
+. (Join-Path $Global:STSrc 'setup.ps1')
 
 # ---- parseo manual de flags (compatible CMD + PS5.1) ----
 $cmd = ''
@@ -31,6 +32,7 @@ $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
 $aiGoal = ''
+$setupPlan = ''; $skipApps = $false; $skipTweaks = $false
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
@@ -49,6 +51,9 @@ foreach ($a in $RawArgs) {
         '^(--id=.+)$' { $optId = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--category=.+|--cat=.+)$' { $optCat = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--objetivo|--goal)=.*$' { $aiGoal = $a.Substring($a.IndexOf('=') + 1); $matched = $true; continue }
+        '^--plan=.+$' { $setupPlan = $a.Substring($a.IndexOf('=') + 1).ToLowerInvariant(); $matched = $true; continue }
+        '^--sin-apps$' { $skipApps = $true; $matched = $true; continue }
+        '^--sin-ajustes$' { $skipTweaks = $true; $matched = $true; continue }
         '^(--out=.+)$' { $Global:STReportOut = ($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--install=.+)$' { $appsInstall = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--update=.+)$' { $appsUpdate = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -58,7 +63,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
+    if ($low -in @('setup','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     Write-STErr ("argumento desconocido: $a")
     exit 2
@@ -98,10 +103,21 @@ $Global:STDryRun = $flagDry
 
 if ($flagHelp) { Show-STHelp; exit 0 }
 
+if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks)) {
+    Write-STErr '--plan, --sin-apps y --sin-ajustes se utilizan con setup.'
+    exit 2
+}
+
+if ($cmd -eq 'setup' -and ($optNivel -or $optId -or $optCat -or $appsInstall -or $appsUpdate -or $appsScope -or $Global:STReportOut -or $aiGoal)) {
+    Write-STErr 'setup no admite opciones de otros comandos. Consulta sparktune setup --help.'
+    exit 2
+}
+
 try {
     switch ($cmd) {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
+        'setup'     { exit (Invoke-STSetup -Perfil $optPerfil -Plan $setupPlan -SkipApps:$skipApps -SkipTweaks:$skipTweaks -Interactive:$appsInteractive -Yes:$flagYes) }
         'status'    { Show-STStatus }
         'battery'   { Show-STBatteryReport }
         'power'     { Invoke-STPowerMenu }

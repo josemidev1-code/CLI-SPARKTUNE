@@ -301,6 +301,9 @@ function Show-STHelp {
     $lines = @(
         'Uso:  sparktune [comando] [opciones]',
         '',
+        '  setup                  Preparar un PC nuevo: apps, ajustes y energía',
+        '  setup --perfil=desarrollo --dry-run',
+        '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
         '  (sin comando)          Asistente interactivo',
         '  status                 Panel: CPU, RAM, disco, GPU, bateria, plan, servicios',
         '  battery                Informe de bateria + planes recomendados',
@@ -342,6 +345,9 @@ function Show-STHelp {
         $lines = @(
             'Usage: sparktune [command] [options]',
             '',
+            '  setup                    Set up a new PC: apps, settings and power',
+            '  setup --perfil=desarrollo --dry-run',
+            '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
             '  (no command)           Interactive wizard',
             '  status                 Dashboard: CPU, RAM, disk, GPU, battery, plan, services',
             '  battery                Battery report + recommended plans',

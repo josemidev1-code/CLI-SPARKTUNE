@@ -46,6 +46,32 @@ sparktune
 
 Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\SparkTune\uninstall.ps1"`.
 
+## Preparar un PC nuevo
+
+`sparktune setup` abre el selector de perfiles. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
+
+| Perfil | Qué prepara |
+| --- | --- |
+| `desarrollo` | VS Code, Git, Node.js LTS, Python y 7-Zip |
+| `video-adobe` | Herramientas auxiliares e instrucciones oficiales para instalar Premiere Pro y After Effects desde Creative Cloud con tu cuenta |
+| `video-libre` | Kdenlive, Blender, Audacity y VLC |
+| `gaming` | Steam, Discord, 7-Zip y Modo Juego |
+| `ofimatica` | LibreOffice, Firefox y 7-Zip |
+
+```powershell
+sparktune setup --perfil=desarrollo --dry-run
+sparktune setup --perfil=video-adobe
+sparktune setup --perfil=gaming --sin-apps
+sparktune setup --perfil=ofimatica --sin-ajustes --plan=ninguno
+sparktune setup --perfil=gaming --sin-apps --sin-ajustes --plan=spark-portatil-max
+```
+
+Con `--dry-run` puedes revisar el plan sin instalar ni aplicar cambios. `--yes` acepta todas las propuestas del perfil. Puedes usar `--interactive` si quieres ver los instaladores de las aplicaciones que lo admiten. Las apps automáticas se instalan desde la fuente `winget`.
+
+**Portátil Máximo** favorece el rendimiento al enchufarlo y limita el estado máximo de CPU al 80 % con batería. También apaga antes la pantalla y suspende tras 15 minutos de inactividad con batería. Si priorizas la autonomía, puedes elegir `--plan=spark-ahorro` o `--plan=spark-ultra`. El efecto del plan depende del hardware y del firmware. Los ajustes y los cambios de plan hechos por `setup` se pueden deshacer con `sparktune undo`. Gestiona las aplicaciones instaladas por separado desde Windows o WinGet.
+
+Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
+
 ## Uso
 
 ```

@@ -23,6 +23,9 @@ jobs:
       - name: Run power plan tests (mocked powercfg)
         shell: powershell
         run: ./tests/power-tests.ps1
+      - name: Run setup profile tests (mocked WinGet and hardware)
+        shell: powershell
+        run: ./tests/setup-tests.ps1
       - name: Run AI advisor tests (mocked API)
         shell: powershell
         run: ./tests/ai-tests.ps1
@@ -91,6 +94,10 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $marker)) { throw 'se reinstalo la misma version' }
           if ((Get-ItemProperty 'HKCU:\Environment' -Name Path).Path -ne $pathBefore) { throw 'cambio inesperado del PATH' }
 
+          & "$dst\sparktune.cmd" setup --perfil=desarrollo --dry-run
+          if ($LASTEXITCODE -ne 0) { throw 'setup no funciona desde la copia instalada' }
+
+
           Remove-Item -LiteralPath "$dst\sparktune.cmd"
           ./install.ps1
           if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath "$dst\sparktune.cmd")) { throw 'no se reparo el lanzador' }
@@ -125,3 +132,6 @@ jobs:
       - name: Create, inspect and restore a power plan
         shell: powershell
         run: ./tests/power-windows-integration.ps1
+      - name: Apply and undo setup settings on Windows
+        shell: powershell
+        run: ./tests/setup-windows-integration.ps1

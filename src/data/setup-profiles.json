@@ -1,0 +1,50 @@
+{
+  "desarrollo": {
+    "nombre": "Programación",
+    "nombre_en": "Software development",
+    "apps": ["vscode", "git", "node-lts", "python", "7zip"],
+    "ajustes": ["setup.start-suggestions"],
+    "plan-portatil": "spark-equili",
+    "plan-sobremesa": "spark-equili"
+  },
+  "video-adobe": {
+    "nombre": "Edición de vídeo con Adobe",
+    "nombre_en": "Adobe video editing",
+    "apps": ["vlc", "audacity", "7zip"],
+    "ajustes": ["setup.start-suggestions", "setup.background-capture"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi",
+    "manual": [
+      {
+        "nombre": "Premiere Pro / After Effects",
+        "instrucciones": "Instala Creative Cloud, inicia sesión y elige las aplicaciones incluidas en tu plan.",
+        "instrucciones_en": "Install Creative Cloud, sign in, and select the apps included in your plan.",
+        "url": "https://helpx.adobe.com/uk/download-install/apps/download-install-apps/creative-cloud-apps/download-creative-cloud-desktop-app-using-direct-links.html"
+      }
+    ]
+  },
+  "video-libre": {
+    "nombre": "Edición de vídeo con herramientas libres",
+    "nombre_en": "Video editing with open-source tools",
+    "apps": ["kdenlive", "blender", "audacity", "vlc"],
+    "ajustes": ["setup.start-suggestions", "setup.background-capture"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi"
+  },
+  "gaming": {
+    "nombre": "Gaming",
+    "nombre_en": "Gaming",
+    "apps": ["steam", "discord", "7zip"],
+    "ajustes": ["setup.game-mode", "setup.start-suggestions"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi"
+  },
+  "ofimatica": {
+    "nombre": "Ofimática",
+    "nombre_en": "Office",
+    "apps": ["libre", "firefox", "7zip"],
+    "ajustes": ["setup.start-suggestions", "setup.background-capture"],
+    "plan-portatil": "spark-ahorro",
+    "plan-sobremesa": "spark-equili"
+  }
+}

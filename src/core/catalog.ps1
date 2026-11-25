@@ -9,7 +9,7 @@ function Load-STCatalog {
                  'Get-GpuCatalogActions','Get-NetworkCatalogActions','Get-PrivacyCatalogActions',
                  'Get-SecurityCatalogActions',
                  'Get-OfficeCatalogActions','Get-UpdatesCatalogActions','Get-PowerCatalogActions',
-                 'Get-LaptopCatalogActions')
+                 'Get-LaptopCatalogActions','Get-SetupCatalogActions')
     foreach ($m in (Get-ChildItem -Path $Global:STCatalogDir -Filter '*.ps1' | Sort-Object Name)) {
         . $m.FullName.ToString()
     }

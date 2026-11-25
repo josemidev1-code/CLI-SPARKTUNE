@@ -4,6 +4,7 @@
 # Cargado por catalog.ps1.
 
 $script:STPowerSet = @{
+    'spark-portatil-max' = @{ num=7; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Portátil Máximo' }
     'spark-ultra'    = @{ num=1; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Ultra Ahorro' }   # base: equilibrado
     'spark-ahorro'   = @{ num=2; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Ahorro' }          # base: equilibrado
     'spark-equili'   = @{ num=3; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Equilibrado' }     # base: equilibrado
@@ -86,6 +87,7 @@ function Get-STPlanSpec([string]$Key, $hw) {
     $minAc = 5; $minDc = 5; $maxAc = 100; $maxDc = 100
     $videoDc = 600; $sleepDc = 1800
     switch ($Key.ToLowerInvariant()) {
+        'spark-portatil-max' { $maxDc = 80; $videoDc = 300; $sleepDc = 900 }
         'spark-ultra'  { $maxDc = 60; $videoDc = 180; $sleepDc = 600 }
         'spark-ahorro' { $maxDc = 80; $videoDc = 300; $sleepDc = 900 }
         'spark-equili' { }
@@ -94,11 +96,16 @@ function Get-STPlanSpec([string]$Key, $hw) {
         'spark-max'    { $minAc = 100 }
         default { throw "spec desconocida $Key" }
     }
-    return @{
+    $spec = @{
         Ac = @{ 'SUB_PROCESSOR|PROCTHROTTLEMIN'=$minAc; 'SUB_PROCESSOR|PROCTHROTTLEMAX'=$maxAc }
         Dc = @{ 'SUB_PROCESSOR|PROCTHROTTLEMIN'=$minDc; 'SUB_PROCESSOR|PROCTHROTTLEMAX'=$maxDc
                 'SUB_VIDEO|VIDEOIDLE'=$videoDc; 'SUB_SLEEP|STANDBYIDLE'=$sleepDc }
     }
+    if ($Key -eq 'spark-portatil-max') {
+        $spec.Ac['SUB_PROCESSOR|PERFEPP'] = 0
+        $spec.Dc['SUB_PROCESSOR|PERFEPP'] = 75
+    }
+    return $spec
 }
 
 function Install-STPowerPlan {
@@ -159,8 +166,8 @@ function Get-PowerCatalogActions {
     foreach ($key in ($script:STPowerSet.Keys | Sort-Object { $script:STPowerSet[$_].num })) {
         $meta = $script:STPowerSet[$key]
         $thisKey = $key; $thisMeta = $meta
-        $g = Get-STPlanGuid $key
         $descEs = switch ($key) {
+            'spark-portatil-max' { 'Enchufado: hasta 100% de CPU y preferencia por rendimiento en equipos compatibles. En batería: hasta 80%, pantalla a 5 min y suspensión a 15 min.' }
             'spark-ultra'  { 'En bateria: CPU hasta 60%, pantalla a 3 min y suspension a 10 min de inactividad.' }
             'spark-ahorro' { 'En bateria: CPU hasta 80%, pantalla a 5 min y suspension a 15 min de inactividad.' }
             'spark-equili' { 'CPU hasta 100%; en bateria, pantalla a 10 min y suspension a 30 min.' }
@@ -169,6 +176,7 @@ function Get-PowerCatalogActions {
             'spark-max'    { 'CPU minimo 100% enchufado; puede aumentar el consumo y el calor.' }
         }
         $descEn = switch ($key) {
+            'spark-portatil-max' { 'Plugged in: up to 100% CPU and performance preference on compatible hardware. On battery: up to 80%, display off after 5 min and sleep after 15 min.' }
             'spark-ultra'  { 'On battery: CPU max 60%, display off after 3 min, sleep after 10 min.' }
             'spark-ahorro' { 'On battery: CPU max 80%, display off after 5 min, sleep after 15 min.' }
             'spark-equili' { 'CPU max 100%; on battery, display off after 10 min and sleep after 30 min.' }
@@ -176,8 +184,9 @@ function Get-PowerCatalogActions {
             'spark-turbo'  { 'CPU minimum 50% on AC; does not directly change the GPU.' }
             'spark-max'    { 'CPU minimum 100% on AC; may increase heat and consumption.' }
         }
-        $risk = 'bajo'; if ($key -in @('spark-rendi','spark-turbo','spark-max')) { $risk = 'medio' }
+        $risk = 'bajo'; if ($key -in @('spark-rendi','spark-turbo','spark-max','spark-portatil-max')) { $risk = 'medio' }
         $perfs = switch ($key) {
+            'spark-portatil-max' { @('portatil-rendimiento','gaming','creativo') }
             'spark-ultra'  { @('portatil-ahorro','bajos-recursos','ofimatica') }
             'spark-ahorro' { @('portatil-ahorro','ofimatica','bajos-recursos') }
             'spark-equili' { @('ofimatica','gaming','portatil-rendimiento','bajos-recursos','personalizado') }
@@ -190,7 +199,7 @@ function Get-PowerCatalogActions {
                 if ($thisKey -eq 'spark-max') { return $false }
                 if ($thisKey -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
             } else {
-                if ($thisKey -in @('spark-ultra','spark-ahorro')) { return $false }
+                if ($thisKey -in @('spark-ultra','spark-ahorro','spark-portatil-max')) { return $false }
                 if ($thisKey -eq 'spark-turbo' -and -not $hw.HasDgpu) { return $false }
             }
             return $true
@@ -276,6 +285,7 @@ function Invoke-STPowerMenu {
             $meta = $script:STPowerSet[$key]
             $mark = ''
             if ((Get-STPlanGuid $key) -and ($act -match [regex]::Escape((Get-STPlanGuid $key)))) { $mark = ' ✔' }
+            if (($key -eq 'spark-portatil-max' -and -not $hw.IsLaptop) -or ($key -eq 'spark-max' -and $hw.IsLaptop)) { continue }
             $aplica = if ($hw.IsLaptop) { '' } elseif ($key -in @('spark-ultra','spark-ahorro')) { '  [no sobremesa]' } else { '' }
             $items += [pscustomobject]@{ id=$key; label="$($meta.num). $($meta.name)$mark$aplica" }
         }
@@ -343,7 +353,7 @@ function Show-STPlanSuggestion($hw) {
     $s = @()
     if ($hw.IsLaptop) {
         if ($hw.Plugged) {
-            if ($hw.HasDgpu) { $s += 'spark-turbo' } else { $s += 'spark-rendi' }
+            $s += 'spark-portatil-max'
             $s += 'spark-equili'
         } else {
             if ($hw.BatteryPct -ge 0 -and $hw.BatteryPct -lt 20) { $s += 'spark-ultra' }
