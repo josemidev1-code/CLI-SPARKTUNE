@@ -85,7 +85,7 @@ Flags:
 
 Las opciones desconocidas terminan con código 2 para evitar que un error al escribir `--dry-run` ejecute cambios por accidente.
 
-`--dry-run` simula el asistente, `apps`, `ai` y `undo`; para `power`, `battery`, `report` y los cambios de configuración se rechaza, ya que esos comandos pueden escribir archivos o cambiar ajustes. La simulación no añade entradas al historial.
+`--dry-run` simula el asistente, `apps`, `ai` y `undo`; para `power`, `battery`, `report` y los cambios de configuración se rechaza, ya que esos comandos pueden escribir archivos o cambiar ajustes. La simulación no añade entradas al historial. Con `--perfil` y `--nivel` explícitos, muestra las acciones compatibles sin abrir menús ni seleccionar cambios.
 
 **Estado de la revisión:** no ejecutes ajustes reales en un equipo de uso diario todavía. Algunos módulos anteriores guardan valores supuestos para `undo` o silencian errores de Windows. Se están corrigiendo y deben probarse en una VM; los planes de ahorro también necesitan pruebas de consumo en un portátil físico. El asistente ya no preselecciona acciones.
 

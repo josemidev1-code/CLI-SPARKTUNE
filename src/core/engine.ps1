@@ -182,6 +182,7 @@ function Invoke-STApply {
 # ---------- wizard ----------
 function Start-STWizard {
     param([switch]$NoBanner, [switch]$Yes, [string]$Perfil = '', [string]$Nivel = '')
+    $nonInteractiveDryRun = [bool]($Global:STDryRun -and $Perfil -and $Nivel)
     $NoBanner = [bool]($NoBanner -or -not $Global:STBanner)
     Show-STBanner -NoBanner:$NoBanner
     Write-STInfo "$(T 'hw.detect')."
@@ -207,6 +208,12 @@ function Start-STWizard {
     }
 
     if ($cands.Count -eq 0) { Write-STWarn (T 'list.empty'); return }
+
+    # Con perfil y nivel explicitos la simulacion es automatizable y no abre menus.
+    if ($nonInteractiveDryRun) {
+        foreach ($a in $cands) { Write-STInfo "[dry-run] $($a.id) - $(STField $a 'titulo')" }
+        return
+    }
 
     $sel = Select-STActions -Actions $cands
     if (-not $sel) { return }
