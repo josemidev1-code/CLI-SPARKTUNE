@@ -1,49 +1,18 @@
 ﻿# SparkTune power.ps1 — planes de energia SparkTune.
-# Crea planes con powercfg /duplicate sobre los 3 planes base de Microsoft y
-# ajusta subparametros documentados. Undo = volver al plan original (journal).
+# Duplica el plan equilibrado de Windows y ajusta valores de CPU y tiempos.
+# La accion guarda el plan activo previo para poder restaurarlo.
 # Cargado por catalog.ps1.
 
 $script:STPowerSet = @{
-    'spark-ultra'    = @{ num=1; base='3af42e19-b433-4b15-8c6c-0c0b586e35c2'; name='SparkTune Ultra Ahorro' }   # base: max battery saver
-    'spark-ahorro'   = @{ num=2; base='a18413be-3541-4fab-bc81-f71556f20b4a'; name='SparkTune Ahorro' }          # base: power saver
-    'spark-equili'   = @{ num=3; base='381b4222-f694-41f8-9685-ff5bb260df2e'; name='SparkTune Equilibrado' }     # base: balanced
-    'spark-rendi'    = @{ num=4; base='8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'; name='SparkTune Rendimiento' }     # base: high perf
-    'spark-turbo'    = @{ num=5; base='8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'; name='SparkTune Turbo GPU' }
-    'spark-max'      = @{ num=6; base='8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'; name='SparkTune Maximo (sobremesa)' }
+    'spark-ultra'    = @{ num=1; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Ultra Ahorro' }   # base: equilibrado
+    'spark-ahorro'   = @{ num=2; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Ahorro' }          # base: equilibrado
+    'spark-equili'   = @{ num=3; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Equilibrado' }     # base: equilibrado
+    'spark-rendi'    = @{ num=4; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Rendimiento' }     # base: equilibrado
+    'spark-turbo'    = @{ num=5; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Alto Rendimiento' }
+    'spark-max'      = @{ num=6; base='381b4222-f694-41f0-9685-ff5bb260df2e'; name='SparkTune Maximo (sobremesa)' }
 }
 $script:STPowerGuidFile = Join-Path $Global:STHome 'power-guids.json'
 $script:STPowerPrevFile = Join-Path $Global:STHome 'power-prev.txt'
-
-# GUIDs de subgrupos/subparametros (documentados por Microsoft)
-$STSUB = @{
-    SubBatt='001a468b-4c03-470b-8270-8b10a9d38d64'; CritBatt='9a66741a-17fc-42d9-b83d-0f145d9261d9'
-    LowBatt='8183ba9a-e916-4ace-9aff-a7e02f0ea55f'; BattLevelAct='e40b5daa-1f9c-4e07-b1aa-4826e399ba76'
-    SleepIdleAc='2c815c63-31a3-4b3e-8503-13b7d9ed734e'; SleepIdleDc='f2cbe7df-2ada-4c88-b9c8-7a7e1063c8d3'
-    HibernateTimeout='9d7815a6-7ee4-497e-8888-515a96a0ec13'
-    SubProc='54533251-82be-4824-96c1-47b60b740d00'
-    ProcMinAc='893dee8d-2bef-41e0-89fb-58d45259cc4c'; ProcMinDc='bc5038f7-23e0-4960-96da-33abaf5935ec'
-    ProcMaxAc='bc037623-e152-4233-b009-531e49adc355'; ProcMaxDc='45f638e3-af0b-48a7-920b-e20837f67e1f'
-    IdleTimeAc='63f2ec4e-4d4f-4e90-bda6-c7c82d8aff83'; IdleTimeDc='5d76a2ca-a8d3-441c-b2f3-2fd0836d4028'
-    ProcPerfBoost='be337238-0d82-4146-a960-4f3749d470c7'  # 0=Default 1=Efficient 2=Aggressive
-    LatencyHint='f4baaf2c-638c-4790-b101-0f4f02493e7b'    # processor performance history/decrease hint
-    SubPci='eeabc0fe-811e-11d5-b4d9-00a0242541e9'         # PCI Express subgrupo
-    AspmAc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'         # ASPM Policies (mismo set GUID en AC y DC)
-    AspmDc='eeabc0f9-811e-11d5-b4d9-00a0242541e9'
-    SubPciAdmin='4d36e967-e325-11ce-bfc1-08002be10318'    # subgrupo PCI Express Link State Power Management
-    PciAdminAc='eeabc0fe-811e-11d5-b4d9-00a0242541e9'    # setting Link State Power Management (Off=0; mismo GUID AC/DC)
-    PciAdminDc='eeabc0fe-811e-11d5-b4d9-00a0242541e9'
-    SubGPU='44f76c74-876a-482b-9b8c-7c00af9bc5a5'
-    DgpuMinAc='48f03ac5-cf51-4766-8fd5-0a1db1999fd1'; DgpuMaxAc='ec8d00b4-65e9-4b1b-83cc-001e81eee0ae'
-    DgpuMinDc='b8f44f6f-53e4-4a3f-a33f-9f8744a060e0'; DgpuMaxDc='ea8c88e8-f68b-4e0e-a3d3-4b1e5b5515a3'
-}
-$STSUB.SubNet='e543ec7e-637f-44ef-b78d-910a4c57d14c'
-$STSUB.NetRfAc='14519c9e-4e37-4ade-9c0a-c916adc3d4e9'   # Wireless adapter power mode AC
-$STSUB.NetRfDc='69cfff71-c3a7-4c4c-97d3-125048f2f2ea'   # DC
-$STSUB.SubVideo='7516b90f-f776-4464-8c53-06167f40cc99'
-$STSUB.VidIdleAc='3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e' # video idle timeout AC
-$STSUB.VidIdleDc='3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e'
-$STSUB.SubAlrm='d84de9df-6a3c-4e8b-9dbe-5bb51b44df35'   # alarm actions
-$STSUB.AlrmDc='bcda0727-8491-4a27-9bb6-abf892b415b6'    # alarm actions DC (0 play,1 bios,2 none,3 die)
 
 function Invoke-STPowerCfg([string[]]$Args2) {
     $out = (& powercfg.exe @Args2 2>&1) -join "`n"
@@ -87,73 +56,49 @@ function New-STPowerPlan {
     if (-not $meta) { throw "plan desconocido: $Key" }
     $base = $meta.base
     $name = $meta.name
-    Invoke-STPowerCfg @('/duplicate', $base, $name) | Out-Null
-    $list = (powercfg.exe /list) -join "`n"
-    # parse robusto: lineas "GUID de la configuración: <name> (<guid>)" o "Power Scheme GUID: <guid>  (<name>)"
-    $g = ''
-    foreach ($line in ($list -split "`n")) {
-        if ($line -match [regex]::Escape($name)) {
-            if ($line -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') { $g = $matches[1]; break }
-        }
+    # /duplicatescheme acepta un GUID de destino, no el nombre del plan.
+    $g = [guid]::NewGuid().ToString()
+    Invoke-STPowerCfg @('/duplicatescheme', $base, $g) | Out-Null
+    try {
+        Invoke-STPowerCfg @('/changename', $g, $name) | Out-Null
+    } catch {
+        try { Invoke-STPowerCfg @('/delete', $g) | Out-Null } catch { }
+        throw
     }
-    if (-not $g) { throw "No se encontro el GUID del plan $name" }
-    Set-STPlanGuid -Key $Key -Guid $g
     return $g
 }
 
 function Set-STPlanValues {
     param([string]$Guid, [hashtable]$Ac, [hashtable]$Dc, [hashtable]$Subs = @{})
-    foreach ($k in $Subs.Keys) { Invoke-STPowerCfg @('/setsubgroupscheme', $Guid, $k, 'sub') 2>$null }
     foreach ($kv in $Ac.Keys) {
-        $pair = $kv.Split('|'); $v = ([convert]::ToString([int]$Ac[$kv], 16)).PadLeft(8,'0')
-        try { Invoke-STPowerCfg @('/setacvalueindex', $Guid, $pair[0], $pair[1], "0x$v") | Out-Null } catch { }
+        $pair = $kv.Split('|')
+        Invoke-STPowerCfg @('/setacvalueindex', $Guid, $pair[0], $pair[1], "$($Ac[$kv])") | Out-Null
     }
     foreach ($kv in $Dc.Keys) {
-        $pair = $kv.Split('|'); $v = ([convert]::ToString([int]$Dc[$kv], 16)).PadLeft(8,'0')
-        try { Invoke-STPowerCfg @('/setdcvalueindex', $Guid, $pair[0], $pair[1], "0x$v") | Out-Null } catch { }
+        $pair = $kv.Split('|')
+        Invoke-STPowerCfg @('/setdcvalueindex', $Guid, $pair[0], $pair[1], "$($Dc[$kv])") | Out-Null
     }
 }
 
 function Get-STPlanSpec([string]$Key, $hw) {
-    # subparametros por plan. Claves "subguid|setguid" = valor.
-    $P = $STSUB
-    $Key = $Key.ToLowerInvariant()
-    switch ($Key) {
-        'spark-ultra' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=5;"$($P.SubProc)|$($P.ProcMaxAc)"=80;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                 "$($P.SubBatt)|$($P.SleepIdleAc)"=120;"$($P.SubBatt)|$($P.CritBatt)"=5;"$($P.SubBatt)|$($P.LowBatt)"=20
-                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubNet)|$($P.NetRfAc)"=2;"$($P.SubVideo)|$($P.VidIdleAc)"=30}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=5;"$($P.SubProc)|$($P.ProcMaxDc)"=60;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                  "$($P.SubBatt)|$($P.SleepIdleDc)"=60;"$($P.SubBatt)|$($P.CritBatt)"=5;"$($P.SubBatt)|$($P.LowBatt)"=20
-                 "$($P.SubPci)|$($P.AspmDc)"=0;"$($P.SubNet)|$($P.NetRfDc)"=2;"$($P.SubVideo)|$($P.VidIdleDc)"=15} } }
-        'spark-ahorro' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=5;"$($P.SubProc)|$($P.ProcMaxAc)"=90;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                 "$($P.SubBatt)|$($P.SleepIdleAc)"=300;"$($P.SubPci)|$($P.AspmAc)"=1}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=5;"$($P.SubProc)|$($P.ProcMaxDc)"=75;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                 "$($P.SubBatt)|$($P.SleepIdleDc)"=180;"$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubNet)|$($P.NetRfDc)"=2} } }
-        'spark-equili' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=5;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=0
-                 "$($P.SubBatt)|$($P.SleepIdleAc)"=600}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=5;"$($P.SubProc)|$($P.ProcMaxDc)"=95;"$($P.SubProc)|$($P.ProcPerfBoost)"=1
-                 "$($P.SubBatt)|$($P.SleepIdleDc)"=300;"$($P.SubPci)|$($P.AspmAc)"=1} } }
-        'spark-rendi' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=100;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubPci)|$($P.AspmAc)"=0}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=5;"$($P.SubProc)|$($P.ProcMaxDc)"=98;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubBatt)|$($P.SleepIdleDc)"=300} } }
-        'spark-turbo' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=100;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubPciAdmin)|$($P.PciAdminAc)"=0
-                 "$($P.SubGPU)|$($P.DgpuMinAc)"=98;"$($P.SubGPU)|$($P.DgpuMaxAc)"=100}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=80;"$($P.SubProc)|$($P.ProcMaxDc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubGPU)|$($P.DgpuMinDc)"=50;"$($P.SubGPU)|$($P.DgpuMaxDc)"=100} } }
-        'spark-max' { return @{
-            Ac=@{"$($P.SubProc)|$($P.ProcMinAc)"=100;"$($P.SubProc)|$($P.ProcMaxAc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2
-                 "$($P.SubPci)|$($P.AspmAc)"=0;"$($P.SubPciAdmin)|$($P.PciAdminAc)"=0
-                 "$($P.SubGPU)|$($P.DgpuMinAc)"=99;"$($P.SubGPU)|$($P.DgpuMaxAc)"=100}
-            Dc=@{"$($P.SubProc)|$($P.ProcMinDc)"=100;"$($P.SubProc)|$($P.ProcMaxDc)"=100;"$($P.SubProc)|$($P.ProcPerfBoost)"=2} } }
+    # Los mismos identificadores de ajustes se usan tanto en CA como en bateria.
+    # Los tiempos de VIDEOIDLE y STANDBYIDLE se expresan en segundos.
+    $minAc = 5; $minDc = 5; $maxAc = 100; $maxDc = 100
+    $videoDc = 600; $sleepDc = 1800
+    switch ($Key.ToLowerInvariant()) {
+        'spark-ultra'  { $maxDc = 60; $videoDc = 180; $sleepDc = 600 }
+        'spark-ahorro' { $maxDc = 80; $videoDc = 300; $sleepDc = 900 }
+        'spark-equili' { }
+        'spark-rendi'  { $minAc = 25 }
+        'spark-turbo'  { $minAc = 50 }
+        'spark-max'    { $minAc = 100 }
+        default { throw "spec desconocida $Key" }
     }
-    throw "spec desconocida $Key"
+    return @{
+        Ac = @{ 'SUB_PROCESSOR|PROCTHROTTLEMIN'=$minAc; 'SUB_PROCESSOR|PROCTHROTTLEMAX'=$maxAc }
+        Dc = @{ 'SUB_PROCESSOR|PROCTHROTTLEMIN'=$minDc; 'SUB_PROCESSOR|PROCTHROTTLEMAX'=$maxDc
+                'SUB_VIDEO|VIDEOIDLE'=$videoDc; 'SUB_SLEEP|STANDBYIDLE'=$sleepDc }
+    }
 }
 
 function Install-STPowerPlan {
@@ -172,24 +117,40 @@ function Install-STPowerPlan {
     $g = Get-STPlanGuid $Key
     if (-not $g) {
         $g = New-STPowerPlan $Key
-        $spec = Get-STPlanSpec $Key $null
-        Set-STPlanValues -Guid $g -Ac $spec.Ac -Dc $spec.Dc
+        try {
+            $spec = Get-STPlanSpec $Key $null
+            Set-STPlanValues -Guid $g -Ac $spec.Ac -Dc $spec.Dc
+            Set-STPlanGuid -Key $Key -Guid $g
+        } catch {
+            try { Invoke-STPowerCfg @('/delete', $g) | Out-Null } catch { }
+            throw
+        }
     }
     if ($Activate) { Invoke-STPowerCfg @('/setactive', $g) | Out-Null }
     return $g
 }
 
-function Remove-STPowerPlans {
-    $list = (powercfg.exe /list) -join "`n"
-    foreach ($meta in $script:STPowerSet.Values) {
-        foreach ($line in ($list -split "`n")) {
-            if ($line -match [regex]::Escape($meta.name) -and $line -match '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
-                $g = $matches[1]
-                try { Invoke-STPowerCfg @('/delete', $g) | Out-Null } catch { }
-            }
-        }
+function Get-STActivePowerGuid {
+    $text = Invoke-STPowerCfg @('/getactivescheme')
+    if ($text -notmatch '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') {
+        throw 'No se pudo identificar el plan de energia activo.'
     }
-    if (Test-Path $script:STPowerGuidFile) { Remove-Item $script:STPowerGuidFile -Force }
+    return $matches[1]
+}
+
+function Remove-STPowerPlans {
+    # Solo borrar los GUID registrados por SparkTune, nunca por coincidencia de nombre.
+    if (-not (Test-Path $script:STPowerGuidFile)) { return }
+    try { $map = Get-Content $script:STPowerGuidFile -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop }
+    catch { throw 'No se puede leer power-guids.json; no se borrara ningun plan.' }
+    $active = Get-STActivePowerGuid
+    foreach ($p in $map.PSObject.Properties) {
+        $g = [string]$p.Value
+        if ($g -notmatch '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$') { throw 'GUID de plan invalido; no se borraran planes.' }
+        if ($g -eq $active) { throw 'Un plan SparkTune esta activo; restaura otro plan antes de borrarlo.' }
+    }
+    foreach ($p in $map.PSObject.Properties) { Invoke-STPowerCfg @('/delete', [string]$p.Value) | Out-Null }
+    Remove-Item -LiteralPath $script:STPowerGuidFile -Force -ErrorAction Stop
 }
 
 # ---------- acciones del catalogo ----------
@@ -200,20 +161,20 @@ function Get-PowerCatalogActions {
         $thisKey = $key; $thisMeta = $meta
         $g = Get-STPlanGuid $key
         $descEs = switch ($key) {
-            'spark-ultra'  { 'Plan de duracion maxima: CPU al 5-80%, ASPM total, radio al minimo, pantallas y suspension agresivas.' }
-            'spark-ahorro' { 'Ahorro sin martyrio: CPU limitada en bateria, suspension razonable, Wi-Fi ahorrador.' }
-            'spark-equili' { 'Equilibrado fino: boost eficiente en bateria, ASPM en bateria, sin limits tontas.' }
-            'spark-rendi'  { 'Rendimiento alto: CPU al 100% con boost Aggressive, ASPM off (AC).' }
-            'spark-turbo'  { 'Para gaming enchufado: como Rendimiento + GPU discreta al 98-100% (solo AC).' }
-            'spark-max'    { 'Sobremesa sin compromises: todo al 100%, boost Aggressive. No apto para portatiles.' }
+            'spark-ultra'  { 'En bateria: CPU hasta 60%, pantalla a 3 min y suspension a 10 min de inactividad.' }
+            'spark-ahorro' { 'En bateria: CPU hasta 80%, pantalla a 5 min y suspension a 15 min de inactividad.' }
+            'spark-equili' { 'CPU hasta 100%; en bateria, pantalla a 10 min y suspension a 30 min.' }
+            'spark-rendi'  { 'CPU minimo 25% enchufado; hasta 100% en bateria y enchufado.' }
+            'spark-turbo'  { 'CPU minimo 50% enchufado; no modifica directamente la GPU.' }
+            'spark-max'    { 'CPU minimo 100% enchufado; puede aumentar el consumo y el calor.' }
         }
         $descEn = switch ($key) {
-            'spark-ultra'  { 'Max battery plan: CPU 5-80%, full ASPM, radio min power, aggressive sleep.' }
-            'spark-ahorro' { 'Saver without pain: CPU capped on battery, sane sleep, Wi-Fi saver.' }
-            'spark-equili' { 'Tuned balanced: efficient boost on battery, ASPM on battery.' }
-            'spark-rendi'  { 'High performance: CPU 100% with Aggressive boost, ASPM off (AC).' }
-            'spark-turbo'  { 'Plugged-in gaming: like Rendimiento + dGPU at 98-100% (AC only).' }
-            'spark-max'    { 'Desktop no compromise: everything 100%. Not for laptops.' }
+            'spark-ultra'  { 'On battery: CPU max 60%, display off after 3 min, sleep after 10 min.' }
+            'spark-ahorro' { 'On battery: CPU max 80%, display off after 5 min, sleep after 15 min.' }
+            'spark-equili' { 'CPU max 100%; on battery, display off after 10 min and sleep after 30 min.' }
+            'spark-rendi'  { 'CPU minimum 25% on AC; maximum 100% on AC and battery.' }
+            'spark-turbo'  { 'CPU minimum 50% on AC; does not directly change the GPU.' }
+            'spark-max'    { 'CPU minimum 100% on AC; may increase heat and consumption.' }
         }
         $risk = 'bajo'; if ($key -in @('spark-rendi','spark-turbo','spark-max')) { $risk = 'medio' }
         $perfs = switch ($key) {
@@ -241,13 +202,17 @@ function Get-PowerCatalogActions {
             elseif ($act2 -match ':\s*(.+?)\s*\(') { $cur = $matches[1] }
             "$cur  ->  $($thisMeta.name)"
         }.GetNewClosure()
-        $apply = { Install-STPowerPlan -Key $thisKey | Out-Null }.GetNewClosure()
+        $apply = {
+            $prev = Get-STActivePowerGuid
+            Set-STStateFile "power.$thisKey" @{ previous = $prev }
+            Install-STPowerPlan -Key $thisKey | Out-Null
+        }.GetNewClosure()
         $undo = {
-            $prev = ''
-            if (Test-Path $script:STPowerPrevFile) { $prev = (Get-Content $script:STPowerPrevFile -First 1) }
-            if ($prev) { powercfg.exe /setactive $prev | Out-Null }
-            else { throw 'sin plan previo registrado' }
-        }
+            $state = Get-STStateFile "power.$thisKey"
+            if (-not $state -or -not $state.previous) { throw 'Sin plan previo para esta accion; restaura manualmente el plan original.' }
+            Invoke-STPowerCfg @('/setactive', [string]$state.previous) | Out-Null
+            Remove-STStateFile "power.$thisKey"
+        }.GetNewClosure()
         $act = @{
             id    = "power.$key"
             titulo = "Aplicar plan $($meta.name)"
@@ -285,7 +250,8 @@ function Get-PowerCatalogActions {
         apply={
             $prev=''
             if (Test-Path $script:STPowerPrevFile) { $prev=(Get-Content $script:STPowerPrevFile -First 1) }
-            if ($prev) { powercfg.exe /setactive $prev 2>$null | Out-Null }
+            if (-not $prev) { throw 'Sin plan previo guardado; selecciona otro plan antes de borrar los de SparkTune.' }
+            Invoke-STPowerCfg @('/setactive', $prev) | Out-Null
             Remove-STPowerPlans
         }
         undo={ Install-STPowerPlan -Key 'spark-equili' | Out-Null }
@@ -322,10 +288,14 @@ function Invoke-STPowerMenu {
             'quit' { return }
             'restore' {
                 if (Read-STConfirm -Question 'Borrar planes SparkTune y volver al plan original? (s/n)') {
-                    Remove-STPowerPlans
-                    $prev = ''
-                    if (Test-Path $script:STPowerPrevFile) { $prev = (Get-Content $script:STPowerPrevFile -First 1) }
-                    if ($prev) { powercfg.exe /setactive $prev 2>$null | Out-Null; Write-STOk "plan previo restaurado: $prev" }
+                    try {
+                        $prev = ''
+                        if (Test-Path $script:STPowerPrevFile) { $prev = (Get-Content $script:STPowerPrevFile -First 1) }
+                        if (-not $prev) { throw 'Sin plan previo guardado; selecciona otro plan antes de borrar los de SparkTune.' }
+                        Invoke-STPowerCfg @('/setactive', $prev) | Out-Null
+                        Remove-STPowerPlans
+                        Write-STOk "plan previo restaurado: $prev"
+                    } catch { Write-STErr $_.Exception.Message }
                 }
             }
             default {

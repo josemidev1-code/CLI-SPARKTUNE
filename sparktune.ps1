@@ -60,9 +60,16 @@ foreach ($a in $RawArgs) {
     if ($matched) { continue }
     if ($low -in @('status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
-    if ($a.StartsWith('-')) { Write-STWarn ("flag desconocido: $a") }
+    Write-STErr ("argumento desconocido: $a")
+    exit 2
 }
 if ($optLang -eq 'en' -or $optLang -eq 'es') { $Global:STLang = $optLang }
+
+# Algunos comandos escriben fuera del motor; no aceptar una simulacion que no pueden respetar.
+if ($flagDry -and (($setLang -or $setBanner -or $setNivel) -or $cmd -in @('power','report','battery'))) {
+    Write-STErr '--dry-run no esta disponible para este comando o cambio de configuracion; no se ha ejecutado.'
+    exit 2
+}
 
 # config persistente: --set-lang / --set-banner / --set-nivel
 if ($setLang -or $setBanner -or $setNivel) {

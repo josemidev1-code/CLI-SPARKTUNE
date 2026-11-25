@@ -2,7 +2,7 @@
 
 Optimizador CLI de Windows. Sin instalar nada, sin registros raros, sin promesas raras:
 detecta tu hardware, te ensena **una ficha por cambio** (qué hace, riesgo, reversible), y aplicas
-solo lo que quieras. Cada cambio queda en un journal y se puede deshacer con un comando.
+solo lo que quieras. Los cambios se registran en un historial; algunas operaciones son irreversibles y otras necesitan una revisión adicional antes de poder garantizar su restauración.
 
 by **@josemidev1**
 
@@ -82,6 +82,12 @@ Flags:
 --update=a,b                       # (apps) actualizar solo esas apps
 --no-banner
 ```
+
+Las opciones desconocidas terminan con código 2 para evitar que un error al escribir `--dry-run` ejecute cambios por accidente.
+
+`--dry-run` simula el asistente, `apps`, `ai` y `undo`; para `power`, `battery`, `report` y los cambios de configuración se rechaza, ya que esos comandos pueden escribir archivos o cambiar ajustes. La simulación no añade entradas al historial.
+
+**Estado de la revisión:** no ejecutes ajustes reales en un equipo de uso diario todavía. Algunos módulos anteriores guardan valores supuestos para `undo` o silencian errores de Windows. Se están corrigiendo y deben probarse en una VM; los planes de ahorro también necesitan pruebas de consumo en un portátil físico. El asistente ya no preselecciona acciones.
 
 Ejemplo recomendado la primera vez:
 
@@ -165,12 +171,11 @@ Instalador de apps (menu `sparktune apps` → Herramientas del sistema):
 - **Fichas antes de aplicar**: descripcion, aviso, valor actual -> propuesto, riesgo, reversible, admin, reinicio.
 - **Riesgo alto = confirmacion tipando SI**, y aviso de punto de restauracion.
 - **Journal** en `~/.sparktune/journal.json` y **undo** de todo o de un cambio concreto.
-- **Planes de energia** propios (Ultra Ahorro -> Turbo GPU) creados con `powercfg` duplicando los de fabrica, y restaurables.
+- **Planes de energia** propios (Ultra Ahorro -> Alto Rendimiento) creados con `powercfg` duplicando los de fabrica, y restaurables.
 - **Instalador de apps** (`sparktune apps`): 66 apps organizadas por categorias (navegadores, social, herramientas, gaming, diseno, programacion, docs, musica, seguridad, oficina, emulacion, streaming) instaladas con **winget oficial**; nada de mirrors ni instaladores sueltos. Incluye paquetes **portables** (marcados `(p)`) que no tocan el registro.
-- **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catalogo `sec.*` informa y endurece (PUA, SMBv1, logs), todo reversible.
+- **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catalogo `sec.*` informa y endurece (PUA, SMBv1, logs), la restauración de cada ajuste necesita verificación en Windows real.
 
-No hace "tweaks magicos" que rompen Windows: cada accion tiene undo documentado, y lo que no se
-puede deshacer (limpieza de ficheros) esta marcado como irreversible y se confirma aparte.
+La limpieza de ficheros es irreversible y se confirma aparte. La restauración de otros ajustes aún está en revisión: comprueba los cambios en una máquina virtual antes de usarlos en tu equipo.
 
 ## Estructura
 

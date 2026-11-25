@@ -62,7 +62,8 @@ function Get-LaptopCatalogActions {
         categoria='laptop'; riesgo='sin'; reversible=$true; admin=$false; reinicio=$false; needsRP=$false
         perfiles=@('portatil-ahorro','ofimatica','personalizado')
         niveles=@{ suave=1; medio=1; agresivo=1 }
-        detect={ param($hw) $hw.IsLaptop -and $hw.Battery }
+        # Desactivada: escribir la preferencia no implementa un monitor de bateria.
+        detect={ param($hw) $false }
         preview={ 'adaptativo OFF -> ON (recomienda plan de ahorro)' }
         apply={ Set-STRegValue 'HKCU:\Software\SparkTune' 'Adaptive' 1 }
         undo={ Remove-ItemProperty 'HKCU:\Software\SparkTune' 'Adaptive' -ErrorAction SilentlyContinue }

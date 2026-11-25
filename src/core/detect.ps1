@@ -17,7 +17,7 @@ function Get-STHardware {
     try {
         $cs = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
         if ($cs) {
-            $hw.IsLaptop = ($cs.PCSystemType -ge 2)
+            $hw.IsLaptop = ($cs.PCSystemType -eq 2)
             $hw.Manufacturer = "$($cs.Manufacturer)"
             $hw.Model = "$($cs.Model)"
         }
