@@ -1,11 +1,11 @@
 ﻿function Invoke-STSetup {
-    param([string]$Perfil, [string]$Plan, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes)
+    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes)
 
     $en = $Global:STLang -eq 'en'
     $file = Join-Path $Global:STData 'setup-profiles.json'
     $profiles = Get-Content -LiteralPath $file -Raw -Encoding UTF8 | ConvertFrom-Json
     $keys = @($profiles.PSObject.Properties.Name)
-    if (-not $Perfil) {
+    if (-not $Perfil -and -not $Goal) {
         if ($Yes) { throw 'Indica --perfil para usar --yes.' }
         if ($Global:STDryRun -or [Console]::IsInputRedirected) {
             Write-STInfo "setup --perfil=$($keys[0]) --dry-run"
@@ -16,21 +16,92 @@
             return 0
         }
         $items = @(
+            if (-not $Plan) {
+                [pscustomobject]@{ id = '_ai'; label = $(if ($en) { 'Describe your goal to AI' } else { 'Cuéntale tu objetivo a la IA' }) }
+            }
             foreach ($key in $keys) {
                 [pscustomobject]@{ id = $key; label = $(if ($en) { $profiles.$key.nombre_en } else { $profiles.$key.nombre }) }
             }
         )
         $index = Show-STMenu -Title $(if ($en) { 'Set up your new PC' } else { 'Prepara tu PC nuevo' }) -Items $items
         if ($index -lt 0) { return 0 }
-        $Perfil = $items[$index].id
+        if ($items[$index].id -eq '_ai') {
+            $Goal = ([string](Read-Host $(if ($en) { 'What do you want to optimize?' } else { '¿Qué quieres optimizar?' }))).Trim()
+            if (-not $Goal) { return 0 }
+        } else { $Perfil = $items[$index].id }
+    }
+
+    $hw = Get-STHardware
+    Load-STCatalog
+    $actions = @{}
+    foreach ($action in (Get-STCatalogActions)) { $actions[$action.id] = $action }
+
+    $fromAI = [bool]$Goal
+    if ($fromAI) {
+        $Goal = $Goal.Trim()
+        if (-not $Goal -or $Goal.Length -gt 500) { throw (T 'ai.goalLength') }
+        $context = @{
+            goal = $Goal
+            laptop = [bool]$hw.IsLaptop
+            has_battery = [bool]$hw.Battery
+            plugged_in = if ($hw.Battery) { [bool]$hw.Plugged } else { $null }
+            apps_allowed = -not $SkipApps
+            tweaks_allowed = -not $SkipTweaks
+            profiles = @(
+                foreach ($key in $keys) {
+                    if ($key -eq 'ninguno' -or $key -cnotmatch '^[a-z0-9]+(-[a-z0-9]+)*$') { throw "ID de perfil no válido: $key" }
+                    $entry = $profiles.$key
+                    $defaultPlan = if ($hw.IsLaptop) { $entry.'plan-portatil' } else { $entry.'plan-sobremesa' }
+                    @{
+                        id = $key
+                        name = if ($en) { $entry.nombre_en } else { $entry.nombre }
+                        apps = @(if (-not $SkipApps) { $entry.apps })
+                        tweaks = @(
+                            if (-not $SkipTweaks) {
+                                foreach ($id in $entry.ajustes) {
+                                    $action = $actions[$id]
+                                    if ($action -and $action.setupSafe -and (Test-STApplies $action $hw)) {
+                                        STField $action 'titulo'
+                                    }
+                                }
+                            }
+                        )
+                        default_plan = $defaultPlan
+                    }
+                }
+            )
+            plans = @(
+                @{ id = 'ninguno'; description = 'Keep the current power plan' }
+                foreach ($action in $actions.Values | Sort-Object id) {
+                    if ($action.planKey -and $action.reversible -and (Test-STApplies $action $hw)) {
+                        @{ id = $action.planKey; description = STField $action 'descripcion' }
+                    }
+                }
+            )
+        }
+        if ($Global:STDryRun) {
+            ConvertTo-Json -InputObject $context -Depth 8
+            return
+        }
+        try { $recommendation = Get-STAISetupRecommendation -Context $context }
+        catch {
+            Write-STErr $_.Exception.Message
+            Write-STInfo $(if ($en) { 'Continue without AI with sparktune setup.' } else { 'Para seguir sin IA, elige un perfil desde sparktune setup.' })
+            return 1
+        }
+        Write-STInfo $recommendation.reason
+        if ($recommendation.profile -eq 'ninguno') { return 0 }
+
+        $Perfil = $recommendation.profile
+        $Plan = $recommendation.plan
+        $SkipApps = $SkipApps -or -not $recommendation.apps
+        $SkipTweaks = $SkipTweaks -or -not $recommendation.tweaks
     }
     if ($Perfil -notin $keys) {
         Write-STErr "Perfil de setup desconocido: $Perfil. Disponibles: $($keys -join ', ')."
         return 2
     }
     $profile = $profiles.$Perfil
-    $hw = Get-STHardware
-    Load-STCatalog
 
     $apps = @()
     if (-not $SkipApps) {
@@ -45,8 +116,6 @@
         )
     }
 
-    $actions = @{}
-    foreach ($action in (Get-STCatalogActions)) { $actions[$action.id] = $action }
     $tweaks = @()
     if (-not $SkipTweaks) {
         $tweaks = @(
@@ -91,6 +160,14 @@
     }
     if ($Global:STDryRun) {
         Write-STInfo (T 'dryrun')
+        return 0
+    }
+
+    if ($fromAI -and [Console]::IsInputRedirected) {
+        $command = "sparktune setup --perfil=$Perfil --plan=$Plan"
+        if ($SkipApps) { $command += ' --sin-apps' }
+        if ($SkipTweaks) { $command += ' --sin-ajustes' }
+        Write-STInfo $command
         return 0
     }
 
