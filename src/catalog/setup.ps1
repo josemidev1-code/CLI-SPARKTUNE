@@ -40,28 +40,35 @@ function New-STSetupAction {
         admin = $false
         reinicio = $false
         setupSafe = $true
-        detect = { param($hw) $hw.Build -ge $MinBuild }.GetNewClosure()
+        registryPath = $Path
+        registryName = $Name
+        registryValue = $Value
+        minBuild = $MinBuild
+        detect = { param($hw, $action) $hw.Build -ge $action.minBuild }
         preview = {
-            $old = Get-STSetupRegistryValue $Path $Name
+            param($action)
+            $old = Get-STSetupRegistryValue $action.registryPath $action.registryName
             if ($null -eq $old) { $old = 'Windows default' }
-            "$old -> $Value"
-        }.GetNewClosure()
+            "$old -> $($action.registryValue)"
+        }
         apply = {
-            $old = Get-STSetupRegistryValue $Path $Name
-            Set-STStateFile $Id @{ previous = $old; value = $Value }
-            Set-STSetupRegistryValue $Path $Name $Value
-        }.GetNewClosure()
+            param($action)
+            $old = Get-STSetupRegistryValue $action.registryPath $action.registryName
+            Set-STStateFile $action.id @{ previous = $old; value = $action.registryValue }
+            Set-STSetupRegistryValue $action.registryPath $action.registryName $action.registryValue
+        }
         undo = {
-            $state = Get-STStateFile $Id
-            if (-not $state -or $state.PSObject.Properties.Name -notcontains 'previous' -or $state.value -ne $Value) {
-                throw "Falta el estado anterior de $Id."
+            param($action)
+            $state = Get-STStateFile $action.id
+            if (-not $state -or $state.PSObject.Properties.Name -notcontains 'previous' -or $state.value -ne $action.registryValue) {
+                throw "Falta el estado anterior de $($action.id)."
             }
-            $current = Get-STSetupRegistryValue $Path $Name
-            if ($current -ne $Value -and $current -ne $state.previous) {
-                throw "El valor de $Id ha cambiado desde la aplicación. Revisa esa opción en Configuración de Windows."
+            $current = Get-STSetupRegistryValue $action.registryPath $action.registryName
+            if ($current -ne $action.registryValue -and $current -ne $state.previous) {
+                throw "El valor de $($action.id) ha cambiado desde la aplicación. Revisa esa opción en Configuración de Windows."
             }
-            Set-STSetupRegistryValue $Path $Name $state.previous
-        }.GetNewClosure()
+            Set-STSetupRegistryValue $action.registryPath $action.registryName $state.previous
+        }
         undoCmd = "sparktune undo --id=$Id"
     }
 }

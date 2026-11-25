@@ -114,7 +114,7 @@ function Show-STCard {
     # diff actual -> propuesto
     $prevTxt = (T 'card.na')
     try {
-        if ($Action.ContainsKey('preview') -and $Action.preview) { $prevTxt = (& $Action.preview) }
+        if ($Action.ContainsKey('preview') -and $Action.preview) { $prevTxt = (& $Action.preview $Action) }
     } catch { $prevTxt = "(preview: $($_.Exception.Message))" }
     Write-STLine "  $(T 'card.cur'): $prevTxt" 'white'
     $revTxt = (T 'yes'); if (-not $Action.reversible) { $revTxt = "$(T 'no') ⚠" }
@@ -162,11 +162,11 @@ function Invoke-STApply {
         $script:STRpDone = $true
     }
     $prev = ''
-    try { $prev = (& $Action.preview) } catch { $prev = '' }
+    try { $prev = (& $Action.preview $Action) } catch { $prev = '' }
     $sw = [Diagnostics.Stopwatch]::StartNew()
     try {
         if ($Action.ContainsKey('applyPre') -and $Action.applyPre) { & $Action.applyPre }
-        & $Action.apply
+        & $Action.apply $Action
         $sw.Stop()
         Add-STJournalEntry -Action $Action -Status 'applied' -Detail ([string]$sw.ElapsedMilliseconds) -PrevState ([string]$prev)
         Write-STOk "$((T 'apply.ok'))  $(STField $Action 'titulo')  ($($sw.ElapsedMilliseconds)ms)"
@@ -384,7 +384,7 @@ function Invoke-STUndo {
         if (-not $a) { Write-STWarn "$($e.id): accion no encontrada en el catalogo — manual: $($e.undoCmd)"; continue }
         if ($a.admin -and -not (Is-STAdmin)) { Write-STWarn "$($e.id): requiere admin — omitido"; continue }
         try {
-            & $a.undo
+            & $a.undo $a
             Mark-STJournalUndone -Seq $e.seq
             Write-STOk "undo OK  $($e.id)"
         } catch {

@@ -18,7 +18,7 @@ try {
     $list = Invoke-STPowerCfg @('/list')
     if ($list -match [regex]::Escape($created)) { throw 'El plan de prueba no se elimino.' }
     $laptop = @(Get-PowerCatalogActions | Where-Object id -eq 'power.spark-portatil-max')[0]
-    & $laptop.apply
+    & $laptop.apply $laptop
     $laptopGuid = Get-STPlanGuid 'spark-portatil-max'
     if ((Get-STActivePowerGuid) -ne $laptopGuid) { throw 'El plan Portátil Máximo no está activo.' }
     $query = Invoke-STPowerCfg @('/query', $laptopGuid, 'SUB_PROCESSOR', 'PROCTHROTTLEMAX')
@@ -26,7 +26,7 @@ try {
     if ($indices.Count -lt 2 -or $indices[-2] -ne 100 -or $indices[-1] -ne 80) {
         throw "El plan Portátil Máximo no guardó los límites CA/CC esperados: $query"
     }
-    & $laptop.undo
+    & $laptop.undo $laptop
     if ((Get-STActivePowerGuid) -ne $original) { throw 'undo del plan Portátil Máximo no restauró el original.' }
     Remove-STPowerPlans
     Write-Host 'Ahorro y Portátil Máximo creados, configurados, activados, restaurados y eliminados en Windows.'

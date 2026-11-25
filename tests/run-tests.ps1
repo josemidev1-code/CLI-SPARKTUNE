@@ -125,7 +125,7 @@ Check 'detect blocks run with fake hw' {
     $hw = @{ IsLaptop=$false; Battery=$false; BatteryPct=-1; Plugged=$true; HasSSD=$true; HasHDD=$false
              HasNvidia=$false; HasAmd=$false; HasIntelGpu=$true; HasDgpu=$false; Gpu=@(); RamGB=16; Build=22631; Admin=$true }
     foreach ($a in $all) {
-        try { $null = (& $a.detect $hw) } catch { throw "$($a.id).detect : $($_.Exception.Message)" }
+        try { $null = (& $a.detect $hw $a) } catch { throw "$($a.id).detect : $($_.Exception.Message)" }
     }
 }
 

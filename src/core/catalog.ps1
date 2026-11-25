@@ -1,6 +1,10 @@
 ﻿# SparkTune catalog.ps1 — agrega modulos del catalogo y resuelve perfiles/niveles.
 
 $script:STCatalog = $null
+# Las acciones se ejecutan después de que termine Load-STCatalog.
+foreach ($catalogFile in (Get-ChildItem -LiteralPath $Global:STCatalogDir -Filter '*.ps1' -File | Sort-Object Name)) {
+    . $catalogFile.FullName
+}
 
 function Load-STCatalog {
     if ($script:STCatalog) { return }
@@ -10,9 +14,6 @@ function Load-STCatalog {
                  'Get-SecurityCatalogActions',
                  'Get-OfficeCatalogActions','Get-UpdatesCatalogActions','Get-PowerCatalogActions',
                  'Get-LaptopCatalogActions','Get-SetupCatalogActions')
-    foreach ($m in (Get-ChildItem -Path $Global:STCatalogDir -Filter '*.ps1' | Sort-Object Name)) {
-        . $m.FullName.ToString()
-    }
     foreach ($g in $getters) {
         if (Get-Command $g -ErrorAction SilentlyContinue) {
             try { $all += & $g } catch { Write-STWarn "catalogo $g : $($_.Exception.Message)" }
@@ -36,7 +37,7 @@ function Get-STCatalogActions { return @($script:STCatalog) }
 function Test-STApplies {
     param($Action, $Hw)
     try {
-        if ($Action.ContainsKey('detect') -and $Action.detect) { return [bool](& $Action.detect $Hw) }
+        if ($Action.ContainsKey('detect') -and $Action.detect) { return [bool](& $Action.detect $Hw $Action) }
     } catch { return $false }
     return $true
 }
