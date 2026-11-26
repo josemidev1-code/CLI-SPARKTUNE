@@ -7,7 +7,7 @@ function Show-STBanner {
     $logoFile = Join-Path $Global:STData 'figlet.txt'
     $logo = @(Get-Content -LiteralPath $logoFile -ErrorAction SilentlyContinue)
     $width = 80
-    if ($script:STConsole) { try { $width = $script:STConsole.WindowWidth } catch { } }
+    if ($script:STConsole) { try { $width = [Console]::WindowWidth } catch { } }
     $logoWidth = ($logo | Measure-Object -Property Length -Maximum).Maximum
     if (-not $logo.Count -or $width -le $logoWidth) {
         $logo = @('  * SparkTune')
