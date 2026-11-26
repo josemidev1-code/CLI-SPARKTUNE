@@ -29,6 +29,7 @@ function Test-STAnsi {
 }
 
 function Enable-STVirtualTerminal {
+    $script:STVtEnabled = $false
     $script:STAnsi = Test-STAnsi
     if (-not $script:STAnsi) { return }
     try {
@@ -44,7 +45,7 @@ function Enable-STVirtualTerminal {
         $m = [uint32]0
         if ([STNat.Win32C]::GetConsoleMode($h, [ref]$m)) {
             # ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-            [STNat.Win32C]::SetConsoleMode($h, ($m -bor 4)) | Out-Null
+            $script:STVtEnabled = [STNat.Win32C]::SetConsoleMode($h, ($m -bor 4))
         }
     } catch { $script:STAnsi = $false }
 }
@@ -320,6 +321,7 @@ function Show-STHelp {
         '  setup --perfil=desarrollo --dry-run',
         '  setup --objetivo="Ahorrar batería"    Pedir un perfil y plan a la IA',
         '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
+        '  banner                 Ver la intro ASCII',
         '  (sin comando)          Asistente interactivo',
         '@Diagnóstico y cambios',
         '  status                 Panel: CPU, RAM, disco, GPU, bateria, plan, servicios',
@@ -370,6 +372,7 @@ function Show-STHelp {
             '  setup --perfil=desarrollo --dry-run',
             '  setup --goal="Save battery"    Ask AI for a profile and power plan',
             '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
+            '  banner                 Play the ASCII intro',
             '  (no command)           Interactive wizard',
             '@Diagnostics and changes',
             '  status                 Dashboard: CPU, RAM, disk, GPU, battery, plan, services',
