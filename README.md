@@ -48,7 +48,7 @@ Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -Execution
 
 ## Intro en la terminal
 
-Al abrir el asistente desde una terminal de Windows verás el logo ASCII de SparkTune y la firma `made by josemidev1`. Puedes reproducir la intro por separado con `sparktune banner`. Usa `--no-banner` para omitirla.
+Al abrir el asistente desde una terminal de Windows verás cómo los `0` y `1` forman el logo de bloques, una chispa enciende la onda RGB y aparece la firma `made by josemidev1`. Puedes reproducir la intro por separado con `sparktune banner`. Usa `--no-banner` para omitirla.
 
 ## Preparar un PC nuevo
 
