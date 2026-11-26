@@ -1,4 +1,5 @@
 ﻿# Prueba real en un runner Windows desechable. No usar en un PC de trabajo.
+param([switch]$ShowEvidence)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $Global:STHome = Join-Path $env:RUNNER_TEMP ('sparktune-power-' + [guid]::NewGuid().ToString('N'))
@@ -7,8 +8,10 @@ New-Item -ItemType Directory -Path $Global:STHome | Out-Null
 . (Join-Path $root 'src\catalog\power.ps1')
 function Is-STAdmin { return $true }
 $original = Get-STActivePowerGuid
+if ($ShowEvidence) { Write-Host "Plan original: $original" }
 try {
     $created = Install-STPowerPlan -Key 'spark-ahorro'
+    if ($ShowEvidence) { Write-Host "Ahorro se activó: $created" }
     if ((Get-STActivePowerGuid) -ne $created) { throw 'El plan creado no esta activo.' }
     $query = Invoke-STPowerCfg @('/query', $created, 'SUB_PROCESSOR', 'PROCTHROTTLEMAX')
     if ($query -notmatch '0x0*50\b') { throw "No aparece 80% como limite del procesador en bateria: $query" }
@@ -26,9 +29,14 @@ try {
     if ($indices.Count -lt 2 -or $indices[-2] -ne 100 -or $indices[-1] -ne 80) {
         throw "El plan Portátil Máximo no guardó los límites CA/CC esperados: $query"
     }
+    if ($ShowEvidence) {
+        Write-Host "Portátil Máximo activo: $laptopGuid"
+        Write-Host "Máximo de CPU verificado: $($indices[-2])% enchufado / $($indices[-1])% en batería"
+    }
     & $laptop.undo $laptop
     if ((Get-STActivePowerGuid) -ne $original) { throw 'undo del plan Portátil Máximo no restauró el original.' }
     Remove-STPowerPlans
+    if ($ShowEvidence) { Write-Host "Plan original restaurado: $(Get-STActivePowerGuid)" }
     Write-Host 'Ahorro y Portátil Máximo creados, configurados, activados, restaurados y eliminados en Windows.'
 } finally {
     try { Invoke-STPowerCfg @('/setactive', $original) | Out-Null } catch { Write-Warning $_ }
