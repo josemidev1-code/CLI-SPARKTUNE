@@ -125,10 +125,10 @@ $script:ST_ES = @{
     'card.risk'      = 'Riesgo'
     'ai.goalLength'  = 'El objetivo debe tener 500 caracteres o menos.'
     'ai.invalidLevel'= 'Usa --nivel=suave|medio|agresivo junto a un perfil concreto.'
-    'ai.missingKey'  = 'Configura OPENAI_API_KEY en esta terminal o usa sparktune ai --dry-run para ver el contexto.'
+    'ai.missingKey'  = 'Configura GROQ_API_KEY u OPENAI_API_KEY en esta terminal o usa sparktune ai --dry-run para ver el contexto.'
     'ai.noCandidates'= 'No hay ajustes reversibles compatibles. Revisa el perfil o vuelve a probar sin ese filtro.'
-    'ai.httpError'   = 'OpenAI devolvió HTTP {0}. Comprueba la clave, el acceso al modelo y la cuota de la API.'
-    'ai.networkError'= 'No se pudo conectar a OpenAI. Comprueba la conexión y vuelve a intentarlo.'
+    'ai.httpError'   = 'El proveedor de IA devolvió HTTP {0}. Comprueba la clave, el acceso al modelo y la cuota de la API.'
+    'ai.networkError'= 'No se pudo conectar al proveedor de IA. Comprueba la conexión y vuelve a intentarlo.'
     'ai.noResponse'  = 'El modelo no devolvió recomendaciones en el formato esperado.'
     'ai.restart'     = 'Requiere reinicio.'
     'ai.noRecommendations' = 'El modelo no encontró recomendaciones para este objetivo.'
@@ -219,10 +219,10 @@ $script:ST_EN = @{
     'card.risk'      = 'Risk'
     'ai.goalLength'  = 'The objective must be 500 characters or fewer.'
     'ai.invalidLevel'= 'Use --nivel=suave|medio|agresivo with a specific profile.'
-    'ai.missingKey'  = 'Set OPENAI_API_KEY in this terminal or run sparktune ai --dry-run to preview the context.'
+    'ai.missingKey'  = 'Set GROQ_API_KEY or OPENAI_API_KEY in this terminal or run sparktune ai --dry-run to preview the context.'
     'ai.noCandidates'= 'No compatible reversible actions. Check the profile or try again without that filter.'
-    'ai.httpError'   = 'OpenAI returned HTTP {0}. Check your key, model access and API quota.'
-    'ai.networkError'= 'Could not connect to OpenAI. Check your connection and try again.'
+    'ai.httpError'   = 'The AI provider returned HTTP {0}. Check your key, model access and API quota.'
+    'ai.networkError'= 'Could not connect to the AI provider. Check your connection and try again.'
     'ai.noResponse'  = 'The model did not return recommendations in the expected format.'
     'ai.restart'     = 'Requires a restart.'
     'ai.noRecommendations' = 'The model found no recommendations for this objective.'
@@ -331,7 +331,7 @@ function Show-STHelp {
         '  history                Historial de cambios',
         '  doctor                 Comprobar el sistema y el historial',
         '  report                 Generar un informe HTML',
-        '  ai                     Recomendar ajustes del catálogo con OpenAI',
+        '  ai                     Recomendar ajustes del catálogo con IA',
         '  ai --objetivo="texto"   Personalizar recomendaciones (--dry-run: ver contexto)',
         '  apps                   Instalar apps populares via winget (menu interactivo)',
         '  apps --install=a,b     Instalar sin interactuar (ids o nombres, comma separados)',
@@ -382,7 +382,7 @@ function Show-STHelp {
             '  history                Change history',
             '  doctor                 Check the system and change history',
             '  report                 Generate an HTML report',
-            '  ai                     Recommend catalog actions with OpenAI',
+            '  ai                     Recommend catalog actions with AI',
             '  ai --goal="text"         Personalize advice (--dry-run: preview context)',
             '  apps                   Install popular apps via winget (interactive menu)',
             '  apps --install=a,b     Non-interactive install (ids or names, comma separated)',

@@ -47,6 +47,8 @@ if not 12 <= spark_row.index("*") <= 28:
 if hidden or "made by josemidev1" not in " ".join(frames[-1]["rows"]):
     raise SystemExit("The final credit or visible cursor is missing.")
 final = frames[-1]
+if "-=[ made by josemidev1 ]=-" not in " ".join(final["rows"]):
+    raise SystemExit("The final signature plaque is missing.")
 if sum("█" in row for row in final["rows"]) != 5 or has(final, "*"):
     raise SystemExit("The final logo must have five block rows and no spark residue.")
 colors = {color for row, shades in zip(final["rows"], final["colors"]) for char, color in zip(row, shades) if char == "█"}

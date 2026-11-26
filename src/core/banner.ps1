@@ -30,6 +30,8 @@ function Show-STBanner {
     $cyan = STC '96'
     $mint = STC '92'
     $gold = STC '93'
+    $muted = STC '90'
+    $bold = STC '1'
     $white = STC '97'
     $reset = STC '0'
     $palette = @(
@@ -45,6 +47,11 @@ function Show-STBanner {
         STC '38;2;194;104;250'
         STC '38;2;240;100;210'
     )
+
+    $signature = '-=[ made by josemidev1 ]=-'
+    $decorated = $logo.Count -gt 1 -and $columns -ge $signature.Length
+    $indent = ' ' * [Math]::Max(0, [int][Math]::Floor(($logoWidth - $signature.Length) / 2))
+    $author = 'josemidev1'
 
     # Stable paths keep the binary assembly identical at each startup.
     $random = [Random]::new(14)
@@ -108,7 +115,17 @@ function Show-STBanner {
                 if ($y) { [void]$buffer.Append("`r`n") }
                 [void]$buffer.Append("`r$clear")
                 if ($y -eq $rows - 1 -and $frame -ge $ignition + 5) {
-                    [void]$buffer.Append("$gold$credit$reset")
+                    if ($decorated) {
+                        $shine = $frame - $ignition - 5
+                        $authorLine = [Text.StringBuilder]::new()
+                        for ($i = 0; $i -lt $author.Length; $i++) {
+                            $tint = if ($i -eq $shine) { $white } else { $palette[($i + 5) % $palette.Count] }
+                            [void]$authorLine.Append("$tint$($author[$i])")
+                        }
+                        [void]$buffer.Append("$indent$cyan-=[ $muted" + "made by $bold$authorLine$reset$cyan ]=-$reset")
+                    } else {
+                        [void]$buffer.Append("$gold$credit$reset")
+                    }
                     continue
                 }
                 $activeColor = ''

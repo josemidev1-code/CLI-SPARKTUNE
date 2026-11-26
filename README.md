@@ -78,7 +78,7 @@ Si prefieres explicarlo con tus palabras, elige **Cuéntale tu objetivo a la IA*
 sparktune setup '--objetivo=Quiero programar en mi portátil y que la batería me dure más' --sin-apps
 ```
 
-La IA explica qué perfil y plan propone. SparkTune prepara la lista a partir de su catálogo y te pide confirmación antes de instalar o aplicar. Usa la misma variable `OPENAI_API_KEY` que `sparktune ai`. Para revisar qué datos se enviarían sin llamar a OpenAI, añade `--dry-run` al ejemplo. Se envían tu objetivo, si el equipo tiene batería o está enchufado y las opciones del catálogo.
+La IA explica qué perfil y plan propone. SparkTune prepara la lista a partir de su catálogo y te pide confirmación antes de instalar o aplicar. Usa la misma variable `GROQ_API_KEY` u `OPENAI_API_KEY` que `sparktune ai`. Para revisar qué datos se enviarían sin llamar al proveedor, añade `--dry-run` al ejemplo. Se envían tu objetivo, si el equipo tiene batería o está enchufado y las opciones del catálogo.
 
 **Portátil Máximo** favorece el rendimiento al enchufarlo y limita el estado máximo de CPU al 80 % con batería. También apaga antes la pantalla y suspende tras 15 minutos de inactividad con batería. Si priorizas la autonomía, puedes elegir `--plan=spark-ahorro` o `--plan=spark-ultra`. El efecto del plan depende del hardware y del firmware. Los ajustes y los cambios de plan hechos por `setup` se pueden deshacer con `sparktune undo`. Gestiona las aplicaciones instaladas por separado desde Windows o WinGet.
 
@@ -88,7 +88,7 @@ Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json)
 
 ```
 sparktune                          # asistente interactivo (perfil -> nivel -> lista de acciones)
-sparktune ai                       # recomendaciones personalizadas de OpenAI
+sparktune ai                       # recomendaciones personalizadas con IA
 sparktune status                   # CPU, RAM, discos, GPU, bateria, plan, servicios pesados
 sparktune analyze                  # que esta ocupando espacio (no borra nada)
 sparktune power                    # planes SparkTune: listar / crear / aplicar / restaurar
@@ -135,7 +135,7 @@ sparktune --perfil=gaming --nivel=medio --dry-run
 
 ## Recomendaciones con IA
 
-`sparktune ai` pide a OpenAI hasta cuatro recomendaciones del catálogo compatibles
+`sparktune ai` pide hasta cuatro recomendaciones del catálogo compatibles
 con el equipo. Muestra el motivo, el riesgo y si hace falta reiniciar o abrir
 PowerShell como administrador. Tú decides qué ajustes aplicar desde el asistente.
 
@@ -145,22 +145,19 @@ Primero puedes ver el contexto que se enviaría, sin clave y sin contactar a la 
 sparktune ai --objetivo="Ahorrar batería" --dry-run
 ```
 
-Para hacer la consulta, crea una [clave de API de OpenAI](https://platform.openai.com/api-keys)
-y cárgala en la sesión de PowerShell. El primer comando solicita la clave sin mostrarla
-en pantalla. Las consultas consumen cuota de la API.
+Para usar **GPT-OSS 20B con el plan gratuito de Groq**, crea una [clave de Groq](https://console.groq.com/keys) y cárgala en la sesión de PowerShell:
 
 ```powershell
-$key = Read-Host 'Clave de API de OpenAI' -AsSecureString
-$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
-sparktune ai --objetivo="Ahorrar batería" --perfil=portatil-ahorro --nivel=suave
+$key = Read-Host 'Clave de API de Groq' -AsSecureString
+$env:GROQ_API_KEY = [System.Net.NetworkCredential]::new('', $key).Password
+sparktune setup '--objetivo=Quiero programar y ahorrar batería' --sin-apps
 ```
 
-La consulta envía el objetivo, categorías del hardware y metadatos de los ajustes
-candidatos. El historial, los nombres del equipo y las rutas locales se quedan
-en el PC. SparkTune lee la clave de la variable de entorno y no la guarda en
-su configuración. El modelo predeterminado es `gpt-4.1-mini`. Para usar otro
-modelo compatible con Responses y Structured Outputs, configura
-`SPARKTUNE_AI_MODEL`. Usa `--lang=en` para recibir recomendaciones en inglés.
+Si ya tienes `OPENAI_API_KEY` configurada, SparkTune usará OpenAI. Retira esa variable de la sesión con `Remove-Item Env:OPENAI_API_KEY` si prefieres probar Groq. Con OpenAI, el modelo predeterminado es `gpt-4.1-mini` y lo puedes cambiar con `SPARKTUNE_AI_MODEL`. Ambos servicios tienen límites de uso.
+
+La consulta envía el objetivo, categorías del hardware y opciones del catálogo.
+El historial, los nombres del equipo y las rutas locales se quedan en el PC.
+SparkTune lee la clave del entorno. Usa `--lang=en` para recibir recomendaciones en inglés.
 
 ## Capturas (simuladas)
 

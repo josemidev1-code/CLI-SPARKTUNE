@@ -6,6 +6,7 @@ $entry = Join-Path $root 'sparktune.ps1'
 $testHome = Join-Path ([IO.Path]::GetTempPath()) ('sparktune-ai-' + [guid]::NewGuid().ToString('N'))
 $oldProfile = $env:USERPROFILE
 $oldKey = $env:OPENAI_API_KEY
+$oldGroq = $env:GROQ_API_KEY
 $oldModel = $env:SPARKTUNE_AI_MODEL
 $mock = @{ Calls = 0; Reply = 'normal'; LastRequest = $null; LastHttp = $null; Chosen = $null }
 
@@ -22,7 +23,9 @@ function Invoke-RestMethod {
     $mock.LastRequest = ConvertFrom-Json -InputObject ([Text.Encoding]::UTF8.GetString($Body))
     $mock.LastHttp = @{ Uri = $Uri.AbsoluteUri; Method = $Method; Authorization = $Headers.Authorization }
     if ($mock.Reply -eq 'http-error') { throw 'PRIVATE-API-DETAIL' }
-    if ($mock.LastRequest.text.format.name -eq 'sparktune_setup') {
+    $groq = $Uri.Host -eq 'api.groq.com'
+    $format = if ($groq) { $mock.LastRequest.response_format.json_schema } else { $mock.LastRequest.text.format }
+    if ($format.name -eq 'sparktune_setup') {
         $advice = @{
             profile = if ($mock.Reply -eq 'bad-profile') { 'inventado' } else { 'desarrollo' }
             plan = if ($mock.Reply -eq 'bad-plan') { 'power.restore-defaults' } else { 'ninguno' }
@@ -31,7 +34,7 @@ function Invoke-RestMethod {
             reason = "Propuesta de programación. $([char]27)CONTROL"
         }
     } else {
-        $mock.Chosen = @($mock.LastRequest.text.format.schema.properties.recommendations.items.properties.id.enum)[0]
+        $mock.Chosen = @($format.schema.properties.recommendations.items.properties.id.enum)[0]
         $advice = @{
             recommendations = @(
                 @{ id = 'unknown.fake'; reason = 'INVALID ADVICE' }
@@ -39,6 +42,14 @@ function Invoke-RestMethod {
                 @{ id = $mock.Chosen; reason = 'DUPLICATE ADVICE' }
             )
         }
+    }
+    if ($groq) {
+        $json = ConvertTo-Json -InputObject $advice -Depth 5 -Compress
+        $reason = if ($mock.Reply -eq 'refusal') { 'length' } else { 'stop' }
+        return [pscustomobject]@{ choices = @([pscustomobject]@{
+            finish_reason = $reason
+            message = [pscustomobject]@{ content = $json }
+        }) }
     }
     $content = if ($mock.Reply -eq 'refusal') {
         @{ type = 'refusal'; refusal = 'No puedo responder.' }
@@ -58,6 +69,7 @@ try {
     New-Item -ItemType Directory -Path $testHome | Out-Null
     $env:USERPROFILE = $testHome
     $env:OPENAI_API_KEY = $null
+    $env:GROQ_API_KEY = $null
     $env:SPARKTUNE_AI_MODEL = 'mock-model'
 
     $goal = 'Batería = más duración'
@@ -124,10 +136,27 @@ try {
     Assert-AI ($LASTEXITCODE -eq 2 -and $mock.Calls -eq $calls) 'setup aceptó --yes para una recomendación de IA.'
     Assert-AI (-not (Test-Path -LiteralPath (Join-Path $testHome '.sparktune/journal.json'))) 'setup con IA escribió el historial sin aplicar ajustes.'
 
+    $env:GROQ_API_KEY = 'groq-test-secret'
+    $env:OPENAI_API_KEY = $null
+    $mock.Reply = 'normal'
+    $proposal = (& $entry setup "--objetivo=$goal" --sin-apps --lang=es 6>&1) -join "`n"
+    Assert-AI ($LASTEXITCODE -eq 0 -and $proposal -match '\[desarrollo\]' -and $proposal -notmatch 'groq-test-secret') 'La propuesta de Groq no se mostró correctamente.'
+    $request = $mock.LastRequest
+    $context = ConvertFrom-Json -InputObject $request.messages[1].content
+    Assert-AI ($mock.LastHttp.Uri -eq 'https://api.groq.com/openai/v1/chat/completions' -and $mock.LastHttp.Authorization -ceq 'Bearer groq-test-secret') 'La solicitud Groq tiene destino o autenticación incorrectos.'
+    Assert-AI ($request.model -ceq 'openai/gpt-oss-20b' -and $request.response_format.json_schema.strict -and $context.goal -ceq $goal -and -not $context.apps_allowed) 'Groq perdió el modelo, el esquema o el objetivo.'
+    $mock.Reply = 'bad-plan'
+    $rejected = (& $entry setup "--objetivo=$goal" --lang=es 6>&1) -join "`n"
+    Assert-AI ($LASTEXITCODE -eq 1 -and $rejected -match 'formato esperado') 'SparkTune aceptó un plan inválido de Groq.'
+    $mock.Reply = 'normal'
+    $advice = (& $entry ai "--objetivo=$goal" --lang=es 6>&1) -join "`n"
+    Assert-AI ($LASTEXITCODE -eq 0 -and $advice -match 'Mejora sugerida' -and $advice -notmatch 'INVALID ADVICE') 'El asesor de Groq no filtró las recomendaciones.'
+
     Write-Host 'AI advisor tests OK'
 } finally {
     $env:USERPROFILE = $oldProfile
     $env:OPENAI_API_KEY = $oldKey
+    $env:GROQ_API_KEY = $oldGroq
     $env:SPARKTUNE_AI_MODEL = $oldModel
     if (Test-Path -LiteralPath $testHome) { Remove-Item -LiteralPath $testHome -Recurse -Force }
 }
