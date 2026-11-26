@@ -11,8 +11,7 @@ function Test-STConsoleUsable {
         return $true
     } catch { return $false }
 }
-$script:STConsole = $null
-if (Test-STConsoleUsable) { try { $script:STConsole = [Console] } catch { $script:STConsole = $null } }
+$script:STConsole = Test-STConsoleUsable
 
 function Test-STAnsi {
     if ($env:WT_SESSION) { return $true }
@@ -69,10 +68,10 @@ function Write-STLine {
         if ($Extra  -and $script:STColorMap.ContainsKey($Extra))  { $pre += STC $script:STColorMap[$Extra] }
         if ($pre) { $suf = STC '0' }
     }
-    if ($script:STConsole) { $script:STConsole.Write("$pre$Text$suf`n") } else { Write-Host "$pre$Text$suf" }
+    if ($script:STConsole) { [Console]::Write("$pre$Text$suf`n") } else { Write-Host "$pre$Text$suf" }
 }
 function Write-STPlain([string]$Text) {
-    if ($script:STConsole) { $script:STConsole.Write($Text) } else { Write-Host -NoNewline $Text }
+    if ($script:STConsole) { [Console]::Write($Text) } else { Write-Host -NoNewline $Text }
 }
 function Write-STInfo([string]$T)  { Write-STLine "  $T" 'cyan' }
 function Write-STOk([string]$T)    { Write-STLine "  $T" 'green' }
@@ -80,7 +79,7 @@ function Write-STWarn([string]$T)  { Write-STLine "  [!] $T" 'yellow' }
 function Write-STErr([string]$T)   { Write-STLine "  [x] $T" 'red' }
 
 function Clear-STScreen {
-    if ($script:STConsole) { $script:STConsole.Clear() } else { Clear-Host }
+    if ($script:STConsole) { [Console]::Clear() } else { Clear-Host }
 }
 
 function Write-STHeader {
@@ -430,7 +429,7 @@ function Read-STKey {
         $k = Read-Host
         return [pscustomobject]@{ Ch = $(if ($k) { $k[0] } else { [char]13 }); Key = 'Enter' }
     }
-    $ki = $script:STConsole.ReadKey($true)
+    $ki = [Console]::ReadKey($true)
     $c = $ki.KeyChar
     $ck = "$($ki.Key)"
     switch ($ck) {
@@ -472,7 +471,7 @@ function Write-STProgress {
     param([int]$Pct, [string]$Label = '')
     if ($script:STConsole) {
         $w = 80
-        try { $w = $script:STConsole.WindowWidth } catch { }
+        try { $w = [Console]::WindowWidth } catch { }
         if ($w -lt 40) { $w = 40 }
         $inner = $w - 12
         if ($inner -lt 10) { $inner = 10 }
@@ -480,8 +479,8 @@ function Write-STProgress {
         $bar = ('#' * $done).PadRight($inner, '-')
         $txt = "  [$bar] $($Pct.ToString().PadLeft(3))% $Label"
         $txt = $txt.Substring(0, [Math]::Min($txt.Length, $w - 1))
-        $script:STConsole.Write("`r$txt")
-        if ($Pct -ge 100) { $script:STConsole.Write("`n") }
+        [Console]::Write("`r$txt")
+        if ($Pct -ge 100) { [Console]::Write("`n") }
     } else {
         Write-Host "`r  [$Pct%] $Label" -NoNewline
     }
