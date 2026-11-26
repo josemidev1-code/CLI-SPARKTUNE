@@ -1,4 +1,5 @@
 ﻿# Pruebas del comando ai mediante la CLI, con la API simulada.
+param([switch]$ShowSetupExample)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $entry = Join-Path $root 'sparktune.ps1'
@@ -106,6 +107,10 @@ try {
     $setup = (& $entry setup "--objetivo=$goal" --sin-apps --lang=es 6>&1) -join "`n"
     Assert-AI ($LASTEXITCODE -eq 0 -and $mock.Calls -eq ($calls + 1) -and $setup -match 'Programación \[desarrollo\]') 'setup no usó el perfil elegido en la respuesta.'
     Assert-AI ($setup -notmatch 'Visual Studio Code|SparkTune Equilibrado|setup.start-suggestions|mock-secret' -and -not $setup.Contains("$([char]27)CONTROL")) 'setup mostró un cambio omitido o texto de control.'
+    if ($ShowSetupExample) {
+        Write-Host "> sparktune setup '--objetivo=$goal' --sin-apps"
+        Write-Host $setup
+    }
     $props = $mock.LastRequest.text.format.schema.properties
     Assert-AI ($props.profile.enum -ccontains 'desarrollo' -and $props.plan.enum -ccontains 'ninguno' -and $props.plan.enum -cnotcontains 'restore-defaults') 'La consulta de setup admite opciones incorrectas.'
 

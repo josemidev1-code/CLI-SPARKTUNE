@@ -1,0 +1,26 @@
+name: SparkTune Windows capture
+on:
+  push:
+    branches: [codex/windows-captures]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run and record SparkTune
+        shell: powershell
+        run: ./tests/windows-demo.ps1 -OutputDirectory "$env:RUNNER_TEMP/sparktune-captures"
+      - name: Save Windows transcripts and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sparktune-windows-evidence
+          path: ${{ runner.temp }}/sparktune-captures
+          if-no-files-found: error
+          retention-days: 14
