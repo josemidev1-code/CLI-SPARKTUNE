@@ -95,6 +95,8 @@ El archivo guarda identificadores de aplicaciones y ajustes, y el plan de energ�
 
 Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
 
+El catálogo [acciones.json](src/data/acciones.json) define los ajustes de cuenta que usa `setup`. Cada entrada indica un ID único `setup.…`, títulos y descripciones en español e inglés, una ruta en `HKCU` (bajo `Software\Microsoft` o `System\GameConfigStore`), el nombre del ajuste, el valor booleano de registro como entero `0` o `1`, y la compilación mínima de Windows. El motor valida el catálogo y guarda el valor previo para `undo`. Añade el ID al perfil que quieras desde `setup-profiles.json`.
+
 ## Uso
 
 ```
