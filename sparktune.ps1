@@ -33,7 +33,7 @@ $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
 $aiGoal = ''; $aiGoalSpecified = $false
 $setupPlan = ''; $saveSetupPath = ''; $loadSetupPath = ''; $skipApps = $false; $skipTweaks = $false
-$flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
+$flagJson = $false; $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
     $matched = $false
@@ -41,6 +41,7 @@ foreach ($a in $RawArgs) {
         '^(--yes|-y)$'            { $flagYes = $true; $matched = $true; continue }
         '^(--dry-run|-n|--dryrun)$' { $flagDry = $true; $matched = $true; continue }
         '^(--no-banner|--nobanner)$' { $flagNoBanner = $true; $matched = $true; continue }
+        '^--json$'              { $flagJson = $true; $matched = $true; continue }
         '^--version$'           { $cmd = 'version'; $matched = $true; continue }
         '^(--help|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
         '^(--lang=.+)$' { $optLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -66,7 +67,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('setup','version','validar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
+    if ($low -in @('setup','version','validar','acciones','ejecutar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     Write-STErr ("argumento desconocido: $a")
     exit 2
@@ -130,8 +131,16 @@ if ($loadSetupPath -and ($optPerfil -or $aiGoalSpecified -or $setupPlan)) {
     exit 2
 }
 
-if ($cmd -eq 'validar' -and (-not $loadSetupPath -or $flagYes -or $appsInteractive)) {
-    Write-STErr 'Usa sparktune validar --cargar-plan=archivo.json.'
+if ($cmd -eq 'validar' -and ($flagYes -or $appsInteractive -or $optPerfil -or $aiGoalSpecified)) {
+    Write-STErr 'Usa sparktune validar o sparktune validar --cargar-plan=archivo.json.'
+    exit 2
+}
+if ($flagJson -and $cmd -ne 'acciones') {
+    Write-STErr '--json se utiliza con el comando acciones.'
+    exit 2
+}
+if ($cmd -eq 'ejecutar' -and -not $optId) {
+    Write-STErr 'Usa sparktune ejecutar --id=setup.nombre [--dry-run|--yes].'
     exit 2
 }
 
@@ -140,7 +149,20 @@ try {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
         'version'   { Write-Output $Global:STVersion; exit 0 }
-        'validar'   { exit (Invoke-STSetup -LoadPath $loadSetupPath -ValidateOnly) }
+        'validar'   {
+            if ($loadSetupPath) { exit (Invoke-STSetup -LoadPath $loadSetupPath -ValidateOnly) }
+            exit (Invoke-STActionCatalog -ValidateOnly)
+        }
+        'acciones'  {
+            if ($flagJson) {
+                $catalogJson = Invoke-STActionCatalog -Json
+                if ($catalogJson -is [int]) { exit $catalogJson }
+                Write-Output $catalogJson
+                exit 0
+            }
+            exit (Invoke-STActionCatalog)
+        }
+        'ejecutar'  { exit (Invoke-STActionCatalog -Id $optId -Yes:$flagYes) }
         'banner'    { Show-STBanner -NoBanner:$flagNoBanner }
         'setup'     {
             if ($script:STConsole -and -not ($flagDry -or $flagYes -or $flagNoBanner) -and $Global:STBanner) {

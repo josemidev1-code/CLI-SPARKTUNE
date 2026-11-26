@@ -39,7 +39,7 @@ if (($mock.Lines -join ' ') -notmatch 'Premiere Pro.*https://helpx\.adobe\.com' 
 $Global:STDryRun = $false
 if ((Invoke-STSetup -Perfil 'desarrollo' -Yes) -ne 1) { throw 'Se perdio el fallo de instalacion de Git.' }
 if (($mock.Apps -join ',') -ne 'vscode,git,node-lts,python,7zip') { throw 'Paquetes de programacion incorrectos.' }
-if (($mock.Adjustments -join ',') -ne 'setup.start-suggestions,power.spark-equili') { throw 'Ajustes de programacion incorrectos.' }
+if (($mock.Adjustments -join ',') -ne 'setup.start-suggestions,setup.file-extensions,power.spark-equili') { throw 'Ajustes de programacion incorrectos.' }
 
 $mock.Laptop = $false
 if ((Invoke-STSetup -Perfil 'gaming' -Plan 'spark-portatil-max' -Yes) -ne 2) { throw 'No rechazo el plan exclusivo de portatil.' }

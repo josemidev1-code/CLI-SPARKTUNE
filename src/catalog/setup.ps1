@@ -54,7 +54,7 @@ function New-STSetupAction {
         apply = {
             param($action)
             $old = Get-STSetupRegistryValue $action.registryPath $action.registryName
-            Set-STStateFile $action.id @{ previous = $old; value = $action.registryValue }
+            Set-STStateFile $action.id @{ previous = $old; value = $action.registryValue; path = $action.registryPath; name = $action.registryName }
             Set-STSetupRegistryValue $action.registryPath $action.registryName $action.registryValue
         }
         undo = {
@@ -62,6 +62,9 @@ function New-STSetupAction {
             $state = Get-STStateFile $action.id
             if (-not $state -or $state.PSObject.Properties.Name -notcontains 'previous' -or $state.value -ne $action.registryValue) {
                 throw "Falta el estado anterior de $($action.id)."
+            }
+            if ($state.path -and ($state.path -ne $action.registryPath -or $state.name -ne $action.registryName)) {
+                throw "El destino de $($action.id) cambió desde que se aplicó. Restaura la definición anterior antes de deshacer."
             }
             $current = Get-STSetupRegistryValue $action.registryPath $action.registryName
             if ($current -ne $action.registryValue -and $current -ne $state.previous) {
