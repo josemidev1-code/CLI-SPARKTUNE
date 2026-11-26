@@ -11,11 +11,33 @@ $testProfile = Join-Path $env:RUNNER_TEMP ('sparktune-setup-' + [guid]::NewGuid(
 try {
     $env:USERPROFILE = $testProfile
     Set-STSetupRegistryValue $gameBar $gameMode 0
-    & $entry setup --perfil=gaming --plan=ninguno --sin-apps --dry-run
+    New-Item -ItemType Directory -Path $testProfile -Force | Out-Null
+    $file = Join-Path $testProfile 'Mi plan.json'
+    & $entry setup --perfil=gaming --plan=ninguno --sin-apps "--guardar-plan=$file"
+    if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
+        throw 'Guardar el plan falló o modificó el registro.'
+    }
+    $saved = Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+    if ($saved.apps.Count -ne 0 -or $saved.ajustes.Count -ne 2 -or $saved.energia -ne 'ninguno') {
+        throw 'El archivo no conserva las opciones elegidas.'
+    }
+    $hash = (Get-FileHash -LiteralPath $file).Hash
+    & $entry setup --perfil=ofimatica --plan=ninguno --sin-apps "--guardar-plan=$file"
+    if ($LASTEXITCODE -eq 0 -or (Get-FileHash -LiteralPath $file).Hash -ne $hash) {
+        throw 'Se sobrescribió un plan guardado.'
+    }
+    $bad = Join-Path $testProfile 'Plan incompatible.json'
+    $saved.ajustes += 'priv.tips'
+    ConvertTo-Json $saved | Set-Content -LiteralPath $bad -Encoding UTF8
+    & $entry setup "--cargar-plan=$bad" --yes
+    if ($LASTEXITCODE -eq 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
+        throw 'Se aplicaron cambios antes de rechazar un ajuste ajeno al catálogo de setup.'
+    }
+    & $entry setup "--cargar-plan=$file" --dry-run
     if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
         throw 'La simulación falló o modificó el registro.'
     }
-    & $entry setup --perfil=gaming --plan=ninguno --sin-apps --yes
+    & $entry setup "--cargar-plan=$file" --yes
     if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 1) {
         throw 'El asistente no activó el Modo Juego en Windows.'
     }
@@ -27,7 +49,7 @@ try {
     if (@($entries | Where-Object status -eq 'failed').Count -or @($entries | Where-Object status -eq 'undo').Count -ne 2) {
         throw 'El historial no refleja los dos ajustes restaurados.'
     }
-    Write-Host 'Simulación, aplicación y undo del registro: OK'
+    Write-Host 'Exportación, importación, simulación, aplicación y undo del registro: OK'
 } finally {
     Set-STSetupRegistryValue $gameBar $gameMode $previous
     $env:USERPROFILE = $oldProfile

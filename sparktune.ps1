@@ -32,7 +32,7 @@ $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
 $aiGoal = ''; $aiGoalSpecified = $false
-$setupPlan = ''; $skipApps = $false; $skipTweaks = $false
+$setupPlan = ''; $saveSetupPath = ''; $loadSetupPath = ''; $skipApps = $false; $skipTweaks = $false
 $flagYes = $false; $flagDry = $false; $flagNoBanner = $false; $flagHelp = $false
 foreach ($a in $RawArgs) {
     $low = "$a".ToLowerInvariant()
@@ -52,6 +52,8 @@ foreach ($a in $RawArgs) {
         '^(--category=.+|--cat=.+)$' { $optCat = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--objetivo|--goal)=.*$' { $aiGoal = $a.Substring($a.IndexOf('=') + 1); $aiGoalSpecified = $true; $matched = $true; continue }
         '^--plan=.+$' { $setupPlan = $a.Substring($a.IndexOf('=') + 1).ToLowerInvariant(); $matched = $true; continue }
+        '^--(guardar-plan|save-plan)=.+$' { $saveSetupPath = $a.Substring($a.IndexOf('=') + 1); $matched = $true; continue }
+        '^--(cargar-plan|load-plan)=.+$' { $loadSetupPath = $a.Substring($a.IndexOf('=') + 1); $matched = $true; continue }
         '^--sin-apps$' { $skipApps = $true; $matched = $true; continue }
         '^--sin-ajustes$' { $skipTweaks = $true; $matched = $true; continue }
         '^(--out=.+)$' { $Global:STReportOut = ($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -103,8 +105,8 @@ $Global:STDryRun = $flagDry
 
 if ($flagHelp) { Show-STHelp; exit 0 }
 
-if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks)) {
-    Write-STErr '--plan, --sin-apps y --sin-ajustes se utilizan con setup.'
+if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks -or $saveSetupPath -or $loadSetupPath)) {
+    Write-STErr 'Las opciones de plan y selección se utilizan con setup.'
     exit 2
 }
 
@@ -115,6 +117,15 @@ if ($cmd -eq 'setup' -and ($optNivel -or $optId -or $optCat -or $appsInstall -or
 
 if ($cmd -eq 'setup' -and $aiGoalSpecified -and ($flagYes -or $optPerfil -or $setupPlan -or -not $aiGoal.Trim())) {
     Write-STErr 'En setup, usa --objetivo con texto y sin --perfil, --plan ni --yes.'
+    exit 2
+}
+
+if ($saveSetupPath -and ($loadSetupPath -or $flagDry -or $flagYes -or $appsInteractive -or -not ($optPerfil -or $aiGoalSpecified))) {
+    Write-STErr '--guardar-plan requiere un perfil u objetivo y solo exporta el JSON.'
+    exit 2
+}
+if ($loadSetupPath -and ($optPerfil -or $aiGoalSpecified -or $setupPlan)) {
+    Write-STErr '--cargar-plan ya indica el perfil y el plan de energía.'
     exit 2
 }
 
@@ -131,7 +142,7 @@ try {
                 Invoke-STSetup -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks
                 exit 0
             }
-            exit (Invoke-STSetup -Perfil $optPerfil -Plan $setupPlan -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks -Interactive:$appsInteractive -Yes:$flagYes)
+            exit (Invoke-STSetup -Perfil $optPerfil -Plan $setupPlan -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks -Interactive:$appsInteractive -Yes:$flagYes -SavePath $saveSetupPath -LoadPath $loadSetupPath)
         }
         'status'    { Show-STStatus }
         'battery'   { Show-STBatteryReport }
