@@ -26,35 +26,48 @@ function Show-STBanner {
     $up = "$esc[$($logo.Count + 1)A"
     $cyan = STC '96'
     $spark = STC '97'
+    $blue = STC '94'
     $dim = STC '90'
     $gold = STC '93'
     $reset = STC '0'
+    $lastFrame = 30
+    $revealFrames = 18
     $first = $true
 
     try {
         Write-STPlain "$esc[?25l"
-        for ($frame = 0; $frame -le 24; $frame++) {
-            $edge = [int][Math]::Floor($logoWidth * [Math]::Min($frame, 16) / 16)
+        for ($frame = 0; $frame -le $lastFrame; $frame++) {
             $rows = @(
-                foreach ($line in $logo) {
-                    $end = [Math]::Min($edge, $line.Length)
-                    $start = [Math]::Max(0, $end - 3)
-                    if ($frame -lt 16) {
-                        $line.Substring(0, $start).Insert(0, $cyan) +
+                for ($row = 0; $row -lt $logo.Count; $row++) {
+                    $line = $logo[$row]
+                    # Offset each row so the advancing edge crosses the logo diagonally.
+                    if ($frame -lt $revealFrames) {
+                        $edge = [int][Math]::Floor(($logoWidth + 2 * ($logo.Count - 1)) * $frame / $revealFrames) - 2 * $row
+                        $end = [Math]::Min([Math]::Max(0, $edge), $line.Length)
+                        $start = [Math]::Max(0, $end - 3)
+                        $cyan + $line.Substring(0, $start) +
                             $spark + $line.Substring($start, $end - $start) + $dim +
-                            ($line.Substring($end) -replace '[#]', '.')
+                            ($line.Substring($end) -replace '[^ ]', '.')
+                    } elseif ($frame -lt $lastFrame) {
+                        $edge = [int][Math]::Floor(($logoWidth + 10) * ($frame - $revealFrames) / ($lastFrame - $revealFrames)) - 5 + $row
+                        $start = [Math]::Min([Math]::Max(0, $edge - 2), $line.Length)
+                        $end = [Math]::Min([Math]::Max(0, $edge + 2), $line.Length)
+                        $cyan + $line.Substring(0, $start) + $spark + $line.Substring($start, $end - $start) +
+                            $blue + $line.Substring($end)
                     } else { $cyan + $line }
-                }
+                )
                 ''
-                $gold + $credit.Substring(0, [int][Math]::Floor($credit.Length * [Math]::Max(0, $frame - 16) / 8))
+                $count = [int][Math]::Floor($credit.Length * [Math]::Max(0, $frame - $revealFrames) / ($lastFrame - $revealFrames))
+                $caret = if ($frame -ge $revealFrames -and $frame -lt $lastFrame) { '_' } else { '' }
+                $gold + $credit.Substring(0, $count) + $caret
             )
             $position = if ($first) { '' } else { $up }
             $buffer = ($rows | ForEach-Object { "`r$clear$_$reset" }) -join "`r`n"
             Write-STPlain ($position + $buffer)
             $first = $false
-            if ($frame -lt 24) { Start-Sleep -Milliseconds 44 }
+            if ($frame -lt $lastFrame) { Start-Sleep -Milliseconds 42 }
         }
-        Start-Sleep -Milliseconds 430
+        Start-Sleep -Milliseconds 400
     } finally {
         Write-STPlain "$reset$esc[?25h`r`n`r`n"
     }

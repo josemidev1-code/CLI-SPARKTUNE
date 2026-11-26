@@ -26,14 +26,19 @@ def capture(width, *flags):
             break
         stream.feed(output)
         rows = [row.rstrip() for row in screen.display[:9]]
-        if not frames or rows != frames[-1]["rows"]:
-            frames.append({"time": round((time.monotonic() - start) * 1000), "rows": rows})
+        colors = [[screen.buffer[y][x].fg for x in range(len(row))] for y, row in enumerate(rows)]
+        if not frames or (rows, colors) != (frames[-1]["rows"], frames[-1]["colors"]):
+            frames.append({"time": round((time.monotonic() - start) * 1000), "rows": rows, "colors": colors})
     return frames, screen.cursor.hidden
 
 
 frames, hidden = capture(90)
 if len(frames) < 8 or not any("." in row for frame in frames for row in frame["rows"]):
     raise SystemExit(f"The Windows console did not animate. Captured frames: {frames!r}")
+if not any("_" in row for frame in frames for row in frame["rows"]):
+    raise SystemExit("The credit did not display its typing cursor.")
+if not any("brightwhite" in row or "white" in row for frame in frames for row in frame["colors"]):
+    raise SystemExit("The reveal did not display its bright edge.")
 if hidden or "made by josemidev1" not in " ".join(frames[-1]["rows"]):
     raise SystemExit("The final credit or visible cursor is missing.")
 if sum("#" in row for row in frames[-1]["rows"]) != 5:
