@@ -98,6 +98,9 @@ function Write-STSection([string]$Title) {
 # ---------- idioma ----------
 $script:ST = @{}
 $script:ST_ES = @{
+    'catalog.valid' = 'Catálogo válido: {0} acciones.'
+    'catalog.unknown' = 'Acción desconocida: {0}. Consulta sparktune acciones.'
+    'catalog.incompatible' = 'Acción incompatible con este equipo: {0}.'
     'app.tagline'    = 'Optimizacion de Windows'
     'app.by'         = 'por @josemidev1'
     'menu.title'     = 'Que quieres optimizar?'
@@ -192,6 +195,9 @@ $script:ST_ES = @{
     'nav.quit'       = 'Salir'
 }
 $script:ST_EN = @{
+    'catalog.valid' = 'Valid catalog: {0} actions.'
+    'catalog.unknown' = 'Unknown action: {0}. See sparktune acciones.'
+    'catalog.incompatible' = 'Action incompatible with this PC: {0}.'
     'app.tagline'    = 'Windows optimization'
     'app.by'         = 'by @josemidev1'
     'menu.title'     = 'What do you want to optimize?'
@@ -323,7 +329,9 @@ function Show-STHelp {
         '  setup: --guardar-plan=archivo.json | --cargar-plan=archivo.json',
         '  banner                 Ver la intro ASCII',
         '  version                Mostrar la versión instalada',
-        '  validar --cargar-plan=archivo.json   Comprobar un plan sin aplicarlo',
+        '  validar [--cargar-plan=archivo.json]   Validar el catálogo o un plan',
+        '  acciones [--json]      Listar las acciones configurables',
+        '  ejecutar --id=setup.nombre [--dry-run]    Ejecutar una acción',
         '  (sin comando)          Asistente interactivo',
         '@Diagnóstico y cambios',
         '  status                 Panel: CPU, RAM, disco, GPU, bateria, plan, servicios',
@@ -377,7 +385,9 @@ function Show-STHelp {
             '  setup: --save-plan=file.json | --load-plan=file.json',
             '  banner                 Play the ASCII intro',
             '  version                Show the installed version',
-            '  validar --load-plan=file.json   Check a plan without applying it',
+            '  validar [--load-plan=file.json]   Validate the catalog or a plan',
+            '  acciones [--json]      List configurable actions',
+            '  ejecutar --id=setup.name [--dry-run]    Run an action',
             '  (no command)           Interactive wizard',
             '@Diagnostics and changes',
             '  status                 Dashboard: CPU, RAM, disk, GPU, battery, plan, services',

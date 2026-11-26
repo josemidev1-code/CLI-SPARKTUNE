@@ -69,7 +69,30 @@ try {
     if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $capturePath $captureName) -ne 1) {
         throw 'No se restauró la grabación en segundo plano.'
     }
-    Write-Host 'Tres acciones de acciones.json aplicadas y restauradas en Windows.'
+    $catalog = & $entry acciones --json | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0 -or @($catalog).Count -ne 5) { throw 'La CLI no lista cinco acciones en JSON.' }
+    & $entry validar
+    if ($LASTEXITCODE -ne 0) { throw 'La CLI rechazó el catálogo válido.' }
+
+    $explorer = 'Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+    foreach ($case in @(
+        @{ id = 'setup.file-extensions'; name = 'HideFileExt' },
+        @{ id = 'setup.hide-widgets'; name = 'TaskbarDa' }
+    )) {
+        $prior = Get-STSetupRegistryValue $explorer $case.name
+        try {
+            Set-STSetupRegistryValue $explorer $case.name 1
+            & $entry ejecutar "--id=$($case.id)" --dry-run
+            if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $explorer $case.name) -ne 1) { throw 'La simulación cambió el registro.' }
+            & $entry ejecutar "--id=$($case.id)" --yes
+            if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $explorer $case.name) -ne 0) { throw 'No se aplicó el ajuste.' }
+            & $entry undo "--id=$($case.id)" --yes
+            if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $explorer $case.name) -ne 1) { throw 'No se restauró el valor anterior.' }
+        } finally {
+            Set-STSetupRegistryValue $explorer $case.name $prior
+        }
+    }
+    Write-Host 'Cinco acciones de acciones.json aplicadas y restauradas en Windows.'
     Write-Host 'Exportación, importación, simulación, aplicación y undo del registro: OK'
 } finally {
     Set-STSetupRegistryValue $gameBar $gameMode $previous

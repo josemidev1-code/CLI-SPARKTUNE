@@ -57,6 +57,28 @@ Check 'catalog loads' {
     if ($all.Count -lt 40) { throw "solo $($all.Count) acciones" }
 }
 
+Check 'external actions reject a bad value and duplicate ids' {
+    $dataDir = $Global:STData
+    $scratch = Join-Path ([IO.Path]::GetTempPath()) ('sparktune-catalog-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $scratch | Out-Null
+    try {
+        $source = Join-Path $dataDir 'acciones.json'
+        $Global:STData = $scratch
+        $target = Join-Path $scratch 'acciones.json'
+        foreach ($field in @('valor','id')) {
+            $config = Get-Content -LiteralPath $source -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($field -eq 'valor') { $config.acciones[0].valor = '0' }
+            else { $config.acciones[1].id = $config.acciones[0].id }
+            $config | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $target -Encoding UTF8
+            $message = try { Get-SetupCatalogActions | Out-Null; '' } catch { $_.Exception.Message }
+            if ($message -notmatch [regex]::Escape(".$field")) { throw "No se detectó el error en $field." }
+        }
+    } finally {
+        $Global:STData = $dataDir
+        Remove-Item -LiteralPath $scratch -Recurse -Force
+    }
+}
+
 Check 'unique ids' {
     $seen = @{}; $dupes = @()
     foreach ($a in $all) {

@@ -42,3 +42,27 @@ jobs:
         with:
           name: sparktune-ascii-intro
           path: banner-frames.json
+
+  portable-contract:
+    name: Portable contract (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check catalog metadata
+        shell: pwsh
+        run: ./tests/run-tests.ps1
+      - name: Check public read-only commands
+        shell: pwsh
+        run: |
+          ./sparktune.ps1 validar
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $actions = ./sparktune.ps1 acciones --json | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or @($actions).Count -ne 5) { throw 'Expected five catalog actions.' }
+      - name: Check journal files
+        shell: pwsh
+        run: ./tests/journal-tests.ps1

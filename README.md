@@ -95,7 +95,17 @@ El archivo guarda identificadores de aplicaciones y ajustes, y el plan de energ�
 
 Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
 
-El catálogo [acciones.json](src/data/acciones.json) define los ajustes de cuenta que usa `setup`. Cada entrada indica un ID único `setup.…`, títulos y descripciones en español e inglés, una ruta en `HKCU` (bajo `Software\Microsoft` o `System\GameConfigStore`), el nombre del ajuste, el valor booleano de registro como entero `0` o `1`, y la compilación mínima de Windows. El motor valida el catálogo y guarda el valor previo para `undo`. Añade el ID al perfil que quieras desde `setup-profiles.json`.
+También puedes revisar y ejecutar un solo ajuste del catálogo:
+
+```powershell
+sparktune acciones
+sparktune acciones --json
+sparktune validar
+sparktune ejecutar --id=setup.file-extensions --dry-run
+sparktune ejecutar --id=setup.file-extensions
+```
+
+El catálogo [acciones.json](src/data/acciones.json) define los ajustes de cuenta que usa `setup`. Cada entrada indica un ID único `setup.…`, títulos y descripciones en español e inglés, una ruta en `HKCU` (bajo `Software\Microsoft` o `System\GameConfigStore`), el nombre del ajuste, el valor booleano de registro como entero `0` o `1`, y la compilación mínima de Windows. El motor valida el catálogo y guarda el destino y valor previos para `undo`. Si cambias el destino de un ajuste, dale un ID nuevo. Véase el [ADR del catálogo](docs/adr/0001-catalogo-de-acciones.md). Añade el ID al perfil que quieras desde `setup-profiles.json`.
 
 ## Uso
 
@@ -134,7 +144,7 @@ Flags:
 --no-banner
 ```
 
-`sparktune version` muestra la versión. `sparktune validar --cargar-plan=archivo.json` valida el formato, el catálogo y la compatibilidad sin aplicar cambios. Códigos de salida: `0` correcto, `1` error de operación, `2` uso incorrecto y `3` plan guardado inválido o incompatible.
+`sparktune version` muestra la versión. `sparktune validar --cargar-plan=archivo.json` valida el formato, el catálogo y la compatibilidad sin aplicar cambios. Códigos de salida: `0` correcto, `1` error de operación, `2` uso incorrecto y `3` configuración inválida o plan incompatible.
 
 Las opciones desconocidas terminan con código 2 para evitar que un error al escribir `--dry-run` ejecute cambios por accidente.
 

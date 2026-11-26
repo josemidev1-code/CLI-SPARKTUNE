@@ -33,6 +33,28 @@
       "nombre": "AutoGameModeEnabled",
       "valor": 1,
       "build_minima": 10240
+    },
+    {
+      "id": "setup.file-extensions",
+      "titulo": "Mostrar extensiones de archivos",
+      "titulo_en": "Show file extensions",
+      "descripcion": "Muestra extensiones como .zip, .ps1 y .exe en el Explorador.",
+      "descripcion_en": "Shows extensions such as .zip, .ps1 and .exe in File Explorer.",
+      "ruta": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "nombre": "HideFileExt",
+      "valor": 0,
+      "build_minima": 10240
+    },
+    {
+      "id": "setup.hide-widgets",
+      "titulo": "Ocultar el botón Widgets",
+      "titulo_en": "Hide the Widgets button",
+      "descripcion": "Oculta el botón Widgets de la barra de tareas en Windows 11.",
+      "descripcion_en": "Hides the Widgets button on the Windows 11 taskbar.",
+      "ruta": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "nombre": "TaskbarDa",
+      "valor": 0,
+      "build_minima": 22000
     }
   ]
 }

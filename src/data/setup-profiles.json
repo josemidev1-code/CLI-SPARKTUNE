@@ -3,7 +3,7 @@
     "nombre": "Programación",
     "nombre_en": "Software development",
     "apps": ["vscode", "git", "node-lts", "python", "7zip"],
-    "ajustes": ["setup.start-suggestions"],
+    "ajustes": ["setup.start-suggestions", "setup.file-extensions"],
     "plan-portatil": "spark-equili",
     "plan-sobremesa": "spark-equili"
   },
@@ -43,7 +43,7 @@
     "nombre": "Ofimática",
     "nombre_en": "Office",
     "apps": ["libre", "firefox", "7zip"],
-    "ajustes": ["setup.start-suggestions", "setup.background-capture"],
+    "ajustes": ["setup.start-suggestions", "setup.background-capture", "setup.hide-widgets"],
     "plan-portatil": "spark-ahorro",
     "plan-sobremesa": "spark-equili"
   }

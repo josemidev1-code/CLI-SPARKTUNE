@@ -288,3 +288,49 @@ function Invoke-STSetup {
     }
     return $result
 }
+
+# Comandos de catálogo. Solo exponen las acciones declarativas de setup.
+function Invoke-STActionCatalog {
+    param([switch]$ValidateOnly, [switch]$Json, [string]$Id, [switch]$Yes)
+    try { $actions = @(Get-SetupCatalogActions) }
+    catch { Write-STErr $_.Exception.Message; return 3 }
+
+    if ($ValidateOnly) {
+        Write-STOk (TF 'catalog.valid' @($actions.Count))
+        return 0
+    }
+    if ($Id) {
+        $action = $actions | Where-Object id -eq $Id | Select-Object -First 1
+        if (-not $action) { Write-STErr (TF 'catalog.unknown' @($Id)); return 2 }
+        if (-not (Test-STApplies $action (Get-STHardware))) {
+            Write-STErr (TF 'catalog.incompatible' @($Id))
+            return 1
+        }
+        if ($Global:STDryRun) {
+            Show-STCard $action
+            Write-STInfo (T 'dryrun')
+            return 0
+        }
+        $status = Invoke-STApply -Action $action -Yes $Yes.IsPresent
+        if ($status -ne 'ok') { return 1 }
+        return 0
+    }
+
+    if ($Json) {
+        $rows = @(
+            foreach ($action in $actions) {
+                [ordered]@{
+                    id = $action.id
+                    titulo = STField $action 'titulo'
+                    descripcion = STField $action 'descripcion'
+                    build_minima = $action.minBuild
+                    reversible = $action.reversible
+                }
+            }
+        )
+        ConvertTo-Json -InputObject $rows -Depth 3
+    } else {
+        foreach ($action in $actions) { Write-STInfo "$($action.id) · $(STField $action 'titulo')" }
+        return 0
+    }
+}
