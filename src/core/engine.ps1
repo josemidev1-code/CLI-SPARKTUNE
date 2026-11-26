@@ -466,18 +466,26 @@ function Invoke-STWinget([array]$WArgs) {
     Read-STKey | Out-Null
 }
 function Install-STWingetApp($App, [string]$Scope, [bool]$Interactive, [string]$Source) {
-    # instala 1 app; devuelve 'ok' | 'notfound' | 'fail'.wingetCode | 'error'.mensaje
-    $w = @('install','-e','--id',$App.winget,'--accept-package-agreements','--accept-source-agreements')
-    if ($Interactive) { $w += '--interactive' } else { $w += '--disable-interactivity' }
+    $w = @('install','-e','--id',$App.winget,'--no-upgrade','--accept-package-agreements','--accept-source-agreements')
+    if ($Interactive) { $w += '--interactive' } else { $w += @('--silent','--disable-interactivity') }
     if ($Source) { $w += @('--source', $Source) }
     if ($Scope -eq 'user') { $w += '--scope=user' }
     try {
-        if ($Interactive) { & winget.exe @w | Out-Host; if ($LASTEXITCODE -eq 0) { return 'ok' }; return 'fail' }
-        $out = (& winget.exe @w 2>&1) -join "`n"
-        if ($LASTEXITCODE -eq 0) { return 'ok' }
-        if ($out -match '0x8A150014|no found|no se encontr|Package status Unknown') { return 'notfound' }
-        if ($out -match '(0x[0-9A-Fa-f]{8})') { return "fail.$($matches[1])" }
-        return 'fail'
+        $out = ''
+        if ($Interactive) { & winget.exe @w | Out-Host }
+        else { $out = (& winget.exe @w 2>&1) -join "`n" }
+        $code = $LASTEXITCODE
+        if ($code -eq 0) { return 'ok' }
+        # WinGet may report no applicable upgrade even for an install request.
+        if ($code -in @(-1978335189, -1978334963)) {
+            $check = @('list','-e','--id',$App.winget,'--accept-source-agreements','--disable-interactivity')
+            if ($Source) { $check += @('--source', $Source) }
+            if ($Scope -eq 'user') { $check += '--scope=user' }
+            $listing = (& winget.exe @check 2>&1) -join "`n"
+            if ($LASTEXITCODE -eq 0 -and $listing -match [regex]::Escape($App.winget)) { return 'present' }
+        }
+        if ($code -eq -1978335212 -or $out -match '0x8A150014|no found|no se encontr|Package status Unknown') { return 'notfound' }
+        return ('fail.0x{0:X8}' -f [int]$code)
     } catch { return "error.$($_.Exception.Message)" }
 }
 function Get-STAppsByToken($Cat, [string]$Tok) {
@@ -517,7 +525,7 @@ function Invoke-STAppsInstall {
     foreach ($t in $toks) { $a = Get-STAppsByToken $cat $t; if ($a) { $found += $a } else { $missing += $t } }
     foreach ($m in $missing) { Write-STWarn "desconocida: $m (usa sparktune apps para ver el catalogo)" }
     if ($found.Count -eq 0) { exit 1 }
-    $fail = @(); $skip = @()
+    $fail = @(); $skip = @(); $present = 0
     foreach ($a in $found) {
         if ($Global:STDryRun) {
             if ($Mode -eq 'update') { Write-STInfo "[dry-run] winget upgrade -e --id $($a.winget)$(if ($Interactive) { ' --interactive' } else { '' })" }
@@ -529,6 +537,7 @@ function Invoke-STAppsInstall {
         if ($Mode -eq 'update') { $r = Update-STWingetApp -App $a -Interactive:$Interactive }
         else { $r = Install-STWingetApp -App $a -Scope $Scope -Interactive:$Interactive }
         if ($r -eq 'ok') { Write-STOk $a.name }
+        elseif ($r -eq 'present') { Write-STInfo "$($a.name) ya está instalada."; $present++ }
         elseif ($r -eq 'notfound') {
             if ($Mode -eq 'update') { Write-STInfo "no instalada, se omite: $($a.name)"; $skip += $a.name }
             else { Write-STWarn "no encontrada en winget: $($a.name) [$($a.winget)]"; $fail += $a.name }
@@ -542,12 +551,12 @@ function Invoke-STAppsInstall {
     Write-STLine ''
     if ($Global:STDryRun) { Write-STInfo "dry-run: $($found.Count) apps"; return }
     $verb = @{ install = 'instaladas'; update = 'actualizadas' }[$Mode]
-    if ($fail.Count -gt 0) { Write-STWarn "$($found.Count - $fail.Count)/$($found.Count) $verb; pendientes: $($fail -join ', ')" }
-    else {
-        $msg = "$($found.Count) $verb"
-        if ($skip.Count -gt 0) { $msg += " ($($skip.Count) omitidas por no instaladas)" }
-        Write-STOk $msg
-    }
+    $finished = $found.Count - $fail.Count - $skip.Count - $present
+    $msg = "$finished $verb"
+    if ($present) { $msg += " ($present ya instaladas)" }
+    if ($skip.Count) { $msg += " ($($skip.Count) omitidas por no instaladas)" }
+    if ($fail.Count) { Write-STWarn "$msg. Pendientes: $($fail -join ', ')"; exit 1 }
+    Write-STOk $msg
 }
 function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
     $apps = @($cat.apps | Where-Object { $_.cat -eq $CatId -and -not $_.hidden })
@@ -592,7 +601,10 @@ function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
                 foreach ($t in $todo) {
                     Write-STInfo "-> $($t.name)"
                     $r = Install-STWingetApp -App $t -Scope ''
-                    if ($r -eq 'ok') { Write-STOk $t.name; try { $installed[$t.id] = $true } catch { } }
+                    if ($r -in @('ok','present')) {
+                        if ($r -eq 'present') { Write-STInfo "$($t.name) ya está instalada." } else { Write-STOk $t.name }
+                        $installed[$t.id] = $true
+                    }
                     else {
                         $cod = ''; if ($r -match '^fail\.(.+)$') { $cod = " ($($matches[1]))" }
                         if ($r -eq 'notfound') { Write-STWarn "no encontrada en winget: $($t.name) [$($t.winget)]" }

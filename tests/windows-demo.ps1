@@ -63,10 +63,27 @@ Save-Scene '04-winget' 'WinGet · instalación de una aplicación de prueba' {
     }
     & winget.exe --version
     if ($LASTEXITCODE -ne 0) { throw 'WinGet está instalado, pero no se puede ejecutar.' }
+    function Test-DemoPackage([string]$Id) {
+        $listing = (& winget.exe list --id $Id -e --source winget --accept-source-agreements --disable-interactivity 2>&1) -join "`n"
+        return ($LASTEXITCODE -eq 0 -and $listing -match [regex]::Escape($Id))
+    }
+    $originallyInstalled = Test-DemoPackage '7zip.7zip'
+    "7-Zip ya estaba presente antes de probar: $originallyInstalled"
     Invoke-DemoCli apps --install=7zip
-    '> winget list --id 7zip.7zip -e --source winget'
-    & winget.exe list --id 7zip.7zip -e --source winget --accept-source-agreements --disable-interactivity
-    if ($LASTEXITCODE -ne 0) { throw 'WinGet no confirmó la instalación de 7-Zip.' }
+    if (-not (Test-DemoPackage '7zip.7zip')) { throw 'WinGet no confirmó 7-Zip.' }
+
+    $candidate = @(
+        @{ id = 'vlc'; package = 'VideoLAN.VLC' }
+        @{ id = 'notepadpp'; package = 'Notepad++.Notepad++' }
+        @{ id = 'audacity'; package = 'Audacity.Audacity' }
+    ) | Where-Object { -not (Test-DemoPackage $_.package) } | Select-Object -First 1
+    if (-not $candidate) { throw 'No se encontró una aplicación de prueba ausente.' }
+    "No instalada antes de la prueba: $($candidate.package)"
+    Invoke-DemoCli apps "--install=$($candidate.id)"
+    "> winget list -e --id $($candidate.package) --source winget"
+    & winget.exe list -e --id $candidate.package --source winget --accept-source-agreements --disable-interactivity
+    if ($LASTEXITCODE -ne 0 -or -not (Test-DemoPackage $candidate.package)) { throw 'WinGet no confirmó la instalación nueva.' }
+    'Verificado: WinGet detecta la aplicación recién instalada.'
 }
 
 Save-Scene '05-ajustes-y-undo' 'Cambios de Gaming y restauración · registro real' {

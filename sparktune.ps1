@@ -137,8 +137,8 @@ try {
         'history'   { Show-STHistory }
         'apps'     {
             if ($appsInstall -and $appsUpdate) { Write-STErr 'apps: usa --install o --update, no ambos'; exit 1 }
-            if ($appsInstall) { Invoke-STAppsInstall -List $appsInstall -Scope $appsScope -Interactive $appsInteractive }
-            elseif ($appsUpdate) { Invoke-STAppsInstall -List $appsUpdate -Scope $appsScope -Interactive $appsInteractive -Mode update }
+            if ($appsInstall) { Invoke-STAppsInstall -List $appsInstall -Scope $appsScope -Interactive $appsInteractive; exit 0 }
+            elseif ($appsUpdate) { Invoke-STAppsInstall -List $appsUpdate -Scope $appsScope -Interactive $appsInteractive -Mode update; exit 0 }
             elseif ($appsScope -or $appsInteractive) { Write-STErr 'apps: --scope/--interactive requieren --install=lista o --update=lista'; exit 1 }
             else { Invoke-STAppsMenu }
         }

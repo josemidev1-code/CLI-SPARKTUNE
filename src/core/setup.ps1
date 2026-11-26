@@ -182,6 +182,9 @@
         }
         $status = Install-STWingetApp -App $app -Source 'winget' -Interactive:$Interactive
         if ($status -eq 'ok') { Write-STOk $app.name }
+        elseif ($status -eq 'present') {
+            Write-STInfo $(if ($en) { "$($app.name) is already installed." } else { "$($app.name) ya está instalada." })
+        }
         else { Write-STErr "$($app.name) [$($app.winget)]: $status"; $result = 1 }
     }
     foreach ($action in @($tweaks) + @($power)) {
