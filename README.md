@@ -82,6 +82,16 @@ La IA explica qué perfil y plan propone. SparkTune prepara la lista a partir de
 
 **Portátil Máximo** favorece el rendimiento al enchufarlo y limita el estado máximo de CPU al 80 % con batería. También apaga antes la pantalla y suspende tras 15 minutos de inactividad con batería. Si priorizas la autonomía, puedes elegir `--plan=spark-ahorro` o `--plan=spark-ultra`. El efecto del plan depende del hardware y del firmware. Los ajustes y los cambios de plan hechos por `setup` se pueden deshacer con `sparktune undo`. Gestiona las aplicaciones instaladas por separado desde Windows o WinGet.
 
+Puedes reutilizar una propuesta en otro equipo con un archivo JSON. Guárdala desde un perfil o desde una recomendación de IA:
+
+```powershell
+sparktune setup --perfil=desarrollo '--guardar-plan=Mi plan.json'
+sparktune setup '--cargar-plan=Mi plan.json' --dry-run
+sparktune setup '--cargar-plan=Mi plan.json' --yes
+```
+
+El archivo guarda identificadores de aplicaciones y ajustes, y el plan de energía elegido. Al cargarlo, SparkTune valida el catálogo y la compatibilidad antes de aplicar cambios. Puedes añadir `--sin-apps` o `--sin-ajustes` para saltar una parte. Guardar crea un archivo nuevo y, si ya existe, pide un nombre distinto mediante un error.
+
 Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
 
 ## Uso

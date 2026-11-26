@@ -1,10 +1,57 @@
-﻿function Invoke-STSetup {
-    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes)
+﻿# Planes de setup v1. El archivo solo contiene referencias al catálogo.
+function Read-STSetupPlan([string]$Path) {
+    $item = Get-Item -LiteralPath $Path -ErrorAction Stop
+    if ($item -isnot [IO.FileInfo] -or $item.Length -gt 65536) { throw 'El plan debe ser un archivo JSON de hasta 64 KB.' }
+    $doc = Get-Content -LiteralPath $item.FullName -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+    $fields = @('version','perfil','apps','ajustes','energia','manual')
+    if ($doc -isnot [pscustomobject] -or
+        @($doc.PSObject.Properties.Name | Where-Object { $_ -cnotin $fields }).Count -or
+        ($doc.version -isnot [int] -and $doc.version -isnot [long]) -or $doc.version -ne 1 -or $doc.manual -isnot [bool]) {
+        throw 'Formato de plan de SparkTune no válido (versión 1).'
+    }
+    foreach ($field in @('perfil','energia')) {
+        if ($doc.$field -isnot [string] -or $doc.$field -cnotmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
+            throw "Campo no válido en el plan: $field."
+        }
+    }
+    foreach ($field in @('apps','ajustes')) {
+        if ($doc.$field -isnot [array]) { throw "El campo $field debe ser una lista de IDs." }
+        $seen = @{}
+        foreach ($id in $doc.$field) {
+            if ($id -isnot [string] -or $id -cnotmatch '^[a-z0-9]+([.-][a-z0-9]+)*$' -or $seen.ContainsKey($id)) {
+                throw "ID no válido o repetido en $field."
+            }
+            $seen[$id] = $true
+        }
+    }
+    return $doc
+}
+
+function Save-STSetupPlan([string]$Path, $Data) {
+    $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    $temp = Join-Path ([IO.Path]::GetDirectoryName($target)) ('.sparktune-plan-' + [guid]::NewGuid().ToString('N') + '.tmp')
+    try {
+        [IO.File]::WriteAllText($temp, (ConvertTo-Json -InputObject $Data -Depth 4), [Text.UTF8Encoding]::new($false))
+        # File.Move fails if the destination already exists, even on PowerShell 5.1.
+        [IO.File]::Move($temp, $target)
+    } finally {
+        if ([IO.File]::Exists($temp)) { [IO.File]::Delete($temp) }
+    }
+}
+
+function Invoke-STSetup {
+    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath)
 
     $en = $Global:STLang -eq 'en'
     $file = Join-Path $Global:STData 'setup-profiles.json'
     $profiles = Get-Content -LiteralPath $file -Raw -Encoding UTF8 | ConvertFrom-Json
     $keys = @($profiles.PSObject.Properties.Name)
+    $saved = $null
+    if ($LoadPath) {
+        $saved = Read-STSetupPlan $LoadPath
+        $Perfil = $saved.perfil
+        $Plan = $saved.energia
+    }
     if (-not $Perfil -and -not $Goal) {
         if ($Yes) { throw 'Indica --perfil para usar --yes.' }
         if ($Global:STDryRun -or [Console]::IsInputRedirected) {
@@ -103,13 +150,16 @@
         return 2
     }
     $profile = $profiles.$Perfil
+    $appIds = if ($saved) { $saved.apps } else { $profile.apps }
+    $tweakIds = if ($saved) { $saved.ajustes } else { $profile.ajustes }
+    $showManual = -not $SkipApps -and $profile.manual -and (-not $saved -or $saved.manual)
 
     $apps = @()
     if (-not $SkipApps) {
         $catalog = Get-STAppsCatalog
         if (-not $catalog) { throw 'No se pudo cargar el catálogo de aplicaciones.' }
         $apps = @(
-            foreach ($id in ($profile.apps | Select-Object -Unique)) {
+            foreach ($id in ($appIds | Select-Object -Unique)) {
                 $app = $catalog.apps | Where-Object { $_.id -eq $id } | Select-Object -First 1
                 if (-not $app) { throw "Aplicación desconocida en ${Perfil}: $id" }
                 $app
@@ -120,10 +170,11 @@
     $tweaks = @()
     if (-not $SkipTweaks) {
         $tweaks = @(
-            foreach ($id in ($profile.ajustes | Select-Object -Unique)) {
+            foreach ($id in ($tweakIds | Select-Object -Unique)) {
                 $action = $actions[$id]
                 if (-not $action -or -not $action.setupSafe) { throw "Ajuste de setup desconocido en ${Perfil}: $id" }
                 if (Test-STApplies $action $hw) { $action }
+                elseif ($saved) { throw "El ajuste $id del plan no es compatible con este equipo." }
             }
         )
     }
@@ -136,6 +187,20 @@
             Write-STErr "Plan desconocido o no compatible con el equipo: $Plan. Usa sparktune power para ver los planes."
             return 2
         }
+    }
+
+    if ($SavePath) {
+        $data = [ordered]@{
+            version = 1
+            perfil = $Perfil.ToLowerInvariant()
+            apps = @($apps | ForEach-Object { $_.id })
+            ajustes = @($tweaks | ForEach-Object { $_.id })
+            energia = $Plan
+            manual = [bool]$showManual
+        }
+        Save-STSetupPlan -Path $SavePath -Data $data
+        Write-STOk $(if ($en) { "Plan saved: $SavePath" } else { "Plan guardado: $SavePath" })
+        return 0
     }
 
     $name = if ($en) { $profile.nombre_en } else { $profile.nombre }
@@ -152,7 +217,7 @@
         Write-STSection "$section ($($apps.Count))"
         foreach ($app in $apps) { Write-STLine "    • $($app.name) [$($app.winget)]" }
     }
-    if (-not $SkipApps -and $profile.manual) {
+    if ($showManual) {
         Write-STSection $(if ($en) { 'Manual installation' } else { 'Instalación manual' })
         foreach ($manual in $profile.manual) {
             Write-STLine "    • $($manual.nombre)" '' 'bold'
