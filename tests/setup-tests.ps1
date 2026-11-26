@@ -3,6 +3,7 @@ $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $root 'src\core\globals.ps1')
 . (Join-Path $root 'src\core\catalog.ps1')
 . (Join-Path $root 'src\core\engine.ps1')
+. (Join-Path $root 'src\core\ui.ps1')
 . (Join-Path $root 'src\core\setup.ps1')
 
 $mock = @{ Laptop = $true; Apps = @(); Adjustments = @(); Lines = @() }
