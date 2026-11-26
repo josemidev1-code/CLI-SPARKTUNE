@@ -477,7 +477,7 @@ function Install-STWingetApp($App, [string]$Scope, [bool]$Interactive, [string]$
         $code = $LASTEXITCODE
         if ($code -eq 0) { return 'ok' }
         # WinGet may report no applicable upgrade even for an install request.
-        if ($code -in @(-1978335189, -1978334963)) {
+        if ($code -in @(-1978335189, -1978335135, -1978334963)) {
             $check = @('list','-e','--id',$App.winget,'--accept-source-agreements','--disable-interactivity')
             if ($Source) { $check += @('--source', $Source) }
             if ($Scope -eq 'user') { $check += '--scope=user' }
