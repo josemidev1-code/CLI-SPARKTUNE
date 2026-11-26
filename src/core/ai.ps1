@@ -1,7 +1,7 @@
-﻿# SparkTune AI — recomendaciones del catálogo mediante la API Responses de OpenAI.
+﻿# SparkTune AI — recomendaciones del catálogo mediante OpenAI o Groq.
 
-function Invoke-STOpenAI {
-    param([hashtable]$Request, [string]$ApiKey)
+function Invoke-STAIHttp {
+    param([uri]$Uri, [hashtable]$Request, [string]$ApiKey)
 
     $json = ConvertTo-Json -InputObject $Request -Depth 12 -Compress
     $tls = [Net.ServicePointManager]::SecurityProtocol
@@ -9,7 +9,7 @@ function Invoke-STOpenAI {
         if ($PSVersionTable.PSEdition -eq 'Desktop') {
             [Net.ServicePointManager]::SecurityProtocol = $tls -bor [Net.SecurityProtocolType]::Tls12
         }
-        Invoke-RestMethod -Uri 'https://api.openai.com/v1/responses' -Method Post -UseBasicParsing `
+        Invoke-RestMethod -Uri $Uri -Method Post -UseBasicParsing `
             -Headers @{ Authorization = "Bearer $ApiKey" } -ContentType 'application/json; charset=utf-8' `
             -Body ([Text.Encoding]::UTF8.GetBytes($json)) -TimeoutSec 45 -MaximumRedirection 0
     } catch {
@@ -26,6 +26,41 @@ function Get-STAIResponseJson($Response) {
     $text = @($messages.content | Where-Object { $_.type -eq 'output_text' } | ForEach-Object { $_.text }) -join ''
     if ($Response.status -ne 'completed' -or -not $text) { throw (T 'ai.noResponse') }
     try { ConvertFrom-Json -InputObject $text }
+    catch { throw (T 'ai.noResponse') }
+}
+
+function Get-STAIProvider {
+    if (-not [string]::IsNullOrWhiteSpace($env:OPENAI_API_KEY)) { return 'openai' }
+    if (-not [string]::IsNullOrWhiteSpace($env:GROQ_API_KEY)) { return 'groq' }
+    return ''
+}
+
+function Invoke-STAIJson {
+    param([hashtable]$Request, [string]$Provider)
+    if ($Provider -eq 'openai') {
+        $response = Invoke-STAIHttp -Uri 'https://api.openai.com/v1/responses' -Request $Request -ApiKey $env:OPENAI_API_KEY.Trim()
+        return Get-STAIResponseJson $response
+    }
+    if ($Provider -ne 'groq') { throw (T 'ai.missingKey') }
+
+    $format = $Request.text.format
+    $body = @{
+        model = 'openai/gpt-oss-20b'
+        messages = @(
+            @{ role = 'system'; content = $Request.instructions }
+            @{ role = 'user'; content = $Request.input }
+        )
+        reasoning_effort = 'low'
+        max_completion_tokens = 2048
+        response_format = @{
+            type = 'json_schema'
+            json_schema = @{ name = $format.name; strict = $true; schema = $format.schema }
+        }
+    }
+    $response = Invoke-STAIHttp -Uri 'https://api.groq.com/openai/v1/chat/completions' -Request $body -ApiKey $env:GROQ_API_KEY.Trim()
+    $choice = $response.choices | Select-Object -First 1
+    if ($choice.finish_reason -ne 'stop' -or -not $choice.message.content) { throw (T 'ai.noResponse') }
+    try { ConvertFrom-Json -InputObject $choice.message.content -ErrorAction Stop }
     catch { throw (T 'ai.noResponse') }
 }
 
@@ -54,8 +89,8 @@ function Invoke-STAIAdvisor {
         throw (T 'ai.invalidLevel')
     }
 
-    $apiKey = $env:OPENAI_API_KEY
-    if (-not $DryRun -and [string]::IsNullOrWhiteSpace($apiKey)) { throw (T 'ai.missingKey') }
+    $provider = Get-STAIProvider
+    if (-not $DryRun -and -not $provider) { throw (T 'ai.missingKey') }
 
     $hw = Get-STHardware
     Load-STCatalog
@@ -143,8 +178,7 @@ function Invoke-STAIAdvisor {
         return
     }
 
-    $response = Invoke-STOpenAI -Request $request -ApiKey $apiKey.Trim()
-    $advice = Get-STAIResponseJson $response
+    $advice = Invoke-STAIJson -Request $request -Provider $provider
     if (-not ($advice.recommendations -is [array])) { throw (T 'ai.noResponse') }
 
     $seen = @{}
@@ -168,8 +202,8 @@ function Invoke-STAIAdvisor {
 function Get-STAISetupRecommendation {
     param([hashtable]$Context)
 
-    $apiKey = $env:OPENAI_API_KEY
-    if ([string]::IsNullOrWhiteSpace($apiKey)) { throw (T 'ai.missingKey') }
+    $provider = Get-STAIProvider
+    if (-not $provider) { throw (T 'ai.missingKey') }
 
     $profileIds = @($Context.profiles | ForEach-Object { $_.id })
     $planIds = @($Context.plans | ForEach-Object { $_.id })
@@ -200,8 +234,7 @@ function Get-STAISetupRecommendation {
             }
         }
     }
-    $response = Invoke-STOpenAI -Request $request -ApiKey $apiKey.Trim()
-    $advice = Get-STAIResponseJson $response
+    $advice = Invoke-STAIJson -Request $request -Provider $provider
     $reason = Get-STAIReason $advice.reason
     if ($advice.profile -isnot [string] -or $advice.profile -cnotin ($profileIds + @('ninguno')) -or
         $advice.plan -isnot [string] -or $advice.plan -cnotin $planIds -or
