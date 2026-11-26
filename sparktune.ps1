@@ -63,7 +63,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('setup','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
+    if ($low -in @('setup','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     Write-STErr ("argumento desconocido: $a")
     exit 2
@@ -122,7 +122,11 @@ try {
     switch ($cmd) {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
+        'banner'    { Show-STBanner -NoBanner:$flagNoBanner }
         'setup'     {
+            if ($script:STConsole -and -not ($flagDry -or $flagYes -or $flagNoBanner) -and $Global:STBanner) {
+                Show-STBanner
+            }
             if ($flagDry -and $aiGoalSpecified) {
                 Invoke-STSetup -Goal $aiGoal -SkipApps:$skipApps -SkipTweaks:$skipTweaks
                 exit 0

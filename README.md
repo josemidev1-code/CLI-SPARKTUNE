@@ -46,6 +46,10 @@ sparktune
 
 Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\SparkTune\uninstall.ps1"`.
 
+## Intro en la terminal
+
+Al abrir el asistente desde una terminal de Windows verás el logo ASCII de SparkTune y la firma `made by josemidev1`. Puedes reproducir la intro por separado con `sparktune banner`. Usa `--no-banner` para omitirla.
+
 ## Preparar un PC nuevo
 
 `sparktune setup` abre el selector de perfiles. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
