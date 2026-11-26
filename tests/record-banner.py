@@ -33,7 +33,7 @@ def capture(width, *flags):
 
 frames, hidden = capture(90)
 if len(frames) < 8 or not any("." in row for frame in frames for row in frame["rows"]):
-    raise SystemExit("The Windows console did not display the animated reveal.")
+    raise SystemExit(f"The Windows console did not animate. Captured frames: {frames!r}")
 if hidden or "made by josemidev1" not in " ".join(frames[-1]["rows"]):
     raise SystemExit("The final credit or visible cursor is missing.")
 if sum("#" in row for row in frames[-1]["rows"]) != 5:

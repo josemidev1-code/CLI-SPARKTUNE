@@ -6,7 +6,6 @@ $script:STAnsi = $true
 function Test-STConsoleUsable {
     # [Console] es un type; solo es util si hay consola real interactiva
     try {
-        if (-not [Environment]::UserInteractive) { return $false }
         if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) { return $false }
         $null = [Console]::WindowWidth
         return $true
@@ -31,7 +30,7 @@ function Test-STAnsi {
 function Enable-STVirtualTerminal {
     $script:STVtEnabled = $false
     $script:STAnsi = Test-STAnsi
-    if (-not $script:STAnsi) { return }
+    if (-not $script:STAnsi -and -not $script:STConsole) { return }
     try {
         if (-not ('STNat.Win32C' -as [type])) {
             $sig = @'
@@ -46,6 +45,7 @@ function Enable-STVirtualTerminal {
         if ([STNat.Win32C]::GetConsoleMode($h, [ref]$m)) {
             # ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
             $script:STVtEnabled = [STNat.Win32C]::SetConsoleMode($h, ($m -bor 4))
+            if ($script:STVtEnabled) { $script:STAnsi = $true }
         }
     } catch { $script:STAnsi = $false }
 }
