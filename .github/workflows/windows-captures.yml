@@ -13,6 +13,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Verify setup profile behavior
+        shell: powershell
+        run: ./tests/setup-tests.ps1
       - name: Run and record SparkTune
         shell: powershell
         run: ./tests/windows-demo.ps1 -OutputDirectory "$env:RUNNER_TEMP/sparktune-captures"

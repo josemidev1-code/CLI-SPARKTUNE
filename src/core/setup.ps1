@@ -8,7 +8,8 @@
     if (-not $Perfil -and -not $Goal) {
         if ($Yes) { throw 'Indica --perfil para usar --yes.' }
         if ($Global:STDryRun -or [Console]::IsInputRedirected) {
-            Write-STInfo "setup --perfil=$($keys[0]) --dry-run"
+            Write-STHeader -Title $(if ($en) { 'Setup profiles' } else { 'Perfiles de preparación' })
+            Write-STInfo "sparktune setup --perfil=$($keys[0]) --dry-run"
             foreach ($key in $keys) {
                 $label = if ($en) { $profiles.$key.nombre_en } else { $profiles.$key.nombre }
                 Write-STInfo "$key - $label"
@@ -138,30 +139,42 @@
     }
 
     $name = if ($en) { $profile.nombre_en } else { $profile.nombre }
-    Write-STLine "$name [$Perfil]" 'cyan' 'bold'
-    if ($apps.Count) {
-        Write-STLine $(if ($en) { 'Applications via WinGet' } else { 'Aplicaciones vía WinGet' })
-        foreach ($app in $apps) { Write-STInfo "$($app.name) [$($app.winget)]" }
+    $mode = if ($Global:STDryRun) {
+        if ($en) { 'PREVIEW · No changes' } else { 'SIMULACIÓN · Sin cambios' }
+    } elseif ($fromAI) {
+        if ($en) { 'AI recommendation' } else { 'Recomendación de IA' }
+    } else {
+        if ($en) { 'Setup plan' } else { 'Plan de preparación' }
     }
-    if (-not $SkipApps) {
+    Write-STHeader -Title "$name [$Perfil]" -Detail $mode
+    if ($apps.Count) {
+        $section = if ($en) { 'Apps via WinGet' } else { 'Aplicaciones vía WinGet' }
+        Write-STSection "$section ($($apps.Count))"
+        foreach ($app in $apps) { Write-STLine "    • $($app.name) [$($app.winget)]" }
+    }
+    if (-not $SkipApps -and $profile.manual) {
+        Write-STSection $(if ($en) { 'Manual installation' } else { 'Instalación manual' })
         foreach ($manual in $profile.manual) {
-            Write-STInfo "$($manual.nombre) ($(if ($en) { 'manual installation' } else { 'instalación manual' }))"
-            Write-STLine $(if ($en) { $manual.instrucciones_en } else { $manual.instrucciones })
-            Write-STLine $manual.url
+            Write-STLine "    • $($manual.nombre)" '' 'bold'
+            Write-STLine ("      " + $(if ($en) { $manual.instrucciones_en } else { $manual.instrucciones }))
+            Write-STLine "      $($manual.url)" 'gray'
         }
     }
-    foreach ($action in $tweaks) {
-        Write-STInfo "$(STField $action 'titulo') [$($action.id)]"
-        Write-STLine "  $(STField $action 'descripcion')"
+    if ($tweaks.Count) {
+        $section = if ($en) { 'Windows settings' } else { 'Ajustes de Windows' }
+        Write-STSection "$section ($($tweaks.Count))"
+        foreach ($action in $tweaks) {
+            Write-STLine "    • $(STField $action 'titulo') [$($action.id)]" '' 'bold'
+            Write-STLine "      $(STField $action 'descripcion')"
+        }
     }
     if ($power) {
-        Write-STInfo "$(STField $power 'titulo') [$Plan]"
-        Write-STLine "  $(STField $power 'descripcion')"
+        Write-STSection $(if ($en) { 'Power plan' } else { 'Plan de energía' })
+        Write-STLine "    • $(STField $power 'titulo') [$Plan]" '' 'bold'
+        Write-STLine "      $(STField $power 'descripcion')"
     }
-    if ($Global:STDryRun) {
-        Write-STInfo (T 'dryrun')
-        return 0
-    }
+    Write-STLine ''
+    if ($Global:STDryRun) { return 0 }
 
     if ($fromAI -and [Console]::IsInputRedirected) {
         $command = "sparktune setup --perfil=$Perfil --plan=$Plan"

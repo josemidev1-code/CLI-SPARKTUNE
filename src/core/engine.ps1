@@ -283,12 +283,11 @@ function Show-STMenu {
     $cur = $Start
     while ($true) {
         Clear-STScreen
-        Write-STLine ''
-        Write-STLine "  $Title" 'cyan' 'bold'
+        Write-STHeader -Title $Title
         Write-STLine ''
         for ($i = 0; $i -lt $Items.Count; $i++) {
             $mark = '  '; $col = ''
-            if ($i -eq $cur) { $mark = '> '; $col = 'yellow' }
+            if ($i -eq $cur) { $mark = '› '; $col = 'cyan' }
             Write-STLine "    $mark$($Items[$i].label)" $col $(if ($i -eq $cur) { 'bold' } else { '' })
         }
         Write-STLine ''
@@ -398,9 +397,7 @@ function Invoke-STUndo {
 # ---------- history ----------
 function Show-STHistory {
     $entries = @(Read-STJournal)
-    Write-STLine ''
-    Write-STLine "  $(T 'history.title')" 'cyan' 'bold'
-    Write-STLine ''
+    Write-STHeader -Title (T 'history.title')
     if ($entries.Count -eq 0) { Write-STInfo (T 'history.none'); return }
     $undoneKeys = @{}
     foreach ($e in $entries) { if ($e.status -eq 'undo' -and $e.refSeq) { $undoneKeys["$($e.refSeq)"] = $true } }
@@ -621,9 +618,7 @@ function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
 
 # ---------- doctor ----------
 function Invoke-STDoctor {
-    Write-STLine ''
-    Write-STLine "  $(T 'doctor.title')" 'cyan' 'bold'
-    Write-STLine ''
+    Write-STHeader -Title (T 'doctor.title')
     $issues = 0; $oks = 0
     # 1) coherencia journal (comprobable sin admin)
     $pend = @(Get-STJournalPending)
@@ -693,9 +688,7 @@ table{border-collapse:collapse;width:100%}td,th{padding:4px 8px;border-bottom:1p
 # ---------- status ----------
 function Show-STStatus {
     $hw = Get-STHardware
-    Write-STLine ''
-    Write-STLine "  SparkTune · $(T 'status.title')" 'cyan' 'bold'
-    Write-STLine ''
+    Write-STHeader -Title (T 'status.title')
     Show-STDetectSummary $hw
     Write-STInfo "$(T 'status.plan'): $($hw.PowerPlan) [$($hw.PowerPlanGuid)]"
     Write-STLine ''
@@ -720,9 +713,7 @@ function Show-STStatus {
 
 # ---------- analyze ----------
 function Invoke-STAnalyze {
-    Write-STLine ''
-    Write-STLine "  $(T 'analyze.title')" 'cyan' 'bold'
-    Write-STLine ''
+    Write-STHeader -Title (T 'analyze.title')
     $targets = [ordered]@{
         'Temp usuario'        = $env:TEMP
         'Temp sistema'        = "$env:WINDIR\Temp"

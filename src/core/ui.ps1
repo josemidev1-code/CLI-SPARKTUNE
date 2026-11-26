@@ -50,7 +50,7 @@ function Enable-STVirtualTerminal {
 }
 
 function STC([string]$code) {
-    if (-not $script:STAnsi) { return '' }
+    if (-not $script:STAnsi -or $env:NO_COLOR) { return '' }
     return "$([char]27)[${code}m"
 }
 
@@ -80,6 +80,19 @@ function Write-STErr([string]$T)   { Write-STLine "  [x] $T" 'red' }
 
 function Clear-STScreen {
     if ($script:STConsole) { $script:STConsole.Clear() } else { Clear-Host }
+}
+
+function Write-STHeader {
+    param([string]$Title, [string]$Detail = '')
+    Write-STLine ''
+    Write-STLine "  SparkTune  /  $Title" 'cyan' 'bold'
+    if ($Detail) { Write-STLine "  $Detail" 'gray' }
+    Write-STLine "  $('─' * 44)" 'gray'
+}
+
+function Write-STSection([string]$Title) {
+    Write-STLine ''
+    Write-STLine "  $Title" 'cyan' 'bold'
 }
 
 # ---------- idioma ----------
@@ -297,27 +310,33 @@ function STField($Action, [string]$Name) {
 # ---------- help ----------
 function Show-STHelp {
     $L = $Global:STLang
-    Write-STLine "SparkTune v$Global:STVersion - $(T 'app.tagline') - $(T 'app.by')" 'cyan' 'bold'
+    $title = if ($L -eq 'en') { 'Command guide' } else { 'Guía de comandos' }
+    Write-STHeader -Title $title -Detail "v$Global:STVersion · $(T 'app.tagline') · $(T 'app.by')"
     $lines = @(
         'Uso:  sparktune [comando] [opciones]',
         '',
+        '@Preparación',
         '  setup                  Preparar un PC nuevo: apps, ajustes y energía',
         '  setup --perfil=desarrollo --dry-run',
         '  setup --objetivo="Ahorrar batería"    Pedir un perfil y plan a la IA',
         '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
         '  (sin comando)          Asistente interactivo',
+        '@Diagnóstico y cambios',
         '  status                 Panel: CPU, RAM, disco, GPU, bateria, plan, servicios',
         '  battery                Informe de bateria + planes recomendados',
         '  power                  Listar/crear/aplicar planes SparkTune',
         '  undo                   Deshacer cambios (--id=xxx para uno concreto)',
         '  analyze                Que ocupa espacio (no borra nada)',
-        '  history                Historial de cambios del journal',
+        '  history                Historial de cambios',
+        '  doctor                 Comprobar el sistema y el historial',
+        '  report                 Generar un informe HTML',
         '  ai                     Recomendar ajustes del catálogo con OpenAI',
         '  ai --objetivo="texto"   Personalizar recomendaciones (--dry-run: ver contexto)',
         '  apps                   Instalar apps populares via winget (menu interactivo)',
         '  apps --install=a,b     Instalar sin interactuar (ids o nombres, comma separados)',
         '  apps --update=a,b      Actualizar solo las apps indicadas',
         '',
+        '@Opciones',
         '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
         '                         portatil-ahorro|portatil-rendimiento|',
         '                         red-privacidad|creativo|desarrollo|',
@@ -335,7 +354,7 @@ function Show-STHelp {
         '  --interactive          (apps) mostrar UI de winget en vez de silencioso',
         '  (apps)                 paquetes "(p)" = winget Portable (sin instalador)',
         '',
-        'Ejemplos:',
+        '@Ejemplos',
         '  sparktune',
         '  sparktune --perfil=gaming --nivel=medio --dry-run',
         '  sparktune undo',
@@ -346,23 +365,28 @@ function Show-STHelp {
         $lines = @(
             'Usage: sparktune [command] [options]',
             '',
+            '@Setup',
             '  setup                    Set up a new PC: apps, settings and power',
             '  setup --perfil=desarrollo --dry-run',
             '  setup --goal="Save battery"    Ask AI for a profile and power plan',
             '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
             '  (no command)           Interactive wizard',
+            '@Diagnostics and changes',
             '  status                 Dashboard: CPU, RAM, disk, GPU, battery, plan, services',
             '  battery                Battery report + recommended plans',
             '  power                  List/create/apply SparkTune power plans',
             '  undo                   Revert changes (--id=xxx for a single one)',
             '  analyze                What takes space (deletes nothing)',
-            '  history                Change history from the journal',
+            '  history                Change history',
+            '  doctor                 Check the system and change history',
+            '  report                 Generate an HTML report',
             '  ai                     Recommend catalog actions with OpenAI',
             '  ai --goal="text"         Personalize advice (--dry-run: preview context)',
             '  apps                   Install popular apps via winget (interactive menu)',
             '  apps --install=a,b     Non-interactive install (ids or names, comma separated)',
             '  apps --update=a,b      Update only the listed apps',
             '',
+            '@Options',
             '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
             '                         portatil-ahorro|portatil-rendimiento|',
             '                         red-privacidad|creativo|desarrollo|',
@@ -380,7 +404,7 @@ function Show-STHelp {
             '  --interactive          (apps) show winget UI instead of silent',
             '  (apps)                 "(p)" packages = winget Portable (no installer)',
             '',
-            'Examples:',
+            '@Examples',
             '  sparktune',
             '  sparktune --perfil=gaming --nivel=medio --dry-run',
             '  sparktune undo',
@@ -388,7 +412,11 @@ function Show-STHelp {
             '  sparktune power'
         )
     }
-    foreach ($l in $lines) { Write-STLine "  $l" }
+    foreach ($line in $lines) {
+        if ($line.StartsWith('@')) { Write-STSection $line.Substring(1) }
+        elseif ($line) { Write-STLine "  $line" }
+    }
+    Write-STLine ''
 }
 
 # ---------- input teclado ----------
