@@ -41,6 +41,7 @@ foreach ($a in $RawArgs) {
         '^(--yes|-y)$'            { $flagYes = $true; $matched = $true; continue }
         '^(--dry-run|-n|--dryrun)$' { $flagDry = $true; $matched = $true; continue }
         '^(--no-banner|--nobanner)$' { $flagNoBanner = $true; $matched = $true; continue }
+        '^--version$'           { $cmd = 'version'; $matched = $true; continue }
         '^(--help|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
         '^(--lang=.+)$' { $optLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--set-lang=.+)$' { $setLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -65,7 +66,7 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('setup','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
+    if ($low -in @('setup','version','validar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
     if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
     Write-STErr ("argumento desconocido: $a")
     exit 2
@@ -105,7 +106,7 @@ $Global:STDryRun = $flagDry
 
 if ($flagHelp) { Show-STHelp; exit 0 }
 
-if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks -or $saveSetupPath -or $loadSetupPath)) {
+if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks -or $saveSetupPath -or ($loadSetupPath -and $cmd -ne 'validar'))) {
     Write-STErr 'Las opciones de plan y selección se utilizan con setup.'
     exit 2
 }
@@ -129,10 +130,17 @@ if ($loadSetupPath -and ($optPerfil -or $aiGoalSpecified -or $setupPlan)) {
     exit 2
 }
 
+if ($cmd -eq 'validar' -and (-not $loadSetupPath -or $flagYes -or $appsInteractive)) {
+    Write-STErr 'Usa sparktune validar --cargar-plan=archivo.json.'
+    exit 2
+}
+
 try {
     switch ($cmd) {
         ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
+        'version'   { Write-Output $Global:STVersion; exit 0 }
+        'validar'   { exit (Invoke-STSetup -LoadPath $loadSetupPath -ValidateOnly) }
         'banner'    { Show-STBanner -NoBanner:$flagNoBanner }
         'setup'     {
             if ($script:STConsole -and -not ($flagDry -or $flagYes -or $flagNoBanner) -and $Global:STBanner) {

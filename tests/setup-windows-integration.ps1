@@ -21,6 +21,12 @@ try {
     if ($saved.apps.Count -ne 0 -or $saved.ajustes.Count -ne 2 -or $saved.energia -ne 'ninguno') {
         throw 'El archivo no conserva las opciones elegidas.'
     }
+    $version = & $entry --version
+    if ($LASTEXITCODE -ne 0 -or $version -notmatch '^\d+\.\d+\.\d+$') { throw 'No se pudo leer la versión desde la CLI.' }
+    & $entry validar "--cargar-plan=$file"
+    if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
+        throw 'Validar un plan aplicó cambios o rechazó un archivo válido.'
+    }
     $hash = (Get-FileHash -LiteralPath $file).Hash
     & $entry setup --perfil=ofimatica --plan=ninguno --sin-apps "--guardar-plan=$file"
     if ($LASTEXITCODE -eq 0 -or (Get-FileHash -LiteralPath $file).Hash -ne $hash) {
@@ -29,8 +35,10 @@ try {
     $bad = Join-Path $testProfile 'Plan incompatible.json'
     $saved.ajustes += 'priv.tips'
     ConvertTo-Json $saved | Set-Content -LiteralPath $bad -Encoding UTF8
+    & $entry validar "--cargar-plan=$bad"
+    if ($LASTEXITCODE -ne 3) { throw 'Validar debe devolver 3 para un plan inválido.' }
     & $entry setup "--cargar-plan=$bad" --yes
-    if ($LASTEXITCODE -eq 0 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
+    if ($LASTEXITCODE -ne 3 -or (Get-STSetupRegistryValue $gameBar $gameMode) -ne 0) {
         throw 'Se aplicaron cambios antes de rechazar un ajuste ajeno al catálogo de setup.'
     }
     & $entry setup "--cargar-plan=$file" --dry-run
