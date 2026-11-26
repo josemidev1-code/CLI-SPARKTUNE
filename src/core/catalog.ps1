@@ -13,12 +13,13 @@ function Load-STCatalog {
                  'Get-GpuCatalogActions','Get-NetworkCatalogActions','Get-PrivacyCatalogActions',
                  'Get-SecurityCatalogActions',
                  'Get-OfficeCatalogActions','Get-UpdatesCatalogActions','Get-PowerCatalogActions',
-                 'Get-LaptopCatalogActions','Get-SetupCatalogActions')
+                 'Get-LaptopCatalogActions')
     foreach ($g in $getters) {
         if (Get-Command $g -ErrorAction SilentlyContinue) {
             try { $all += & $g } catch { Write-STWarn "catalogo $g : $($_.Exception.Message)" }
         }
     }
+    $all += Get-SetupCatalogActions
     # normalizar a hashtable con por lo menos los campos del contrato
     $norm = @()
     foreach ($a in $all) {

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "acciones": [
+    {
+      "id": "setup.start-suggestions",
+      "titulo": "Ocultar sugerencias de Inicio",
+      "titulo_en": "Hide Start recommendations",
+      "descripcion": "Quita las sugerencias de aplicaciones y consejos de Inicio en Windows 11. El cambio puede requerir cerrar sesión.",
+      "descripcion_en": "Turns off app and tip suggestions in Windows 11 Start. Signing out may be required.",
+      "ruta": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "nombre": "Start_IrisRecommendations",
+      "valor": 0,
+      "build_minima": 22000
+    },
+    {
+      "id": "setup.background-capture",
+      "titulo": "Desactivar la grabación en segundo plano",
+      "titulo_en": "Turn off background recording",
+      "descripcion": "Desactiva Grabar lo que ocurrió en Capturas de Windows. Si usas las repeticiones automáticas, conserva esta opción.",
+      "descripcion_en": "Turns off Record what happened in Windows Captures. Keep it enabled if you use instant replays.",
+      "ruta": "System\\GameConfigStore",
+      "nombre": "HistoricalCaptureEnabled",
+      "valor": 0,
+      "build_minima": 10240
+    },
+    {
+      "id": "setup.game-mode",
+      "titulo": "Activar el Modo Juego de Windows",
+      "titulo_en": "Enable Windows Game Mode",
+      "descripcion": "Activa el Modo Juego en la cuenta actual.",
+      "descripcion_en": "Enables Game Mode for the current user.",
+      "ruta": "Software\\Microsoft\\GameBar",
+      "nombre": "AutoGameModeEnabled",
+      "valor": 1,
+      "build_minima": 10240
+    }
+  ]
+}

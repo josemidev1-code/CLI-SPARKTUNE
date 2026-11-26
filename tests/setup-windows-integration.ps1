@@ -6,6 +6,9 @@ $entry = Join-Path $root 'sparktune.ps1'
 $gameBar = 'Software\Microsoft\GameBar'
 $gameMode = 'AutoGameModeEnabled'
 $previous = Get-STSetupRegistryValue $gameBar $gameMode
+$capturePath = 'System\GameConfigStore'
+$captureName = 'HistoricalCaptureEnabled'
+$previousCapture = Get-STSetupRegistryValue $capturePath $captureName
 $oldProfile = $env:USERPROFILE
 $testProfile = Join-Path $env:RUNNER_TEMP ('sparktune-setup-' + [guid]::NewGuid().ToString('N'))
 try {
@@ -57,9 +60,20 @@ try {
     if (@($entries | Where-Object status -eq 'failed').Count -or @($entries | Where-Object status -eq 'undo').Count -ne 2) {
         throw 'El historial no refleja los dos ajustes restaurados.'
     }
+    Set-STSetupRegistryValue $capturePath $captureName 1
+    & $entry setup --perfil=video-adobe --plan=ninguno --sin-apps --yes
+    if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $capturePath $captureName) -ne 0) {
+        throw 'La tercera acción de acciones.json no modificó la grabación en segundo plano.'
+    }
+    & $entry undo --category=setup --yes
+    if ($LASTEXITCODE -ne 0 -or (Get-STSetupRegistryValue $capturePath $captureName) -ne 1) {
+        throw 'No se restauró la grabación en segundo plano.'
+    }
+    Write-Host 'Tres acciones de acciones.json aplicadas y restauradas en Windows.'
     Write-Host 'Exportación, importación, simulación, aplicación y undo del registro: OK'
 } finally {
     Set-STSetupRegistryValue $gameBar $gameMode $previous
+    Set-STSetupRegistryValue $capturePath $captureName $previousCapture
     $env:USERPROFILE = $oldProfile
     if (Test-Path -LiteralPath $testProfile) { Remove-Item -LiteralPath $testProfile -Recurse -Force }
 }
