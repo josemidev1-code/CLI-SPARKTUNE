@@ -45,17 +45,17 @@ function Show-STBanner {
                         $edge = [int][Math]::Floor(($logoWidth + 2 * ($logo.Count - 1)) * $frame / $revealFrames) - 2 * $row
                         $end = [Math]::Min([Math]::Max(0, $edge), $line.Length)
                         $start = [Math]::Max(0, $end - 3)
-                        $cyan + $line.Substring(0, $start) +
+                        ($cyan + $line.Substring(0, $start) +
                             $spark + $line.Substring($start, $end - $start) + $dim +
-                            ($line.Substring($end) -replace '[^ ]', '.')
+                            ($line.Substring($end) -replace '[^ ]', '.'))
                     } elseif ($frame -lt $lastFrame) {
                         $edge = [int][Math]::Floor(($logoWidth + 10) * ($frame - $revealFrames) / ($lastFrame - $revealFrames)) - 5 + $row
                         $start = [Math]::Min([Math]::Max(0, $edge - 2), $line.Length)
                         $end = [Math]::Min([Math]::Max(0, $edge + 2), $line.Length)
-                        $cyan + $line.Substring(0, $start) + $spark + $line.Substring($start, $end - $start) +
-                            $blue + $line.Substring($end)
+                        ($cyan + $line.Substring(0, $start) + $spark + $line.Substring($start, $end - $start) +
+                            $blue + $line.Substring($end))
                     } else { $cyan + $line }
-                )
+                }
                 ''
                 $count = [int][Math]::Floor($credit.Length * [Math]::Max(0, $frame - $revealFrames) / ($lastFrame - $revealFrames))
                 $caret = if ($frame -ge $revealFrames -and $frame -lt $lastFrame) { '_' } else { '' }
