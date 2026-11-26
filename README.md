@@ -86,6 +86,7 @@ Puedes reutilizar una propuesta en otro equipo con un archivo JSON. Guárdala de
 
 ```powershell
 sparktune setup --perfil=desarrollo '--guardar-plan=Mi plan.json'
+sparktune validar '--cargar-plan=Mi plan.json'
 sparktune setup '--cargar-plan=Mi plan.json' --dry-run
 sparktune setup '--cargar-plan=Mi plan.json' --yes
 ```
@@ -130,6 +131,8 @@ Flags:
 --update=a,b                       # (apps) actualizar solo esas apps
 --no-banner
 ```
+
+`sparktune version` muestra la versión. `sparktune validar --cargar-plan=archivo.json` valida el formato, el catálogo y la compatibilidad sin aplicar cambios. Códigos de salida: `0` correcto, `1` error de operación, `2` uso incorrecto y `3` plan guardado inválido o incompatible.
 
 Las opciones desconocidas terminan con código 2 para evitar que un error al escribir `--dry-run` ejecute cambios por accidente.
 

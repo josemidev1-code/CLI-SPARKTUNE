@@ -40,7 +40,7 @@ function Save-STSetupPlan([string]$Path, $Data) {
 }
 
 function Invoke-STSetup {
-    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath)
+    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath, [switch]$ValidateOnly)
 
     $en = $Global:STLang -eq 'en'
     $file = Join-Path $Global:STData 'setup-profiles.json'
@@ -48,7 +48,8 @@ function Invoke-STSetup {
     $keys = @($profiles.PSObject.Properties.Name)
     $saved = $null
     if ($LoadPath) {
-        $saved = Read-STSetupPlan $LoadPath
+        try { $saved = Read-STSetupPlan $LoadPath }
+        catch { Write-STErr $_.Exception.Message; return 3 }
         $Perfil = $saved.perfil
         $Plan = $saved.energia
     }
@@ -145,48 +146,63 @@ function Invoke-STSetup {
         $SkipApps = $SkipApps -or -not $recommendation.apps
         $SkipTweaks = $SkipTweaks -or -not $recommendation.tweaks
     }
-    if ($Perfil -notin $keys) {
-        Write-STErr "Perfil de setup desconocido: $Perfil. Disponibles: $($keys -join ', ')."
-        return 2
-    }
-    $profile = $profiles.$Perfil
-    $appIds = if ($saved) { $saved.apps } else { $profile.apps }
-    $tweakIds = if ($saved) { $saved.ajustes } else { $profile.ajustes }
-    $showManual = -not $SkipApps -and $profile.manual -and (-not $saved -or $saved.manual)
-
-    $apps = @()
-    if (-not $SkipApps) {
-        $catalog = Get-STAppsCatalog
-        if (-not $catalog) { throw 'No se pudo cargar el catálogo de aplicaciones.' }
-        $apps = @(
-            foreach ($id in ($appIds | Select-Object -Unique)) {
-                $app = $catalog.apps | Where-Object { $_.id -eq $id } | Select-Object -First 1
-                if (-not $app) { throw "Aplicación desconocida en ${Perfil}: $id" }
-                $app
-            }
-        )
-    }
-
-    $tweaks = @()
-    if (-not $SkipTweaks) {
-        $tweaks = @(
-            foreach ($id in ($tweakIds | Select-Object -Unique)) {
-                $action = $actions[$id]
-                if (-not $action -or -not $action.setupSafe) { throw "Ajuste de setup desconocido en ${Perfil}: $id" }
-                if (Test-STApplies $action $hw) { $action }
-                elseif ($saved) { throw "El ajuste $id del plan no es compatible con este equipo." }
-            }
-        )
-    }
-    $power = $null
-    if (-not $Plan) { $Plan = if ($hw.IsLaptop) { $profile.'plan-portatil' } else { $profile.'plan-sobremesa' } }
-    if ($Plan -ne 'ninguno') {
-        if (-not $Plan) { throw "Falta un plan de energía para $Perfil." }
-        $power = $actions["power.$Plan"]
-        if (-not $power -or -not $power.reversible -or -not (Test-STApplies $power $hw)) {
-            Write-STErr "Plan desconocido o no compatible con el equipo: $Plan. Usa sparktune power para ver los planes."
-            return 2
+    try {
+        if ($Perfil -notin $keys) {
+            Write-STErr "Perfil de setup desconocido: $Perfil. Disponibles: $($keys -join ', ')."
+            return $(if ($saved) { 3 } else { 2 })
         }
+        $profile = $profiles.$Perfil
+        $appIds = if ($saved) { $saved.apps } else { $profile.apps }
+        $tweakIds = if ($saved) { $saved.ajustes } else { $profile.ajustes }
+        $showManual = -not $SkipApps -and $profile.manual -and (-not $saved -or $saved.manual)
+
+        $apps = @()
+        if (-not $SkipApps) {
+            $catalog = Get-STAppsCatalog
+            if (-not $catalog) { throw 'No se pudo cargar el catálogo de aplicaciones.' }
+            $apps = @(
+                foreach ($id in ($appIds | Select-Object -Unique)) {
+                    $app = $catalog.apps | Where-Object { $_.id -eq $id } | Select-Object -First 1
+                    if (-not $app) { throw "Aplicación desconocida en ${Perfil}: $id" }
+                    $app
+                }
+            )
+        }
+
+        $tweaks = @()
+        if (-not $SkipTweaks) {
+            $tweaks = @(
+                foreach ($id in ($tweakIds | Select-Object -Unique)) {
+                    $action = $actions[$id]
+                    if (-not $action -or -not $action.setupSafe) { throw "Ajuste de setup desconocido en ${Perfil}: $id" }
+                    if (Test-STApplies $action $hw) { $action }
+                    elseif ($saved) { throw "El ajuste $id del plan no es compatible con este equipo." }
+                }
+            )
+        }
+        $power = $null
+        if (-not $Plan) { $Plan = if ($hw.IsLaptop) { $profile.'plan-portatil' } else { $profile.'plan-sobremesa' } }
+        if ($Plan -ne 'ninguno') {
+            if (-not $Plan) { throw "Falta un plan de energía para $Perfil." }
+            $power = $actions["power.$Plan"]
+            if (-not $power -or -not $power.reversible -or -not (Test-STApplies $power $hw)) {
+                Write-STErr "Plan desconocido o no compatible con el equipo: $Plan. Usa sparktune power para ver los planes."
+                return $(if ($saved) { 3 } else { 2 })
+            }
+        }
+
+    } catch {
+        if (-not $saved) { throw }
+        Write-STErr $_.Exception.Message
+        return 3
+    }
+    if ($ValidateOnly) {
+        Write-STOk $(if ($en) {
+            "Valid plan: $($apps.Count) app(s), $($tweaks.Count) setting(s), power plan $Plan."
+        } else {
+            "Plan válido: $($apps.Count) apps, $($tweaks.Count) ajustes. Energía: $Plan."
+        })
+        return 0
     }
 
     if ($SavePath) {
