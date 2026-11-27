@@ -97,6 +97,23 @@ Check 'required fields per action' {
     }
 }
 
+Check 'install.ps1 downloads the newest published 1.x release' {
+    # Desde la 2.0.0, la última release es la edición Python y no incluye el ZIP de la 1.x.
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'install.ps1'), [ref]$null, [ref]$null)
+    $fn = $ast.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Select-STRelease' }, $true)
+    if (-not $fn) { throw 'install.ps1 no define Select-STRelease' }
+    . ([scriptblock]::Create($fn.Extent.Text))
+    function Rel([string]$Tag, [bool]$Draft = $false, [bool]$Pre = $false) {
+        [pscustomobject]@{ tag_name = $Tag; draft = $Draft; prerelease = $Pre }
+    }
+    $publicadas = @((Rel 'v2.0.0'), (Rel 'v1.12.0' $true), (Rel 'v1.11.0' $false $true), (Rel 'v1.9.0'),
+                    (Rel 'v1.10.0'), (Rel 'v1.8.0-rc1'), (Rel 'v1.8.0'))
+    $elegida = Select-STRelease $publicadas
+    # 1.10.0 gana a 1.9.0 al comparar números, no texto; se descartan borradores, previas y la 2.x.
+    if ($elegida.tag_name -ne 'v1.10.0') { throw "eligió $($elegida.tag_name)" }
+    if ($null -ne (Select-STRelease @((Rel 'v2.0.0')))) { throw 'eligió una versión 2.x' }
+}
+
 Check 'actions under review exist and are never offered' {
     $ids = @{}; foreach ($a in $all) { $ids[$a.id] = $a }
     $portatil = [pscustomobject]@{ IsWin = $true; IsLaptop = $true; Battery = $true; Plugged = $false; BatteryPct = 50
