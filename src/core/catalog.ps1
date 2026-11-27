@@ -1,6 +1,26 @@
 ﻿# SparkTune catalog.ps1 — agrega modulos del catalogo y resuelve perfiles/niveles.
 
 $script:STCatalog = $null
+
+# Acciones en revisión: se declaran reversibles, pero su undo no restaura el estado anterior
+# real. Escriben un valor fijo (por ejemplo, un servicio vuelve siempre a Auto), borran
+# valores que podían existir antes o crean valores que no existían. Siguen en el catálogo
+# para que undo pueda deshacer aplicaciones anteriores, pero no se ofrecen en ningún flujo.
+# Para sacar una de la lista, su apply debe guardar el estado previo con Set-STStateFile y
+# su undo restaurarlo. Véase docs/REVISION.md.
+$script:STEnRevision = @(
+    'cpu.fgboost','cpu.visualeffects','cpu.spectre','cpu.hpet','cpu.idlestates','cpu.coreparking-off',
+    'gpu.hags','gamemode','gamebar.dvr','gpu.power-mode',
+    'lap.wifi-powersave','lap.dgpu-off-batt','lap.adaptive','lap.hibernate-fast','lap.bluetooth-idle',
+    'svc.sysmain','svc.sysmain-hdd-off','svc.wsearch','mem.compact','svc.diagsvc','svc.xbox',
+    'net.nla','net.tcp-autotune','net.latin','net.wol-off','net.netbios-off','net.llmnr-off','net.smb-hardening',
+    'off.classic-menu','off.spooler','off.netindex','off.storage-sense','off.hibernation',
+    'priv.teletrack','priv.diagsvc-off','priv.tips','priv.activity','priv.cortana','priv.deep-telemetry',
+    'priv.ads','priv.input-personalization','priv.preapps','priv.cloud-content','priv.feedback-all-off',
+    'sec.pua-protection','sec.autostart-notifs','sec.firewall-log','sec.smb1-off',
+    'upd.pause','upd.forced-reboot'
+)
+
 # Las acciones se ejecutan después de que termine Load-STCatalog.
 foreach ($catalogFile in (Get-ChildItem -LiteralPath $Global:STCatalogDir -Filter '*.ps1' -File | Sort-Object Name)) {
     . $catalogFile.FullName
@@ -28,6 +48,7 @@ function Load-STCatalog {
         if (-not $h.ContainsKey('perfiles')) { $h.perfiles = @() }
         if (-not $h.ContainsKey('niveles'))  { $h.niveles  = @{ suave=1; medio=1; agresivo=1 } }
         if (-not $h.ContainsKey('needsRP'))  { $h.needsRP  = ($h.riesgo -eq 'alto') }
+        $h.enRevision = ($script:STEnRevision -contains $h.id)
         $norm += $h
     }
     $script:STCatalog = $norm
@@ -37,6 +58,8 @@ function Get-STCatalogActions { return @($script:STCatalog) }
 
 function Test-STApplies {
     param($Action, $Hw)
+    # Todos los flujos (asistente, perfiles, setup, ejecutar e IA) pasan por aquí.
+    if ($Action.enRevision) { return $false }
     try {
         if ($Action.ContainsKey('detect') -and $Action.detect) { return [bool](& $Action.detect $Hw $Action) }
     } catch { return $false }
