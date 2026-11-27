@@ -188,3 +188,16 @@ def test_dos_nombres_no_portables_no_llegan_a_la_salida(tmp_path):
     with pytest.raises(archivos.ErrorArchivos, match="colisión"):
         archivos.planificar(tmp_path, entradas, acciones)
     assert not (tmp_path / "sparktune-salida").exists()
+
+
+def test_firma_coincide_al_abrir_el_archivo(tmp_path):
+    # Windows obtiene lstat y fstat con APIs distintas; un archivo intacto debe pasar la comprobación.
+    ruta = tmp_path / "intacto.txt"
+    ruta.write_bytes(b"demo")
+    entrada = archivos.Entrada(ruta, ruta.lstat())
+    with archivos.abrir_origen(entrada) as flujo:
+        abierto = archivos.os.fstat(flujo.fileno())
+        campos = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+        detalle = {c: (getattr(entrada.estado, c), getattr(abierto, c)) for c in campos}
+        assert archivos.firma(abierto) == archivos.firma(entrada.estado), detalle
+        assert flujo.read() == b"demo"

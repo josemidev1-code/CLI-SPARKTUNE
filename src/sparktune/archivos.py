@@ -183,6 +183,11 @@ def leer_carpeta(carpeta):
 
 
 def firma(estado):
+    """Datos que deben coincidir entre la vista previa y la lectura del archivo."""
+    if os.name == "nt":
+        # En Windows, Path.lstat() y os.fstat() usan APIs distintas: el número de volumen
+        # y el identificador del archivo pueden llegar con distinta anchura de bits.
+        return estado.st_ino & 0xFFFF_FFFF_FFFF_FFFF, estado.st_size, estado.st_mtime_ns
     return estado.st_dev, estado.st_ino, estado.st_size, estado.st_mtime_ns, estado.st_ctime_ns
 
 
