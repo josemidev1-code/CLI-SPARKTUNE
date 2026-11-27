@@ -14,6 +14,9 @@ $script:STEnRevision = @(
     'lap.wifi-powersave','lap.dgpu-off-batt','lap.adaptive','lap.hibernate-fast','lap.bluetooth-idle',
     'svc.sysmain','svc.sysmain-hdd-off','svc.wsearch','mem.compact','svc.diagsvc','svc.xbox',
     'net.nla','net.tcp-autotune','net.latin','net.wol-off','net.netbios-off','net.llmnr-off','net.smb-hardening',
+    # net.doh: undo borra entradas DoH que ya existían y un fallo con dos adaptadores no deja estado.
+    # net.wsl-nat: si ~/.wslconfig ya tiene [wsl2], lo reescribe y se pierden sus otras opciones.
+    'net.doh','net.wsl-nat',
     'off.classic-menu','off.spooler','off.netindex','off.storage-sense','off.hibernation',
     'priv.teletrack','priv.diagsvc-off','priv.tips','priv.activity','priv.cortana','priv.deep-telemetry',
     'priv.ads','priv.input-personalization','priv.preapps','priv.cloud-content','priv.feedback-all-off',
