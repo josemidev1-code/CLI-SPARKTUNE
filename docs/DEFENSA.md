@@ -175,7 +175,7 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 
 - Una orden: `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE`. El comando `sparktune` queda disponible en cualquier carpeta, porque es el punto de entrada `[project.scripts]` de [pyproject.toml](../pyproject.toml).
 - [CHANGELOG.md](../CHANGELOG.md) con formato Keep a Changelog, y etiquetas `v1.1.0`…`v1.8.0` de la edición 1.x.
-- Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un subagente revisor de solo lectura, el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
+- Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un agente revisor de solo lectura (`mode: all`, para que `scripts/revisar.sh` pueda lanzarlo como agente principal), el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
 
 - Release [SparkTune 2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0): la etiqueta `v2.0.0` apunta al merge commit del PR #3 y sus notas son la entrada 2.0.0 del CHANGELOG.
 - El PR #3 se fusionó con merge commit, así que `main` conserva cada commit pequeño de la rama y se puede enseñar el historial cambio a cambio.
