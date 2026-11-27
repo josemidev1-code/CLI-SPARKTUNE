@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "acciones": [
+    {
+      "id": "reunir-capturas",
+      "descripcion": "Copia las capturas e imágenes del proyecto.",
+      "tipo": "copiar",
+      "extensiones": [".png", ".jpg", ".jpeg", ".gif", ".webp"]
+    },
+    {
+      "id": "reunir-informes",
+      "descripcion": "Copia los diagnósticos y registros de texto.",
+      "tipo": "copiar",
+      "extensiones": [".txt", ".log", ".html", ".csv"]
+    },
+    {
+      "id": "guardar-planes",
+      "descripcion": "Copia los planes y perfiles JSON para reutilizarlos.",
+      "tipo": "copiar",
+      "extensiones": [".json"]
+    },
+    {
+      "id": "inventariar",
+      "descripcion": "Guarda los nombres y tamaños de los archivos en inventario.json.",
+      "tipo": "inventario",
+      "extensiones": []
+    },
+    {
+      "id": "calcular-huellas",
+      "descripcion": "Calcula las huellas SHA-256 para comprobar después la integridad de los archivos.",
+      "tipo": "huellas",
+      "extensiones": []
+    }
+  ],
+  "perfiles": {
+    "preparar-entrega": ["reunir-capturas", "reunir-informes", "guardar-planes", "inventariar", "calcular-huellas"]
+  }
+}
