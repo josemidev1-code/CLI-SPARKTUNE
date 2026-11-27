@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 @pytest.fixture
 def cli(monkeypatch, tmp_path):
-    from sparktune import ia
+    from sparktune import ia, proveedores
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
@@ -22,14 +22,14 @@ def cli(monkeypatch, tmp_path):
     def red_inesperada(*args, **kwargs):
         pytest.fail("Se intentó contactar con Groq en modo local")
 
-    monkeypatch.setattr(ia.http.client, "HTTPSConnection", red_inesperada)
+    monkeypatch.setattr(proveedores.http.client, "HTTPSConnection", red_inesperada)
     app = typer.Typer()
     ia.registrar(app)
     return lambda *args: CliRunner().invoke(app, list(args))
 
 
 def simular_groq(monkeypatch, contenido=None, estado=200):
-    from sparktune import ia
+    from sparktune import ia, proveedores
 
     peticiones = []
 
@@ -54,7 +54,7 @@ def simular_groq(monkeypatch, contenido=None, estado=200):
         def close(self):
             pass
 
-    monkeypatch.setattr(ia.http.client, "HTTPSConnection", Conexion)
+    monkeypatch.setattr(proveedores.http.client, "HTTPSConnection", Conexion)
     return peticiones
 
 
