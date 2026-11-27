@@ -153,6 +153,32 @@ def test_fallo_a_medias_explica_como_revertir_lo_aplicado(monkeypatch, invocar):
     assert "Restaurar sistema" in despues
 
 
+def test_aplicacion_ya_instalada_no_se_ofrece_deshacer(monkeypatch, invocar):
+    # Si se siguiera la lista de reversión, se desinstalaría un programa que el usuario ya tenía.
+    ejecutar, _ = invocar
+    monkeypatch.setattr(p, "_crear_punto", lambda: "SparkTune-Test")
+
+    def proceso(argumentos, **kw):
+        ya_instalado = 0x8A150061 if argumentos[1] == "install" else 0  # «winget list» lo encuentra
+        return subprocess.CompletedProcess(argumentos, ya_instalado)
+
+    monkeypatch.setattr(p.subprocess, "run", proceso)
+    resultado = ejecutar("preparar", "ofimatica", respuestas="n\ns\n")
+    assert resultado.exit_code == 0, resultado.output
+    despues = resultado.output.split("Mozilla.Firefox ya estaba instalado.")[1]
+    assert "Mozilla.Firefox" not in despues
+    assert "Cambios aplicados" not in despues
+
+
+def test_estado_de_carga_desconocido_no_se_muestra_como_enchufado():
+    # psutil devuelve power_plugged=None cuando Windows no informa del cargador.
+    equipo = dict(sistema="Windows", arquitectura="AMD64", ram_gib=8, disco_libre_gib=40,
+                  con_bateria=True, enchufado=None)
+    resumen = p.resumen_equipo(equipo)
+    assert "enchufado" not in resumen
+    assert "con batería, estado de carga desconocido" in resumen
+
+
 def test_vista_previa_incluye_como_deshacer(invocar):
     ejecutar, _ = invocar
     salida = ejecutar("preparar", "gaming", "--simular").output

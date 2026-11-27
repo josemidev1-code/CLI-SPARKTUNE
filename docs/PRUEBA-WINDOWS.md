@@ -110,7 +110,7 @@ Esperado: se muestran la ayuda y los 13 perfiles, entre ellos `android`, `ofimat
 
 **1.2 · Simulación.** Ejecuta `sparktune preparar ofimatica --simular`.
 Esperado:
-- «Equipo observado» indica la RAM y el disco reales. Si el portátil está desenchufado, dice «con batería, desenchufado», y si está enchufado, «con batería, enchufado». Si dice «enchufado» estando desenchufado, es un fallo: anótalo.
+- «Equipo observado» indica la RAM y el disco reales. Si el portátil está desenchufado, dice «con batería, desenchufado», y si está enchufado, «con batería, enchufado». Si Windows no informa del cargador, dice «con batería, estado de carga desconocido»: anótalo. Si dice «enchufado» estando desenchufado, es un fallo.
 - Se listan LibreOffice y Firefox, cada uno con su orden `winget uninstall`.
 - El último mensaje es `Simulación terminada.`.
 
@@ -183,7 +183,7 @@ Esperado: las dos desinstalaciones terminan bien y `winget list` ya no muestra e
 Esperado:
 - Aparece `Mozilla.Firefox ya estaba instalado.` y al final `Preparación terminada.`.
 - Puede crearse un punto de restauración aunque no se instale nada. No es un fallo.
-- **Firefox no debe aparecer en «Cambios aplicados y cómo deshacerlos uno a uno»**, porque SparkTune no lo instaló. Si aparece, anótalo como fallo: seguir esa lista desinstalaría un programa que ya tenías. Es un error conocido de la versión actual, apuntado en `docs/RELEVO.md`.
+- **Firefox no debe aparecer en «Cambios aplicados y cómo deshacerlos uno a uno»**, porque SparkTune no lo instaló. Si aparece, anótalo como fallo: seguir esa lista desinstalaría un programa que ya tenías.
 
 Si en lugar de «ya estaba instalado» aparece `WinGet terminó con código 0x…`, anota el código: tu versión de WinGet usa un código que SparkTune todavía no reconoce.
 
@@ -236,7 +236,7 @@ Esperado:
 
 Para revertirlo, vuelve a activar la transparencia en Personalización → Colores y comprueba que `EnableTransparency` vuelve a 1.
 
-Si no se pregunta por la transparencia estando desenchufado, revisa la línea «Equipo observado». Si dice «enchufado», es el fallo del caso 1.2.
+Si no se pregunta por la transparencia estando desenchufado, revisa la línea «Equipo observado». Si dice «estado de carga desconocido», Windows no informa del cargador y SparkTune no propone el ajuste. Si dice «enchufado», es el fallo del caso 1.2.
 
 ## 5. Cuando no se puede crear el punto
 

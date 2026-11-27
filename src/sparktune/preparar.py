@@ -218,7 +218,9 @@ def resumen_equipo(equipo: dict) -> str:
               f"{ram:g} GiB de RAM" if ram is not None else "RAM desconocida",
               f"{disco:g} GiB libres" if disco is not None else "espacio libre desconocido"]
     if equipo["con_bateria"]:
-        partes.append("con batería, desenchufado" if equipo["enchufado"] is False else "con batería, enchufado")
+        # psutil devuelve None si Windows no informa del cargador: no se da por enchufado.
+        carga = {True: "enchufado", False: "desenchufado"}.get(equipo["enchufado"], "estado de carga desconocido")
+        partes.append(f"con batería, {carga}")
     elif equipo["con_bateria"] is False:
         partes.append("sin batería")
     return " · ".join(partes)
@@ -303,16 +305,17 @@ def _crear_punto() -> str:
                        "sistema, los permisos de administrador y el límite de creación de Windows (24 horas).")
 
 
-def _instalar(winget: str, paquete: str) -> None:
+def _instalar(winget: str, paquete: str) -> bool:
+    """True si SparkTune lo ha instalado; False si ya estaba instalado y no se ha tocado."""
     filtro = ["--id", paquete, "--exact", "--source", "winget"]
     codigo = subprocess.run([winget, "install", *filtro, "--no-upgrade"]).returncode
     if codigo == 0:
-        return
+        return True
     # WinGet puede usar HRESULT de 32 bits con o sin signo al omitir un paquete instalado.
     if (codigo & 0xFFFFFFFF) in {0x8A15002B, 0x8A150061, 0x8A15010D}:
         if subprocess.run([winget, "list", *filtro, "--disable-interactivity"]).returncode == 0:
             typer.echo(f"{paquete} ya estaba instalado.")
-            return
+            return False
     raise RuntimeError(f"WinGet terminó con código 0x{codigo & 0xFFFFFFFF:08X} para {paquete}.")
 
 
@@ -366,9 +369,10 @@ def preparar(
             if not protegido:
                 typer.echo(f"Punto verificado: {_crear_punto()}")
                 protegido = True
-            _instalar(winget, paquete)
-            aplicados.append(deshacer_paquete(paquete))
-            typer.echo(f"Disponible: {paquete}")
+            # Solo se ofrece deshacer lo que SparkTune instaló; nunca un programa que ya existía.
+            if _instalar(winget, paquete):
+                aplicados.append(deshacer_paquete(paquete))
+                typer.echo(f"Disponible: {paquete}")
         if transparencia and confirmar("¿Desactivar los efectos de transparencia para esta cuenta?"):
             if not protegido:
                 typer.echo(f"Punto verificado: {_crear_punto()}")
