@@ -3,22 +3,17 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+import os
+
 import pytest
-import typer
 from typer.testing import CliRunner
 
-from sparktune import archivos
+from sparktune import ficheros
+from sparktune.cli import app
+from sparktune.config import Catalogo
+from sparktune.errores import ErrorEjecucion
+from sparktune.motor import Plan
 
-
-app = typer.Typer()
-
-
-@app.callback()
-def inicio(ctx: typer.Context, config: Path | None = None):
-    ctx.obj = config
-
-
-archivos.registrar(app)
 runner = CliRunner()
 
 
@@ -118,7 +113,7 @@ def test_config_alternativa_y_local(tmp_path, monkeypatch):
     (("perfiles", "reunir-capturas"), ["inventariar"], "coincide"),
 ])
 def test_errores_de_campos(tmp_path, ruta, valor, mensaje):
-    catalogo = archivos.cargar_catalogo()
+    catalogo = json.loads(Catalogo.ruta_por_defecto().read_text(encoding="utf-8"))
     objeto = catalogo
     for parte in ruta[:-1]:
         objeto = objeto[parte]
@@ -167,26 +162,25 @@ def test_no_sigue_enlaces_y_reserva_otra_salida(tmp_path):
 def test_cambio_posterior_al_plan_y_carrera_destino(tmp_path):
     origen = tmp_path / "a.txt"
     origen.write_bytes(b"original")
-    base, entradas = archivos.leer_carpeta(tmp_path)
-    destino, pasos = archivos.planificar(base, entradas, archivos.seleccionar(archivos.cargar_catalogo(), "reunir-informes"))
+    plan = Plan.preparar(tmp_path, Catalogo.desde_archivo().seleccionar("reunir-informes"))
     origen.write_bytes(b"otro contenido")
-    with pytest.raises(archivos.ErrorArchivos, match="incompleta"):
-        archivos.aplicar(destino, pasos)
-    assert (destino / ".incompleto").exists()
+    with pytest.raises(ErrorEjecucion, match="incompleta"):
+        plan.aplicar()
+    assert (plan.destino / ".incompleto").exists()
     assert origen.read_bytes() == b"otro contenido"
     with pytest.raises(FileExistsError):
-        archivos.aplicar(destino, pasos)
-    assert (destino / ".incompleto").exists()
+        plan.aplicar()
+    assert (plan.destino / ".incompleto").exists()
 
 
 def test_dos_nombres_no_portables_no_llegan_a_la_salida(tmp_path):
     ruta = tmp_path / "Foto.PNG"
     ruta.touch()
     # Fuerza ambas entradas del plan también en sistemas sin distinción de mayúsculas.
-    entradas = [archivos.Entrada(ruta, ruta.stat()), archivos.Entrada(tmp_path / "foto.png", ruta.stat())]
-    acciones = archivos.seleccionar(archivos.cargar_catalogo(), "reunir-capturas")
-    with pytest.raises(archivos.ErrorArchivos, match="colisión"):
-        archivos.planificar(tmp_path, entradas, acciones)
+    entradas = [ficheros.Entrada(ruta, ruta.stat()), ficheros.Entrada(tmp_path / "foto.png", ruta.stat())]
+    acciones = Catalogo.desde_archivo().seleccionar("reunir-capturas")
+    with pytest.raises(ErrorEjecucion, match="colisión"):
+        Plan.desde_entradas(tmp_path, entradas, acciones)
     assert not (tmp_path / "sparktune-salida").exists()
 
 
@@ -194,18 +188,17 @@ def test_firma_coincide_al_abrir_el_archivo(tmp_path):
     # Windows obtiene lstat y fstat con APIs distintas; un archivo intacto debe pasar la comprobación.
     ruta = tmp_path / "intacto.txt"
     ruta.write_bytes(b"demo")
-    entrada = archivos.Entrada(ruta, ruta.lstat())
-    with archivos.abrir_origen(entrada) as flujo:
-        abierto = archivos.os.fstat(flujo.fileno())
+    entrada = ficheros.Entrada(ruta, ruta.lstat())
+    with entrada.abrir() as flujo:
+        abierto = os.fstat(flujo.fileno())
         campos = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
         detalle = {c: (getattr(entrada.estado, c), getattr(abierto, c)) for c in campos}
-        assert archivos.firma(abierto) == archivos.firma(entrada.estado), detalle
+        assert ficheros.firma(abierto) == ficheros.firma(entrada.estado), detalle
         assert flujo.read() == b"demo"
 
 
 def test_salida_redirigida_con_codificacion_antigua(tmp_path):
     # Windows usa cp1252 al redirigir la salida; el plan contiene «→» y nombres con tildes.
-    import os
     import subprocess
     import sys
 
@@ -215,3 +208,27 @@ def test_salida_redirigida_con_codificacion_antigua(tmp_path):
                                 str(tmp_path), "--simular"], capture_output=True, env=entorno)
     assert resultado.returncode == 0, resultado.stderr.decode("utf-8", "replace")
     assert "→".encode() in resultado.stdout and "diagnóstico".encode() in resultado.stdout
+
+
+def test_tipo_nuevo_se_registra_sin_tocar_motor_ni_catalogo(tmp_path, monkeypatch):
+    # Una subclase con «tipo» queda disponible para acciones.json; el motor no cambia.
+    from sparktune.acciones import Accion
+
+    monkeypatch.setattr(Accion, "_tipos", dict(Accion._tipos))
+
+    class Contar(Accion):
+        tipo = "contar"
+
+        def describir(self, fuentes):
+            return [f"  Contar {len(fuentes)} archivos"]
+
+        def escribir(self, fuentes, carpeta):
+            (carpeta / "total.txt").write_text(str(len(fuentes)), encoding="utf-8")
+
+    datos = {"version": 1, "perfiles": {},
+             "acciones": [{"id": "contar-todo", "descripcion": "Cuenta archivos", "tipo": "contar", "extensiones": []}]}
+    (tmp_path / "a.txt").touch()
+    plan = Plan.preparar(tmp_path, Catalogo.desde_datos(datos).seleccionar("contar-todo"))
+    assert plan.lineas()[1:] == ["contar-todo (1 archivos)", "  Contar 1 archivos"]
+    plan.aplicar()
+    assert (plan.destino / "contar-todo" / "total.txt").read_text(encoding="utf-8") == "1"
