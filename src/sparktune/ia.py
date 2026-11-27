@@ -6,7 +6,7 @@ from typing import Annotated
 import typer
 
 from .errores import ErrorIA
-from .preparar import PERFIL_DESCRIPCIONES, contexto_equipo
+from .preparar import PERFIL_DESCRIPCIONES, RESTAURAR, contexto_equipo, propuesta, resumen_equipo
 from .proveedores import MODELO, ProveedorGroq, ProveedorIA, ProveedorLocal, texto_seguro
 
 ArchivoEnv = Annotated[Path | None, typer.Option(
@@ -41,8 +41,9 @@ def asesorar(objetivo: Annotated[str, typer.Argument(help="Describe qué quieres
             proveedor = remoto
         except ErrorIA as error:
             typer.echo(str(error), err=True)
-    typer.echo(f"Recomendación {_origen(proveedor)} · {perfil}\n{motivo}\n"
-               f"Para ver el plan, ejecuta sparktune preparar {perfil} --simular")
+    typer.echo(f"Recomendación {_origen(proveedor)} · {perfil}")
+    typer.echo(f"Por qué encaja con tu uso: {motivo}")
+    _mostrar_propuesta(perfil, equipo, con_equipo=True)
 
 
 def explicar(perfil: Annotated[str, typer.Argument(help="Identificador que aparece en sparktune perfiles.")],
@@ -63,7 +64,7 @@ def explicar(perfil: Annotated[str, typer.Argument(help="Identificador que apare
     typer.echo(f"Explicación {_origen(proveedor)} · {perfil}")
     for linea in lineas:
         typer.echo(linea)
-    typer.echo(f"Para ver el plan, ejecuta sparktune preparar {perfil} --simular")
+    _mostrar_propuesta(perfil, equipo, con_equipo=False)
 
 
 def comprobar_ia(env_file: ArchivoEnv = None):
@@ -74,6 +75,20 @@ def comprobar_ia(env_file: ArchivoEnv = None):
         typer.echo(str(error), err=True)
         raise typer.Exit(error.codigo_salida) from None
     typer.echo(f"Conexión verificada con Groq · {MODELO}")
+
+
+def _mostrar_propuesta(perfil: str, equipo: dict, con_equipo: bool) -> None:
+    """Qué cambiaría y cómo se revierte. Sale del catálogo de SparkTune, nunca del modelo."""
+    cambios, pasos = propuesta(perfil, equipo)
+    if con_equipo:
+        typer.echo(f"Con tu equipo: {resumen_equipo(equipo)}")
+        for paso in pasos[1:]:  # El primero es la guía general del perfil.
+            typer.echo(f"  • {paso}")
+    typer.echo("Qué cambiaría en Windows (cada cambio se confirma por separado):")
+    for cambio in cambios:
+        typer.echo(f"  • {cambio.descripcion}\n    Cómo revertirlo: {cambio.deshacer}")
+    typer.echo(f"Antes del primer cambio se crea un punto de restauración. {RESTAURAR}")
+    typer.echo(f"Todavía no se ha aplicado nada. Para revisar el plan, ejecuta sparktune preparar {perfil} --simular")
 
 
 def _origen(proveedor: ProveedorIA) -> str:

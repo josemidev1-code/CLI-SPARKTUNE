@@ -75,15 +75,16 @@ class ProveedorLocal(ProveedorIA):
     def recomendar(self, objetivo, equipo):
         palabras = unicodedata.normalize("NFKD", objetivo.casefold())
         palabras = "".join(c for c in palabras if not unicodedata.combining(c))
-        mejor, puntuacion = "casa", 0
+        mejor, coincidencias = "casa", []
         for perfil, vocabulario in VOCABULARIO.items():
-            puntos = sum(1 for termino in vocabulario if re.search(r"\b" + termino + r"\b", palabras))
-            if perfil in self._perfiles and puntos > puntuacion:
-                mejor, puntuacion = perfil, puntos
-        motivo = self._perfiles[mejor]
-        if not puntuacion:
-            motivo = f"Para un uso general, empieza por este perfil. {motivo}"
-        return mejor, motivo
+            encontrados = [termino for termino in vocabulario if re.search(r"\b" + termino + r"\b", palabras)]
+            if perfil in self._perfiles and len(encontrados) > len(coincidencias):
+                mejor, coincidencias = perfil, encontrados
+        descripcion = self._perfiles[mejor]
+        if not coincidencias:
+            return mejor, f"No he reconocido una actividad concreta; para un uso general, empieza por este perfil. {descripcion}"
+        citadas = ", ".join(f"«{termino}»" for termino in coincidencias)
+        return mejor, f"Mencionas {citadas}, y este perfil está pensado para eso: {descripcion}."
 
     def explicar(self, perfil, equipo):
         orientacion = [self._perfiles[perfil]]

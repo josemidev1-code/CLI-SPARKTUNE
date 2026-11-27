@@ -19,6 +19,9 @@ def cli(monkeypatch, tmp_path):
         "enchufado": False,
     })
 
+    from sparktune import preparar
+    monkeypatch.setattr(preparar, "_transparencia_activa", lambda: False)
+
     def red_inesperada(*args, **kwargs):
         pytest.fail("Se intentó contactar con Groq en modo local")
 
@@ -163,3 +166,25 @@ def test_consulta_no_envia_clave_literal_fuera_de_cabecera(cli, monkeypatch):
 def test_desarrollo_movil_sin_mencionar_android(cli):
     salida = cli("asesorar", "Quiero programar aplicaciones móviles", "--local")
     assert salida.exit_code == 0 and "preparar android --simular" in salida.output
+
+
+def test_propuesta_dice_que_cambia_por_que_y_como_revertir(cli):
+    salida = cli("asesorar", "Quiero programar en Kotlin para Android", "--local").output
+    assert "Por qué encaja con tu uso: Mencionas «android», «kotlin»" in salida
+    assert "Con tu equipo: Windows AMD64 · 8 GiB de RAM" in salida
+    assert "Instalar Git.Git con WinGet" in salida
+    assert "Cómo revertirlo: winget uninstall --id Git.Git --exact" in salida
+    assert "Restaurar sistema" in salida and "Todavía no se ha aplicado nada" in salida
+
+
+def test_el_modelo_no_decide_cambios_ni_reversion(cli, monkeypatch):
+    # El modelo solo aporta el motivo: paquetes y reversión salen del catálogo de SparkTune.
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_ejemplo")
+    simular_groq(monkeypatch, {"perfil": "ofimatica", "motivo": "Encaja con tus documentos.",
+                               "paquetes": ["Malware.Falso"], "deshacer": "format C:"})
+    salida = cli("asesorar", "Escribir documentos").output
+    assert "Recomendación de Groq · ofimatica" in salida and "Encaja con tus documentos." in salida
+    assert "Malware.Falso" not in salida and "format C:" not in salida
+    revertir = [linea.strip() for linea in salida.splitlines() if "Cómo revertirlo" in linea]
+    assert revertir == ["Cómo revertirlo: winget uninstall --id TheDocumentFoundation.LibreOffice --exact",
+                        "Cómo revertirlo: winget uninstall --id Mozilla.Firefox --exact"]
