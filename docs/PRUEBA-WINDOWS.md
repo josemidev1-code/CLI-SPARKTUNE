@@ -48,10 +48,10 @@ uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE
 sparktune version
 ```
 
-- `sparktune version` debe mostrar `2.0.0`.
+- `sparktune version` debe mostrar `2.0.1`.
 - Si la consola no encuentra el comando, ejecuta `uv tool update-shell` y ábrela de nuevo.
 - Si tenías la edición 1.x, comprueba con `Get-Command sparktune -All` que se ejecuta la versión 2.
-- Si no puedes instalar Git, hay una alternativa sin él: `uv tool install https://github.com/josemidev1-code/CLI-SPARKTUNE/archive/refs/tags/v2.0.0.zip`.
+- Si no puedes instalar Git, hay una alternativa sin él: `uv tool install https://github.com/josemidev1-code/CLI-SPARKTUNE/archive/refs/tags/v2.0.1.zip`.
 
 ### Registro de la sesión
 
