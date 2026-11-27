@@ -232,3 +232,22 @@ def test_tipo_nuevo_se_registra_sin_tocar_motor_ni_catalogo(tmp_path, monkeypatc
     assert plan.lineas()[1:] == ["contar-todo (1 archivos)", "  Contar 1 archivos"]
     plan.aplicar()
     assert (plan.destino / "contar-todo" / "total.txt").read_text(encoding="utf-8") == "1"
+
+
+def test_ruta_inexistente_da_mensaje_claro(tmp_path):
+    resultado = runner.invoke(app, ["ejecutar", "inventariar", str(tmp_path / "no-existe"), "--simular"])
+    assert resultado.exit_code == 1
+    assert "No existe la carpeta" in resultado.stderr and "Errno" not in resultado.stderr
+
+
+def test_acepta_enlaces_del_sistema_como_tmp(tmp_path):
+    # En macOS /tmp es un enlace de root a /private/tmp; un usuario no puede crear uno así.
+    sistema = Path("/tmp")
+    if os.name == "nt" or not sistema.is_symlink() or sistema.lstat().st_uid != 0:
+        pytest.skip("Este sistema no tiene /tmp como enlace de root.")
+    import tempfile
+
+    with tempfile.TemporaryDirectory(dir=sistema) as carpeta:
+        (Path(carpeta) / "a.log").write_text("ok", encoding="utf-8")
+        resultado = runner.invoke(app, ["ejecutar", "reunir-informes", carpeta, "--simular"])
+    assert resultado.exit_code == 0, resultado.output
