@@ -91,7 +91,15 @@ No se admiten campos adicionales ni claves repetidas. `sparktune validar` compru
 
 ## Asesor de IA
 
-`asesorar` elige un perfil y `explicar` ayuda a entender cómo encaja un perfil con el equipo. Usa `--local` si prefieres trabajar sin red. Si no hay red o no hay clave, SparkTune lo indica y responde con sus reglas locales. Para habilitar el proveedor Groq, configura `GROQ_API_KEY` en la sesión o copia `.env.example` a un fichero privado y pasa su ruta con `--env-file`. Prueba la conexión con `sparktune comprobar-ia`. Nunca incluyas claves en capturas, transcripciones o commits. El modelo predeterminado es `openai/gpt-oss-120b`. La disponibilidad depende de la cuenta y de los límites de Groq.
+`asesorar` elige un perfil y `explicar` ayuda a entender cómo encaja un perfil con el equipo. Ninguna de las dos aplica cambios. Cada propuesta muestra:
+
+- **Por qué encaja con tu uso:** el motivo que da la IA o, en modo local, las palabras de tu objetivo que han llevado a ese perfil.
+- **Con tu equipo:** RAM, disco y batería medidos, y cómo adaptan el plan.
+- **Qué cambiaría en Windows:** cada instalación o ajuste y **cómo revertirlo** (por ejemplo, `winget uninstall --id Git.Git --exact`), además del punto de restauración que se crea antes del primer cambio.
+
+La IA solo elige el perfil y redacta el motivo. Los cambios y su reversión salen siempre del catálogo de SparkTune, así que el modelo no puede proponer instalaciones ni instrucciones propias. Si `preparar` falla a medias, indica cómo deshacer lo que sí se aplicó.
+
+Usa `--local` si prefieres trabajar sin red. Si no hay red o no hay clave, SparkTune lo indica y responde con sus reglas locales. Para habilitar el proveedor Groq, configura `GROQ_API_KEY` en la sesión o copia `.env.example` a un fichero privado y pasa su ruta con `--env-file`. Prueba la conexión con `sparktune comprobar-ia`. Nunca incluyas claves en capturas, transcripciones o commits. El modelo predeterminado es `openai/gpt-oss-120b`. La disponibilidad depende de la cuenta y de los límites de Groq.
 
 ## Desarrollo
 

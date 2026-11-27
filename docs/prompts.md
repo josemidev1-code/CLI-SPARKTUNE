@@ -16,6 +16,7 @@ Decisiones de diseño de estos prompts:
 
 - **Respuesta en JSON con claves fijas** (`response_format: json_object`): SparkTune comprueba cada campo en lugar de interpretar texto libre.
 - **El modelo solo elige entre opciones del catálogo.** Nunca devuelve paquetes ni órdenes que se ejecuten, así que una respuesta inventada no puede instalar nada.
+- **Qué cambia y cómo se revierte no lo escribe el modelo.** SparkTune añade a cada propuesta la lista de cambios y su reversión a partir de su propio catálogo (`preparar.propuesta()`). Si el modelo añade campos como `paquetes` o `deshacer`, se ignoran (lo comprueba `test_el_modelo_no_decide_cambios_ni_reversion`).
 - **Datos mínimos:** el resumen del equipo incluye sistema, arquitectura, núcleos, RAM, disco libre y batería, sin nombres de usuario, del equipo ni rutas. Si el objetivo parece contener una ruta, un correo o una clave, no se envía y se responde en local.
 - **Texto saneado:** se eliminan secuencias ANSI y caracteres de control antes de mostrar la respuesta.
 
