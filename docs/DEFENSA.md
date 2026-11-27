@@ -4,7 +4,7 @@ Este documento reúne la evidencia de cada criterio de la rúbrica y explica qu�
 
 Los criterios se basan en un resumen de la rúbrica (https://aulaenlanube.com/programacion-ia/cli/). Antes de la defensa, compara los textos con la página.
 
-Estado verificado el 27 de noviembre de 2026 en la rama `codex/sparktune-python`: `pytest` muestra 68 pruebas en verde en local, y en el PR #3 pasan todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell).
+Estado verificado el 27 de noviembre de 2026: `pytest` muestra 68 pruebas en verde en local, y en el PR #3 pasaron todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell) antes de fusionarlo en `main`. La versión publicada es la release `v2.0.0`.
 
 ## Puerta de entrada
 
@@ -12,7 +12,7 @@ Si falla alguna de estas condiciones, el proyecto no se evalúa.
 
 | Condición | Estado | Evidencia |
 | --- | --- | --- |
-| Se instala siguiendo el README y `--help` funciona | **Solo desde la rama** | Instalar desde la rama funciona: `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python`. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py). **Pero la orden del README apunta a `main`, donde no hay `pyproject.toml`, así que hoy fallaría.** Hay que fusionar el PR #3 antes de entregar. |
+| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la versión 2.0.0. Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
 | Al menos 3 acciones propias en `acciones.json` | Cumple | Hay 5 acciones y 1 perfil en [acciones.json](../acciones.json). |
 | Ninguna clave en el repositorio ni en su historial | Cumple | `git log -p --all \| grep -E "gsk_[A-Za-z0-9]{20,}\|sk-[A-Za-z0-9]{20,}"` no encuentra nada, y `git log --all -- .env` está vacío. Las claves de las pruebas (`gsk_ejemplo`) son falsas. |
 | Al menos 10 commits | Cumple | La rama tiene 67 commits y `main`, 45. |
@@ -177,11 +177,10 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 - [CHANGELOG.md](../CHANGELOG.md) con formato Keep a Changelog, y etiquetas `v1.1.0`…`v1.8.0` de la edición 1.x.
 - Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un subagente revisor de solo lectura, el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
 
-**Pendiente antes de entregar** (en [RELEVO.md](RELEVO.md)):
+- Release [SparkTune 2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0): la etiqueta `v2.0.0` apunta al merge commit del PR #3 y sus notas son la entrada 2.0.0 del CHANGELOG.
+- El PR #3 se fusionó con merge commit, así que `main` conserva cada commit pequeño de la rama y se puede enseñar el historial cambio a cambio.
 
-1. Fusionar el PR #3. Hasta entonces, la orden del README falla porque `main` no tiene `pyproject.toml`.
-2. Añadir la entrada 2.0.0 en el CHANGELOG, la etiqueta `v2.0.0` y la release.
-3. Completar las sesiones con ChatGPT y Codex en `docs/prompts.md`.
+**Pendiente antes de entregar** (en [RELEVO.md](RELEVO.md)): completar las sesiones con ChatGPT y Codex en `docs/prompts.md`.
 
 ---
 
@@ -418,11 +417,9 @@ Preparación común (fixture `invocar`): equipo Windows AMD64 con 16 GiB de RAM,
 
 Conviene saberlos antes de que te pregunten por ellos:
 
-1. **La instalación desde `main` falla hasta fusionar el PR #3.** Es una condición de la puerta de entrada.
-2. Todavía no hay una release `v2.0.0`. Las etiquetas existentes son de la 1.x.
-3. `.env` no estaba en `.gitignore` en el primer commit, aunque nunca se subió ninguna clave.
-4. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
-5. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`).
-6. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 2 de RELEVO.
-7. En la edición 1.x, 50 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
-8. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
+1. `.env` no estaba en `.gitignore` en el primer commit, aunque nunca se subió ninguna clave.
+2. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
+3. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`). El caso 1.5 del guion de Windows lo comprueba a mano.
+4. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 1 de RELEVO.
+5. En la edición 1.x, 50 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
+6. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
