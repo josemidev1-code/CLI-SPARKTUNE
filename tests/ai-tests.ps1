@@ -28,10 +28,16 @@ function Invoke-RestMethod {
     if ($format.name -eq 'sparktune_setup') {
         $advice = @{
             profile = if ($mock.Reply -eq 'bad-profile') { 'inventado' } else { 'desarrollo' }
-            plan = if ($mock.Reply -eq 'bad-plan') { 'power.restore-defaults' } else { 'ninguno' }
+            plan = switch ($mock.Reply) {
+                'bad-plan' { 'power.restore-defaults' }
+                'startup'  { 'spark-ahorro' }
+                default    { 'ninguno' }
+            }
             apps = $true
             tweaks = $false
-            reason = "Propuesta de programación. $([char]27)CONTROL"
+            reason = if ($mock.Reply -eq 'startup') {
+                'Te propongo el perfil de programación y el plan Ahorro para priorizar la batería.'
+            } else { "Propuesta de programación. $([char]27)CONTROL" }
         }
     } else {
         $mock.Chosen = @($format.schema.properties.recommendations.items.properties.id.enum)[0]
@@ -151,6 +157,46 @@ try {
     $mock.Reply = 'normal'
     $advice = (& $entry ai "--objetivo=$goal" --lang=es 6>&1) -join "`n"
     Assert-AI ($LASTEXITCODE -eq 0 -and $advice -match 'Mejora sugerida' -and $advice -notmatch 'INVALID ADVICE') 'El asesor de Groq no filtró las recomendaciones.'
+
+    foreach ($module in @('globals','ui','engine','catalog','ai','setup')) {
+        . (Join-Path $root "src/core/$module.ps1")
+    }
+    $script:STConsole = $false
+    Set-STLang 'es'
+    function Get-STHardware { return @{ IsLaptop=$true; Battery=$true; Plugged=$false; Build=22631 } }
+    function Read-Host([string]$Prompt) {
+        $mock.Prompts++
+        Write-Host "$($Prompt): $($mock.Goal)"
+        return $mock.Goal
+    }
+    function Install-STWingetApp { throw 'El inicio intentó instalar una app.' }
+    function Invoke-STApply { throw 'El inicio intentó aplicar un ajuste.' }
+    $mock.Prompts = 0
+    $mock.Goal = ''
+    $calls = $mock.Calls
+    $env:GROQ_API_KEY = $null
+    $noKey = (@(Invoke-STStartup -Interactive 6>&1) -join [Environment]::NewLine)
+    Assert-AI ($noKey -match 'sparktune preparar' -and $mock.Prompts -eq 0 -and $mock.Calls -eq $calls) 'El inicio sin clave pidió texto o llamó a la API.'
+
+    $env:GROQ_API_KEY = 'groq-test-secret'
+    $redirected = (@(Invoke-STStartup 6>&1) -join [Environment]::NewLine)
+    Assert-AI ($redirected -match 'sparktune preparar' -and $mock.Prompts -eq 0 -and $mock.Calls -eq $calls) 'El inicio redirigido intentó leer texto o llamó a la API.'
+    $skipped = (@(Invoke-STStartup -Interactive 6>&1) -join [Environment]::NewLine)
+    Assert-AI ($skipped -match 'Enter para saltar' -and $skipped -match 'sparktune ayuda' -and $mock.Prompts -eq 1 -and $mock.Calls -eq $calls) 'Pulsar Enter no mostró la guía sin consultar a la IA.'
+
+    $mock.Goal = 'Programo en mi portátil y quiero que la batería dure más'
+    $mock.Reply = 'startup'
+    $startupResult = @(Invoke-STStartup -Interactive 6>&1)
+    Assert-AI ($startupResult[-1] -eq 0) 'El inicio con IA falló.'
+    $startup = ($startupResult | Select-Object -SkipLast 1) -join [Environment]::NewLine
+    $context = ConvertFrom-Json -InputObject $mock.LastRequest.messages[1].content
+    Assert-AI ($mock.Prompts -eq 2 -and $mock.Calls -eq ($calls + 1) -and $context.goal -ceq $mock.Goal) 'El inicio no envió la situación descrita.'
+    Assert-AI ($startup -match 'se enviarán a Groq' -and $startup -match 'priorizar la batería' -and $startup -match 'Visual Studio Code' -and $startup -match 'spark-ahorro') 'El inicio no mostró el aviso o el plan esperado.'
+    Assert-AI (-not (Test-Path -LiteralPath (Join-Path $testHome '.sparktune/journal.json'))) 'El inicio con IA alteró el historial.'
+    if ($ShowSetupExample) {
+        Write-Host 'Inicio interactivo con respuesta simulada'
+        Write-Host $startup
+    }
 
     Write-Host 'AI advisor tests OK'
 } finally {

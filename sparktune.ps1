@@ -193,8 +193,7 @@ try {
     switch ($cmd) {
         ''          {
             if ($script:STConsole -and $Global:STBanner -and -not $flagNoBanner) { Show-STBanner }
-            Show-STHelp
-            exit 0
+            exit (Invoke-STStartup -Interactive:$script:STConsole)
         }
         'wizard'   { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 

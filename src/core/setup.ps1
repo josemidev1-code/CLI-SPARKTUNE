@@ -43,8 +43,51 @@ function Save-STSetupPlan([string]$Path, $Data) {
     }
 }
 
+function Read-STSetupGoal([string]$Provider) {
+    $en = $Global:STLang -eq 'en'
+    if (-not $Provider) {
+        Write-STWarn (T 'ai.missingKey')
+        return ''
+    }
+    $providerName = if ($Provider -eq 'groq') { 'Groq' } else { 'OpenAI' }
+    Write-STLine ''
+    if ($en) {
+        Write-STInfo 'Example: I program on my laptop and want the battery to last longer.'
+        Write-STLine "  Your text and basic hardware context will be sent to $providerName."
+        return ([string](Read-Host 'Describe your situation (Enter to skip)')).Trim()
+    }
+    Write-STInfo 'Ejemplo: programo en mi portátil y quiero que la batería dure más.'
+    Write-STLine "  Tu texto y algunos datos básicos del equipo se enviarán a $providerName."
+    return ([string](Read-Host 'Cuéntale tu situación a la IA (Enter para saltar)')).Trim()
+}
+
+function Invoke-STStartup([switch]$Interactive) {
+    $provider = Get-STAIProvider
+    if (-not $Interactive -or -not $provider) {
+        Show-STHelp
+        return 0
+    }
+
+    $title = if ($Global:STLang -eq 'en') { 'Welcome' } else { 'Bienvenida' }
+    Write-STHeader -Title $title
+    Show-STIntroduction
+    $goal = Read-STSetupGoal -Provider $provider
+    if (-not $goal) {
+        Show-STHelp -SkipIntroduction
+        return 0
+    }
+
+    $result = Invoke-STSetup -Goal $goal -AdviceOnly
+    Write-STInfo $(if ($Global:STLang -eq 'en') {
+        'Use sparktune setup to pick a profile, or sparktune help to see the commands.'
+    } else {
+        'Usa sparktune preparar para elegir un perfil o sparktune ayuda para ver los comandos.'
+    })
+    return $result
+}
+
 function Invoke-STSetup {
-    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath, [switch]$ValidateOnly)
+    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath, [switch]$ValidateOnly, [switch]$AdviceOnly)
 
     $en = $Global:STLang -eq 'en'
     $file = Join-Path $Global:STData 'setup-profiles.json'
@@ -70,7 +113,7 @@ function Invoke-STSetup {
         }
         $items = @(
             if (-not $Plan) {
-                [pscustomobject]@{ id = '_ai'; label = $(if ($en) { 'Describe your goal to AI' } else { 'Cuéntale tu objetivo a la IA' }) }
+                [pscustomobject]@{ id = '_ai'; label = $(if ($en) { 'Describe your situation to AI' } else { 'Cuéntale tu situación a la IA' }) }
             }
             foreach ($key in $keys) {
                 [pscustomobject]@{ id = $key; label = $(if ($en) { $profiles.$key.nombre_en } else { $profiles.$key.nombre }) }
@@ -79,7 +122,7 @@ function Invoke-STSetup {
         $index = Show-STMenu -Title $(if ($en) { 'Set up your new PC' } else { 'Prepara tu PC nuevo' }) -Items $items
         if ($index -lt 0) { return 0 }
         if ($items[$index].id -eq '_ai') {
-            $Goal = ([string](Read-Host $(if ($en) { 'What do you want to optimize?' } else { '¿Qué quieres optimizar?' }))).Trim()
+            $Goal = Read-STSetupGoal -Provider (Get-STAIProvider)
             if (-not $Goal) { return 0 }
         } else { $Perfil = $items[$index].id }
     }
@@ -261,8 +304,8 @@ function Invoke-STSetup {
     Write-STLine ''
     if ($Global:STDryRun) { return 0 }
 
-    if ($fromAI -and [Console]::IsInputRedirected) {
-        $command = "sparktune setup --perfil=$Perfil --plan=$Plan"
+    if ($fromAI -and ($AdviceOnly -or [Console]::IsInputRedirected)) {
+        $command = if ($en) { "sparktune setup $Perfil --plan=$Plan" } else { "sparktune preparar $Perfil --plan=$Plan" }
         if ($SkipApps) { $command += ' --sin-apps' }
         if ($SkipTweaks) { $command += ' --sin-ajustes' }
         Write-STInfo $command
