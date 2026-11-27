@@ -416,5 +416,8 @@ Conviene saberlos antes de que te pregunten por ellos:
 3. `.env` no estaba en `.gitignore` en el primer commit, aunque nunca se subió ninguna clave.
 4. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
 5. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`).
-6. Las pruebas de Windows usan simulaciones. La prueba en un portátil físico es el pendiente 1 de RELEVO (`docs/PRUEBA-WINDOWS.md`).
+6. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 2 de RELEVO.
 7. En la edición 1.x, 50 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
+8. `preparar` tiene dos errores sin corregir, encontrados al escribir el guion de Windows (pendiente 1 de RELEVO):
+   - Una aplicación que ya estaba instalada aparece en «Cambios aplicados y cómo deshacerlos».
+   - Si Windows no informa de si el portátil está enchufado, se muestra «enchufado».

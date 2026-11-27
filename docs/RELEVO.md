@@ -13,13 +13,17 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 - Hecho en esta sesión: rescate del trabajo sin commitear; correcciones para Windows (firma `lstat`/`fstat`, salida en `cp1252`, `PERFEPP` oculto, que ahora se lee con `powercfg /qh`); diseño en clases; robustez (ruta inexistente, enlaces de root como `/tmp` y confirmación `[s/N]`); `.gitattributes`; ADR 0003; `docs/prompts.md`; propuestas de IA con qué cambia, por qué encaja y cómo se revierte, generadas desde el catálogo y no desde el modelo; reversión cuando `preparar` falla a medias.
 - `docs/DEFENSA.md`: evidencia de cada criterio de la rúbrica, demostración en cinco minutos, qué comprueba cada una de las 66 pruebas, preguntas probables y puntos débiles conocidos.
 - Seguridad de la 1.x: 50 acciones que no guardaban el estado anterior real quedan en revisión y no se ofrecen (`$script:STEnRevision` en `src/core/catalog.ps1`; detalle en `docs/REVISION.md`). Corregirlas es trabajo futuro, no un requisito de la entrega. PowerShell 7 está instalado en este Mac (`pwsh`), así que las pruebas `tests/*.ps1` se pueden ejecutar en local.
+- `docs/PRUEBA-WINDOWS.md`: guion para un portátil físico. Cubre el punto de restauración (incluidos el límite de 24 h, la consola sin administrador y la Protección del sistema desactivada), WinGet real (aplicación ya instalada, fallo de red y Creative Cloud), la transparencia y la autonomía con `powercfg /batteryreport`, con una tabla de resultados. Lo revisaron cuatro revisores independientes contra el código y la documentación de Microsoft. Todavía no se ha ejecutado en un equipo real.
 - Estimación frente a la rúbrica: unos 92-94 de 100.
 
 ## Pendiente, por orden
 
-1. `docs/PRUEBA-WINDOWS.md`: guion para un portátil físico con Windows 10 (1809 o posterior) o 11. Debe cubrir el punto de restauración (incluido el límite de 24 h y la Protección del sistema desactivada), WinGet real (app ya instalada, fallo de red, Adobe, que requiere cuenta) y la autonomía con `powercfg /batteryreport`, con una tabla de resultados. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python` mientras no se fusione el PR.
-2. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
-3. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Es imprescindible para la puerta de entrada: `main` no tiene `pyproject.toml`, así que hasta que se fusione la orden de instalación del README falla. Mientras tanto, se instala desde la rama con `@codex/sparktune-python`.
+1. Corregir dos errores de `preparar` encontrados al escribir el guion; el guion ya espera el comportamiento correcto:
+   - Si una aplicación ya estaba instalada, `_instalar` no lo comunica, y `preparar` la incluye en «Cambios aplicados y cómo deshacerlos». Quien siga esa lista desinstalaría un programa que ya tenía (`preparar.py:312-315` y `369-370`; caso 3.1 del guion).
+   - Si psutil no sabe si el portátil está enchufado (`power_plugged` es `None`), `resumen_equipo` muestra «con batería, enchufado» (`preparar.py:221`; caso 1.2).
+2. Ejecutar `docs/PRUEBA-WINDOWS.md` en el portátil y guardar la tabla de resultados.
+3. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
+4. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Es imprescindible para la puerta de entrada: `main` no tiene `pyproject.toml`, así que hasta que se fusione la orden de instalación del README falla. Mientras tanto, se instala desde la rama con `@codex/sparktune-python`.
 
 ## Por confirmar con el profesor
 

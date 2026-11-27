@@ -4,7 +4,7 @@ SparkTune prepara un entorno de trabajo para quien estudia, programa, juega o ed
 
 ## Instalación
 
-Con [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado, ejecuta en cualquier carpeta:
+Con [uv](https://docs.astral.sh/uv/getting-started/installation/) y [Git](https://git-scm.com/downloads) instalados, ejecuta en cualquier carpeta (uv necesita Git para instalar desde una URL `git+https`; en Windows puedes instalarlo con `winget install --id Git.Git --exact`):
 
 ```console
 uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE
@@ -103,7 +103,7 @@ Usa `--local` si prefieres trabajar sin red. Si no hay red o no hay clave, Spark
 
 ## Desarrollo
 
-Ejecuta `uv sync --locked`, `uv run pytest` y `uv run sparktune --help`. Las pruebas usan carpetas temporales y simulan WinGet, PowerShell y Groq, así que no cambian el equipo. GitHub Actions las ejecuta en Ubuntu, Windows y macOS e instala el paquete desde una carpeta limpia.
+Ejecuta `uv sync --locked`, `uv run pytest` y `uv run sparktune --help`. Las pruebas usan carpetas temporales y simulan WinGet, PowerShell y Groq, así que no cambian el equipo. GitHub Actions las ejecuta en Ubuntu, Windows y macOS e instala el paquete desde una carpeta limpia. Para comprobar en un portátil real el punto de restauración, WinGet y la batería, sigue [docs/PRUEBA-WINDOWS.md](docs/PRUEBA-WINDOWS.md).
 
 ### Estructura
 
