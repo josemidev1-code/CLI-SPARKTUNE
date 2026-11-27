@@ -21,7 +21,8 @@ SoloLocal = Annotated[bool, typer.Option("--local", help="Usa las recomendacione
 
 # Vocabulario de tareas que no aparece necesariamente en el nombre del perfil.
 VOCABULARIO = {
-    "android": ("android", "kotlin", "adb", "jetpack", "emulador"),
+    "android": ("android", "kotlin", "adb", "jetpack", "emulador", "movil", "moviles",
+                "aplicaciones moviles", "apps moviles"),
     "video-adobe": ("adobe", "premiere", "after effects", "video adobe", "creative cloud"),
     "video-libre": ("video", "videos", "kdenlive", "montaje", "blender", "edicion audiovisual"),
     "diseno": ("diseno", "ilustracion", "dibujar", "photoshop", "inkscape", "gimp"),
