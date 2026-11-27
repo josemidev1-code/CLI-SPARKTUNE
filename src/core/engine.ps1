@@ -81,16 +81,20 @@ function New-STRestorePoint {
     $en = Test-STRestoreEnabled
     if ($en -eq $false) { Write-STWarn (T 'rp.nofeature') }
     try {
+        # Un punto anterior de SparkTune no demuestra que se haya creado otro.
+        $before = @(Get-ComputerRestorePoint -ErrorAction Stop | ForEach-Object { $_.SequenceNumber })
         Checkpoint-Computer -Description "SparkTune $($Global:STVersion)" -RestorePointType MODIFY_SETTINGS -ErrorAction Stop
         for ($i = 0; $i -lt 20; $i++) {
             Start-Sleep -Seconds 2
-            $last = Get-ComputerRestorePoint -ErrorAction SilentlyContinue | Select-Object -Last 1
-            if ($last -and "$($last.Description)" -match 'SparkTune') {
+            $created = @(Get-ComputerRestorePoint -ErrorAction Stop | Where-Object {
+                $_.Description -eq "SparkTune $($Global:STVersion)" -and $_.SequenceNumber -notin $before
+            })
+            if ($created.Count) {
                 Write-STOk (T 'rp.done'); return $true
             }
         }
-        Write-STWarn 'El punto sigue creandose en segundo plano; se continua.'
-        return $true
+        Write-STWarn $(if ($Global:STLang -eq 'en') { 'Could not verify a new restore point. Check Windows System Protection.' } else { 'No se pudo verificar un punto de restauración nuevo. Comprueba Protección del sistema de Windows.' })
+        return $false
     } catch {
         Write-STWarn "$(T 'rp.fail'): $($_.Exception.Message)"
         return $false

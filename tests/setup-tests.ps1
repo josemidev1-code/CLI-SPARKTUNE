@@ -59,6 +59,9 @@ if (($mock.Lines -join ' ') -notmatch 'Premiere Pro.*https://helpx\.adobe\.com' 
 $Global:STDryRun = $false
 $mock.Laptop = $true
 if ((Invoke-STSetup -Perfil 'desarrollo' -Yes) -ne 1) { throw 'Se perdio el fallo de instalacion de Git.' }
+if (($mock.Lines -join ' ') -notmatch 'Resultados de WinGet' -or
+    ($mock.Lines -join ' ') -notmatch 'Fallidas: Git' -or
+    ($mock.Lines -join ' ') -notmatch 'Instalación comunicada como correcta') { throw 'El resumen no distingue el resultado de WinGet.' }
 if (($mock.Apps -join ',') -ne 'vscode,git,node-lts,python,7zip') { throw 'Paquetes de programacion incorrectos.' }
 if (($mock.Adjustments -join ',') -ne 'setup.start-suggestions,setup.file-extensions,power.spark-equili') { throw 'Ajustes de programacion incorrectos.' }
 

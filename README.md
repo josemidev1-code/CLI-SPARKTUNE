@@ -88,6 +88,8 @@ sparktune setup --perfil=ofimatica --sin-ajustes --plan=ninguno
 sparktune setup --perfil=gaming --sin-apps --sin-ajustes --plan=spark-portatil-max
 ```
 
+Al terminar, el resumen distingue las instalaciones que WinGet comunica como correctas, las ya presentes, los fallos y las que no se intentaron. Un resultado correcto del instalador no garantiza que la app esté configurada: puede pedir inicio de sesión, licencia o pasos adicionales. Adobe se instala manualmente desde Creative Cloud con la cuenta y el plan correspondientes.
+
 Con `--dry-run` puedes revisar el plan sin instalar ni aplicar cambios. `--yes` acepta todas las propuestas del perfil. Puedes usar `--interactive` si quieres ver los instaladores de las aplicaciones que lo admiten. Las apps automáticas se instalan desde la fuente `winget`.
 
 Si prefieres explicarlo con tus palabras, elige **Cuéntale tu situación a la IA** en `sparktune setup` o pasa el texto en el comando:
