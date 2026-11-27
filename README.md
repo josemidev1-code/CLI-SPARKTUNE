@@ -78,7 +78,7 @@ sparktune --config mis-acciones.json ejecutar mi-accion ~/pruebas --simular
 | `acciones[].extensiones` | Sí | Lista de extensiones en minúsculas, como `".png"`, sin repetir. `copiar` necesita al menos una; en `inventario` y `huellas`, una lista vacía incluye todos los archivos. |
 | `perfiles` | Sí | Objeto. Cada clave sigue las reglas de `id`, no coincide con una acción y contiene una lista no vacía de IDs de acciones existentes, sin repetir. |
 
-No se admiten campos adicionales ni claves repetidas. `sparktune validar` comprueba todo esto antes de ejecutar nada e indica el campo que falla, por ejemplo `Falta el campo acciones[2].tipo.`. Para añadir una acción de un tipo existente basta con editar el JSON. La decisión está explicada en el [ADR 0002](docs/adr/0002-python-y-proveedor-ia.md).
+No se admiten campos adicionales ni claves repetidas. `sparktune validar` comprueba todo esto antes de ejecutar nada e indica el campo que falla, por ejemplo `Falta el campo acciones[2].tipo.`. Para añadir una acción de un tipo existente basta con editar el JSON. La decisión está explicada en el [ADR 0003](docs/adr/0003-configuracion-externa.md). Los prompts de la capa de IA y del desarrollo están en [docs/prompts.md](docs/prompts.md).
 
 ## Códigos de salida
 
