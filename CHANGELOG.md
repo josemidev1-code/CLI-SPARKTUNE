@@ -4,6 +4,10 @@ Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [Se
 
 ## [Sin publicar]
 
+### Añadido
+- `sparktune` sin órdenes abre un asistente: explica qué hace, pregunta para qué vas a usar el ordenador, recomienda un plan de energía (con Groq o con reglas locales) y los programas de un perfil si encajan, explica qué cambiaría y lo aplica solo si respondes que sí.
+- `sparktune energia planes|recomendar|aplicar|restaurar`: cinco planes de energía según el uso. `aplicar` duplica el plan Equilibrado con `powercfg` y recuerda el plan original; `restaurar` vuelve a él y borra el de SparkTune. Si un paso falla, el plan a medias se borra.
+
 ## [2.0.1] - 2026-11-27
 
 ### Corregido

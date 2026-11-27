@@ -161,7 +161,7 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 
 **Evidencia**
 
-- 71 pruebas `pytest` en tres archivos (30 + 23 + 18). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
+- 77 pruebas `pytest` en cuatro archivos (30 + 23 + 18 + 6). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
 - Hay decenas de casos feos: los 13 errores de esquema, enlaces, carreras, colisiones, codificación, HTTP 401/429, timeout, respuestas inventadas del modelo, instalaciones fallidas…
 - [.github/workflows/python.yml](../.github/workflows/python.yml) ejecuta `uv sync --locked` y `pytest` en Ubuntu, Windows y macOS. Después construye el wheel y lo instala en una carpeta limpia con [scripts/probar_wheel.py](../scripts/probar_wheel.py), que prueba la ayuda, el catálogo, la simulación, la ejecución y la desinstalación.
 - [.github/workflows/ci.yml](../.github/workflows/ci.yml) mantiene las pruebas de la edición PowerShell 1.x, incluida una integración real con `powercfg` en un runner Windows desechable.

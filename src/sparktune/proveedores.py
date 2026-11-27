@@ -179,6 +179,10 @@ class ProveedorGroq(ProveedorIA):
         except (OSError, http.client.HTTPException):
             raise ErrorIA("Falló la conexión con Groq. Comprueba la red y vuelve a intentarlo.") from None
 
+    def consultar(self, instrucciones: str, datos: dict) -> dict:
+        """Consulta libre que devuelve un objeto JSON. Quien llama valida y limpia los campos."""
+        return self._consultar(instrucciones, datos)
+
     def recomendar(self, objetivo, equipo):
         if contiene_datos_privados(objetivo):
             raise ErrorIA("El objetivo parece incluir datos privados y se ha procesado en el equipo.")
