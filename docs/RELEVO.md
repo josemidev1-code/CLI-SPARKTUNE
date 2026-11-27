@@ -1,9 +1,33 @@
 # Relevo · SparkTune Python · 27 de noviembre de 2026
 
-Objetivo acordado: preparar equipos para necesidades reales, usar IA como asesor, poder simular y combinar acciones y confirmar cada cambio de sistema. La entrega requiere Python 3.12, Typer, uv y pruebas en los tres sistemas. Conservar el código PowerShell como versión anterior.
+Objetivo acordado: preparar equipos para necesidades reales, usar IA como asesor, poder simular y combinar acciones y confirmar cada cambio de sistema. La entrega requiere Python 3.12, Typer, uv y pruebas en los tres sistemas. El código PowerShell se conserva como edición 1.x.
 
-Plan de implementación y verificación:
-- Motor de archivos y catálogo JSON externo. Trabajar solo en la carpeta elegida, sin sobrescrituras. Probar rutas inválidas, colisiones, simulación y configuración inválida.
-- Perfiles y preparación Windows con hardware real, previsualización, confirmación individual y punto de restauración comprobado. Probar con ejecutores simulados y reservar comprobación real para la VM.
-- Dos consultas de IA que ayuden a elegir y comprender los perfiles. Rechazar respuestas fuera de catálogo y ofrecer alternativas locales.
-- Empaquetado, interfaz, pruebas del comando instalado, matriz CI, guía de VM y simulacro de defensa. Registrar resultados y limitaciones aquí.
+Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 20, configuración externa 15, IA 15, robustez 15, diseño 10, pruebas 15, instalación y proceso 10).
+
+## Estado
+
+- Rama `codex/sparktune-python` y PR en borrador #3 hacia `main` (https://github.com/josemidev1-code/CLI-SPARKTUNE/pull/3). Todo está commiteado y subido.
+- 66 pruebas pytest en verde en Ubuntu, Windows y macOS. El CI también instala el paquete desde una carpeta limpia.
+- La prueba real de PowerShell en un runner Windows desechable pasa: los 7 planes de energía (valores CA/CC y restauración del plan original) y aplicar y deshacer los ajustes de `setup`.
+- Estructura: `cli.py` (interfaz), `config.py` (`Catalogo`), `acciones.py` (una clase por tipo), `motor.py` (`Plan`), `ficheros.py`, `esquema.py`, `errores.py`, `dialogo.py`, `proveedores.py` (Groq y local), `ia.py` y `preparar.py`.
+- Hecho en esta sesión: rescate del trabajo sin commitear; correcciones para Windows (firma `lstat`/`fstat`, salida en `cp1252`, `PERFEPP` oculto, que ahora se lee con `powercfg /qh`); diseño en clases; robustez (ruta inexistente, enlaces de root como `/tmp` y confirmación `[s/N]`); `.gitattributes`; ADR 0003; `docs/prompts.md`; propuestas de IA con qué cambia, por qué encaja y cómo se revierte, generadas desde el catálogo y no desde el modelo; reversión cuando `preparar` falla a medias.
+- Estimación frente a la rúbrica: unos 92-94 de 100.
+
+## Pendiente, por orden
+
+1. `docs/DEFENSA.md`: la evidencia de cada criterio de la rúbrica y qué comprueba cada prueba, para que el alumno pueda explicar cada aserción.
+2. Seguridad de la 1.x: desactivar u ocultar como «en revisión» las acciones de `src/catalog/*.ps1` que no guardan el estado anterior real (véase `docs/REVISION.md`).
+3. `docs/PRUEBA-WINDOWS.md`: guion para un portátil físico con Windows 10 (1809 o posterior) o 11. Debe cubrir el punto de restauración (incluido el límite de 24 h y la Protección del sistema desactivada), WinGet real (app ya instalada, fallo de red, Adobe, que requiere cuenta) y la autonomía con `powercfg /batteryreport`, con una tabla de resultados. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python` mientras no se fusione el PR.
+4. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
+5. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Hasta que se fusione, la instalación del README (desde `main`) instala la 1.x.
+
+## Por confirmar con el profesor
+
+- Que acepta la versión Python con un extra solo para Windows.
+- La fecha de entrega: la página indica el 20 de noviembre.
+- `.env` está en `.gitignore` desde `856e745` (25 de noviembre), no desde el primer commit. Nunca se subió ningún `.env` ni ninguna clave.
+
+## Reglas de trabajo
+
+- Commits pequeños que dejen las pruebas en verde por sí solos. Cada commit, push o PR, con la aprobación del alumno.
+- Desarrollo: `uv sync --locked`, `uv run pytest`. En este Mac se usa `.venv/bin/python -m pytest` porque `uv` no está en el PATH.
