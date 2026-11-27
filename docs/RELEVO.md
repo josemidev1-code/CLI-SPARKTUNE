@@ -6,7 +6,8 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 
 ## Estado
 
-- Rama `codex/sparktune-python` y PR en borrador #3 hacia `main` (https://github.com/josemidev1-code/CLI-SPARKTUNE/pull/3). Todo está commiteado y subido.
+- SparkTune 2.0.0 está publicado. El PR #3 (https://github.com/josemidev1-code/CLI-SPARKTUNE/pull/3) se fusionó en `main` con merge commit (`e88062b`), y la etiqueta `v2.0.0` y su release (https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0) apuntan a ese commit. La orden de instalación del README instala ya la versión 2; hace falta Git.
+- Los cambios nuevos se hacen en una rama desde `main` y entran con un PR.
 - 68 pruebas pytest en verde en Ubuntu, Windows y macOS. El CI también instala el paquete desde una carpeta limpia.
 - La prueba real de PowerShell en un runner Windows desechable pasa: los 7 planes de energía (valores CA/CC y restauración del plan original) y aplicar y deshacer los ajustes de `setup`.
 - Estructura: `cli.py` (interfaz), `config.py` (`Catalogo`), `acciones.py` (una clase por tipo), `motor.py` (`Plan`), `ficheros.py`, `esquema.py`, `errores.py`, `dialogo.py`, `proveedores.py` (Groq y local), `ia.py` y `preparar.py`.
@@ -23,7 +24,7 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 
 1. Ejecutar `docs/PRUEBA-WINDOWS.md` en el portátil y guardar la tabla de resultados.
 2. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
-3. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Es imprescindible para la puerta de entrada: `main` no tiene `pyproject.toml`, así que hasta que se fusione la orden de instalación del README falla. Mientras tanto, se instala desde la rama con `@codex/sparktune-python`.
+3. Si el guion de Windows obliga a corregir algo, publicarlo como 2.0.1: entrada en el CHANGELOG, PR, etiqueta y release.
 
 ## Por confirmar con el profesor
 

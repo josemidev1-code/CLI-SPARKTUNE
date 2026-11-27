@@ -41,17 +41,17 @@ uv --version
 - Si `git` no responde, instálalo con `winget install --id Git.Git --exact --source winget` y vuelve a abrir la consola. uv lo necesita para instalar desde una URL `git+https`.
 - Si `uv` no responde, instálalo siguiendo https://docs.astral.sh/uv/getting-started/installation/ y vuelve a abrir la consola.
 
-Instala SparkTune desde la rama del PR, porque `main` todavía no contiene la versión 2:
+Instala SparkTune con la orden del README:
 
 ```powershell
-uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python
+uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE
 sparktune version
 ```
 
 - `sparktune version` debe mostrar `2.0.0`.
 - Si la consola no encuentra el comando, ejecuta `uv tool update-shell` y ábrela de nuevo.
 - Si tenías la edición 1.x, comprueba con `Get-Command sparktune -All` que se ejecuta la versión 2.
-- Si no puedes instalar Git, hay una alternativa sin él: `uv tool install https://github.com/josemidev1-code/CLI-SPARKTUNE/archive/refs/heads/codex/sparktune-python.zip`.
+- Si no puedes instalar Git, hay una alternativa sin él: `uv tool install https://github.com/josemidev1-code/CLI-SPARKTUNE/archive/refs/tags/v2.0.0.zip`.
 
 ### Registro de la sesión
 
