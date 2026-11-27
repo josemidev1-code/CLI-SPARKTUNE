@@ -25,3 +25,6 @@ Assert-CLI @('preparar','desarrollo','--perfil=gaming','--simular') 2 @('sparktu
 Assert-CLI @('energua') 2 @('sparktune ayuda')
 Assert-CLI @('ayuda','energua') 2 @('sparktune ayuda')
 Assert-CLI @('optimizar','--perfil=gaming','--nivel=medio','--simular','--no-banner') 0 @()
+Assert-CLI @('perfiles','--lang=es') 0 @('Trabajo y estudios','estudios','streaming','ingenieria','casa','sparktune preparar estudios --simular')
+Assert-CLI @('profiles','--lang=en') 0 @('Work and study','Graphic design and illustration','Engineering, CAD and mapping')
+Assert-CLI @('preparar','estudios','--simular') 0 @('Obsidian','draw.io')

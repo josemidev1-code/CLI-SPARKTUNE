@@ -1,5 +1,6 @@
 {
   "desarrollo": {
+    "grupo": "tecnologia",
     "nombre": "Programación",
     "nombre_en": "Software development",
     "apps": ["vscode", "git", "node-lts", "python", "7zip"],
@@ -8,6 +9,7 @@
     "plan-sobremesa": "spark-equili"
   },
   "video-adobe": {
+    "grupo": "creacion",
     "nombre": "Edición de vídeo con Adobe",
     "nombre_en": "Adobe video editing",
     "apps": ["vlc", "audacity", "7zip"],
@@ -24,6 +26,7 @@
     ]
   },
   "video-libre": {
+    "grupo": "creacion",
     "nombre": "Edición de vídeo con herramientas libres",
     "nombre_en": "Video editing with open-source tools",
     "apps": ["kdenlive", "blender", "audacity", "vlc"],
@@ -32,6 +35,7 @@
     "plan-sobremesa": "spark-rendi"
   },
   "gaming": {
+    "grupo": "creacion",
     "nombre": "Gaming",
     "nombre_en": "Gaming",
     "apps": ["steam", "discord", "7zip"],
@@ -40,10 +44,74 @@
     "plan-sobremesa": "spark-rendi"
   },
   "ofimatica": {
+    "grupo": "trabajo",
     "nombre": "Ofimática",
     "nombre_en": "Office",
     "apps": ["libre", "firefox", "7zip"],
     "ajustes": ["setup.start-suggestions", "setup.background-capture", "setup.hide-widgets"],
+    "plan-portatil": "spark-ahorro",
+    "plan-sobremesa": "spark-equili"
+  },
+  "estudios": {
+    "grupo": "trabajo",
+    "nombre": "Estudios y apuntes",
+    "nombre_en": "Study and note-taking",
+    "apps": ["libre", "obsidian", "foxit", "drawio"],
+    "ajustes": ["setup.file-extensions", "setup.hide-widgets"],
+    "plan-portatil": "spark-ahorro",
+    "plan-sobremesa": "spark-equili"
+  },
+  "teletrabajo": {
+    "grupo": "trabajo",
+    "nombre": "Teletrabajo y videollamadas",
+    "nombre_en": "Remote work and video calls",
+    "apps": ["zoom", "libre", "bitwarden", "firefox"],
+    "ajustes": ["setup.start-suggestions"],
+    "plan-portatil": "spark-equili",
+    "plan-sobremesa": "spark-equili"
+  },
+  "diseno": {
+    "grupo": "creacion",
+    "nombre": "Diseño gráfico e ilustración",
+    "nombre_en": "Graphic design and illustration",
+    "apps": ["gimp", "inkscape", "blender", "irfanview-portable"],
+    "ajustes": ["setup.file-extensions"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi"
+  },
+  "streaming": {
+    "grupo": "creacion",
+    "nombre": "Streaming y grabación",
+    "nombre_en": "Streaming and recording",
+    "apps": ["obs", "audacity", "discord", "vlc"],
+    "ajustes": ["setup.file-extensions"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi"
+  },
+  "datos": {
+    "grupo": "tecnologia",
+    "nombre": "Análisis de datos",
+    "nombre_en": "Data analysis",
+    "apps": ["python", "vscode", "dbeaver", "libre"],
+    "ajustes": ["setup.file-extensions"],
+    "plan-portatil": "spark-equili",
+    "plan-sobremesa": "spark-equili"
+  },
+  "ingenieria": {
+    "grupo": "tecnologia",
+    "nombre": "Ingeniería, CAD y mapas",
+    "nombre_en": "Engineering, CAD and mapping",
+    "apps": ["freecad", "qgis", "drawio", "7zip"],
+    "ajustes": ["setup.file-extensions"],
+    "plan-portatil": "spark-portatil-max",
+    "plan-sobremesa": "spark-rendi"
+  },
+  "casa": {
+    "grupo": "casa",
+    "nombre": "Uso cotidiano y familiar",
+    "nombre_en": "Everyday and family use",
+    "apps": ["firefox", "vlc", "libre"],
+    "ajustes": ["setup.start-suggestions"],
     "plan-portatil": "spark-ahorro",
     "plan-sobremesa": "spark-equili"
   }

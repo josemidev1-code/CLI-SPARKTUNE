@@ -62,7 +62,7 @@ Al ejecutar `sparktune` desde una terminal de Windows verás cómo los `0` y `1`
 
 ## Preparar un PC nuevo
 
-`sparktune preparar` abre el selector de perfiles. También puedes usar `sparktune setup`. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
+`sparktune preparar` pregunta para qué vas a usar el PC y agrupa los perfiles en Trabajo y estudios, Creación y juegos, Tecnología y Casa y uso cotidiano. Usa `sparktune perfiles` para verlos todos desde la terminal. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
 
 | Perfil | Qué prepara |
 | --- | --- |
@@ -71,9 +71,17 @@ Al ejecutar `sparktune` desde una terminal de Windows verás cómo los `0` y `1`
 | `video-libre` | Kdenlive, Blender, Audacity y VLC |
 | `gaming` | Steam, Discord, 7-Zip y Modo Juego |
 | `ofimatica` | LibreOffice, Firefox y 7-Zip |
+| `estudios` | LibreOffice, Obsidian, Foxit PDF y draw.io |
+| `teletrabajo` | Zoom, LibreOffice, Bitwarden y Firefox |
+| `diseno` | GIMP, Inkscape, Blender e IrfanView |
+| `streaming` | OBS Studio, Audacity, Discord y VLC |
+| `datos` | Python, VS Code, DBeaver y LibreOffice |
+| `ingenieria` | FreeCAD, QGIS, draw.io y 7-Zip |
+| `casa` | Firefox, VLC y LibreOffice |
 
 ```powershell
-sparktune preparar desarrollo --simular
+sparktune perfiles
+sparktune preparar estudios --simular
 sparktune setup --perfil=video-adobe
 sparktune setup --perfil=gaming --sin-apps
 sparktune setup --perfil=ofimatica --sin-ajustes --plan=ninguno
@@ -103,7 +111,7 @@ sparktune setup '--cargar-plan=Mi plan.json' --yes
 
 El archivo guarda identificadores de aplicaciones y ajustes, y el plan de energía elegido. Al cargarlo, SparkTune valida el catálogo y la compatibilidad antes de aplicar cambios. Puedes añadir `--sin-apps` o `--sin-ajustes` para saltar una parte. Guardar crea un archivo nuevo y, si ya existe, pide un nombre distinto mediante un error.
 
-Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
+Para añadir perfiles, edita [setup-profiles.json](src/data/setup-profiles.json). El campo `grupo` acepta `trabajo`, `creacion`, `tecnologia` o `casa`. En `apps` usa identificadores de [apps.json](src/data/apps.json). En `ajustes` usa identificadores de las acciones preparadas para `setup`. `plan-portatil` y `plan-sobremesa` eligen un plan para cada equipo y `manual` permite documentar aplicaciones que se instalan desde el proveedor.
 
 También puedes revisar y ejecutar un solo ajuste del catálogo:
 

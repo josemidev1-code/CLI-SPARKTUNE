@@ -30,11 +30,11 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 $cmd = ''
 $words = @()
 $aliases = @{
-    ayuda = 'help'; preparar = 'setup'; optimizar = 'wizard'; energia = 'power'; energía = 'power'
+    ayuda = 'help'; preparar = 'setup'; perfiles = 'profiles'; optimizar = 'wizard'; energia = 'power'; energía = 'power'
     bateria = 'battery'; batería = 'battery'; estado = 'status'; espacio = 'analyze'
     historial = 'history'; deshacer = 'undo'; ia = 'ai'; informe = 'report'
 }
-$commands = 'setup','wizard','version','validar','acciones','ejecutar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help'
+$commands = 'setup','profiles','wizard','version','validar','acciones','ejecutar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help'
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
@@ -195,6 +195,7 @@ try {
             if ($script:STConsole -and $Global:STBanner -and -not $flagNoBanner) { Show-STBanner }
             exit (Invoke-STStartup -Interactive:$script:STConsole)
         }
+        'profiles' { exit (Invoke-STSetup -ListProfiles) }
         'wizard'   { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
         'version'   { Write-Output $Global:STVersion; exit 0 }
