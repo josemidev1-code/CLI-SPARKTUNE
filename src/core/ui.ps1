@@ -314,7 +314,24 @@ function STField($Action, [string]$Name) {
 }
 
 # ---------- help ----------
-function Show-STHelp([string]$Topic) {
+function Show-STIntroduction {
+    $en = $Global:STLang -eq 'en'
+    if ($en) {
+        Write-STLine '  SparkTune sets up and tunes your Windows PC from the terminal.'
+        Write-STLine '  Choose apps, Windows settings and power plans before applying changes.'
+        Write-STLine '  To get AI advice, open sparktune setup and describe your situation.'
+        Write-STLine '  For settings that need it, the wizard offers a Windows restore point'
+        Write-STLine '  when System Protection is available. Creating one requires admin rights.'
+    } else {
+        Write-STLine '  SparkTune prepara y optimiza tu PC con Windows desde la terminal.'
+        Write-STLine '  Elige las aplicaciones, los ajustes y el plan de energía antes de aplicar.'
+        Write-STLine '  Para empezar con IA, abre sparktune preparar y cuéntale tu situación.'
+        Write-STLine '  Si un ajuste lo requiere, el asistente ofrece crear un punto de restauración'
+        Write-STLine '  cuando Windows lo permite. Crearlo requiere permisos de administrador.'
+    }
+}
+
+function Show-STHelp([string]$Topic, [switch]$SkipIntroduction) {
     $en = $Global:STLang -eq 'en'
     $title = if ($en) { 'Quick help' } else { 'Ayuda rápida' }
     $rows = @(
@@ -343,17 +360,7 @@ function Show-STHelp([string]$Topic) {
     $simulate = if ($en) { '--dry-run' } else { '--simular' }
     if (-not $Topic -or $Topic -eq 'help') {
         Write-STHeader -Title $title -Detail "v$Global:STVersion"
-        if ($en) {
-            Write-STLine '  SparkTune sets up and tunes your Windows PC from the terminal.'
-            Write-STLine '  Choose apps, Windows settings and power plans before applying changes.'
-            Write-STLine '  For settings that need it, the wizard offers a Windows restore point'
-            Write-STLine '  when System Protection is available. Creating one requires admin rights.'
-        } else {
-            Write-STLine '  SparkTune prepara y optimiza tu PC con Windows desde la terminal.'
-            Write-STLine '  Elige las aplicaciones, los ajustes y el plan de energía antes de aplicar.'
-            Write-STLine '  Si un ajuste lo requiere, el asistente ofrece crear un punto de restauración'
-            Write-STLine '  cuando Windows lo permite. Crearlo requiere permisos de administrador.'
-        }
+        if (-not $SkipIntroduction) { Show-STIntroduction }
         for ($i = 0; $i -lt $rows.Count; $i++) {
             switch ($i) {
                 0  { Write-STSection $(if ($en) { 'Set up and tune' } else { 'Preparar y optimizar' }) }

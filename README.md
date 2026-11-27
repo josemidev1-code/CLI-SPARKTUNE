@@ -46,6 +46,8 @@ sparktune ayuda
 
 `sparktune` muestra la intro y la guía de comandos. Para abrir el asistente interactivo, escribe `sparktune optimizar`. El asistente ofrece crear un punto de restauración antes de aplicar ajustes que lo requieren, si Windows lo permite y tienes permisos de administrador.
 
+Si tienes configurada una clave de Groq u OpenAI, SparkTune te invita a describir tu situación al arrancar en una terminal interactiva. Puedes pulsar Enter para ir a la guía. La recomendación de inicio es una vista previa. También puedes acceder a la IA desde el menú de `sparktune preparar`.
+
 ```powershell
 sparktune ayuda preparar
 sparktune help --lang=en
@@ -80,7 +82,7 @@ sparktune setup --perfil=gaming --sin-apps --sin-ajustes --plan=spark-portatil-m
 
 Con `--dry-run` puedes revisar el plan sin instalar ni aplicar cambios. `--yes` acepta todas las propuestas del perfil. Puedes usar `--interactive` si quieres ver los instaladores de las aplicaciones que lo admiten. Las apps automáticas se instalan desde la fuente `winget`.
 
-Si prefieres explicarlo con tus palabras, elige **Cuéntale tu objetivo a la IA** en `sparktune setup` o pasa el texto en el comando:
+Si prefieres explicarlo con tus palabras, elige **Cuéntale tu situación a la IA** en `sparktune setup` o pasa el texto en el comando:
 
 ```powershell
 sparktune setup '--objetivo=Quiero programar en mi portátil y que la batería me dure más' --sin-apps
