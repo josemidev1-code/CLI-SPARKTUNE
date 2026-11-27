@@ -1,2 +1,5 @@
 # Normaliza los finales de línea: LF en el repositorio, el nativo de cada sistema al trabajar.
 * text=auto
+
+# Los scripts de shell necesitan LF también en Windows: sh falla con CRLF.
+*.sh text eol=lf
