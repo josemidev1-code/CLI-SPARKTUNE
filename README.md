@@ -96,3 +96,20 @@ No se admiten campos adicionales ni claves repetidas. `sparktune validar` compru
 ## Desarrollo
 
 Ejecuta `uv sync --locked`, `uv run pytest` y `uv run sparktune --help`. Las pruebas usan carpetas temporales y simulan WinGet, PowerShell y Groq, así que no cambian el equipo. GitHub Actions las ejecuta en Ubuntu, Windows y macOS e instala el paquete desde una carpeta limpia.
+
+### Estructura
+
+| Módulo | Responsabilidad |
+| --- | --- |
+| `cli.py` | Interfaz: órdenes de Typer, salida en pantalla y traducción de errores a códigos de salida. |
+| `config.py` | `Catalogo`: lee y valida `acciones.json` con las fábricas `desde_archivo()` y `desde_datos()`. |
+| `acciones.py` | Una clase por tipo (`Copiar`, `Inventario`, `Huellas`). `Accion.desde_config()` crea la clase adecuada. |
+| `motor.py` | `Plan`: selecciona los archivos, reserva la salida y la aplica sin tocar los originales. |
+| `ficheros.py` | `Entrada`: lectura de la carpeta sin seguir enlaces y comprobación de que los archivos no cambian. |
+| `esquema.py` | Reglas comunes del JSON: campos exactos, IDs portables y claves repetidas. |
+| `errores.py` | Excepciones propias (`ConfigError`, `AccionNoValida`, `ErrorEjecucion`, `ErrorIA`), cada una con su código de salida. |
+| `proveedores.py` | `ProveedorIA` con dos implementaciones: `ProveedorGroq` y `ProveedorLocal` (sin red). |
+| `ia.py` | Órdenes `asesorar`, `explicar` y `comprobar-ia`, que recurren al proveedor local si Groq falla. |
+| `preparar.py` | Perfiles de preparación de Windows, WinGet y punto de restauración. |
+
+Para añadir un tipo de acción, crea una subclase de `Accion` con su atributo `tipo` y los métodos `describir()` y `escribir()`: queda registrada sin cambiar el motor ni el catálogo.
