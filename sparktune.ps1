@@ -28,6 +28,13 @@ $Global:STSrc = Join-Path $PSScriptRoot 'src\core'
 
 # ---- parseo manual de flags (compatible CMD + PS5.1) ----
 $cmd = ''
+$words = @()
+$aliases = @{
+    ayuda = 'help'; preparar = 'setup'; optimizar = 'wizard'; energia = 'power'; energía = 'power'
+    bateria = 'battery'; batería = 'battery'; estado = 'status'; espacio = 'analyze'
+    historial = 'history'; deshacer = 'undo'; ia = 'ai'; informe = 'report'
+}
+$commands = 'setup','wizard','version','validar','acciones','ejecutar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help'
 $optPerfil = ''; $optNivel = ''; $optLang = ''; $optId = ''; $optCat = ''
 $setLang = ''; $setBanner = ''; $setNivel = ''
 $appsInstall = ''; $appsUpdate = ''; $appsScope = ''; $appsInteractive = $false
@@ -39,11 +46,11 @@ foreach ($a in $RawArgs) {
     $matched = $false
     switch -Regex ($low) {
         '^(--yes|-y)$'            { $flagYes = $true; $matched = $true; continue }
-        '^(--dry-run|-n|--dryrun)$' { $flagDry = $true; $matched = $true; continue }
+        '^(--dry-run|-n|--dryrun|--simular)$' { $flagDry = $true; $matched = $true; continue }
         '^(--no-banner|--nobanner)$' { $flagNoBanner = $true; $matched = $true; continue }
         '^--json$'              { $flagJson = $true; $matched = $true; continue }
         '^--version$'           { $cmd = 'version'; $matched = $true; continue }
-        '^(--help|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
+        '^(--help|--ayuda|-h|/help|/\?)$' { $flagHelp = $true; $matched = $true; continue }
         '^(--lang=.+)$' { $optLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--set-lang=.+)$' { $setLang = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
         '^(--set-banner=(0|1|on|off|true|false))$' { $setBanner = $($a.Substring($a.IndexOf('=') + 1)); $matched = $true; continue }
@@ -67,12 +74,52 @@ foreach ($a in $RawArgs) {
         '^(--nivel|--level)$' { Write-STWarn ("usa --nivel=valor"); $flagHelp = $true; $matched = $true; continue }
     }
     if ($matched) { continue }
-    if ($low -in @('setup','version','validar','acciones','ejecutar','banner','status','battery','power','undo','analyze','history','apps','doctor','report','ai','help')) { $cmd = $low; continue }
-    if (-not $cmd -and -not $a.StartsWith('-')) { $cmd = $low; continue }
-    Write-STErr ("argumento desconocido: $a")
-    exit 2
+    if ($a.StartsWith('-')) {
+        Write-STErr "Opción desconocida: $a. Consulta sparktune ayuda."
+        exit 2
+    }
+    $words += $a
 }
 if ($optLang -eq 'en' -or $optLang -eq 'es') { $Global:STLang = $optLang }
+Set-STLang $Global:STLang
+
+if ($words.Count) {
+    $name = $words[0]
+    if ($cmd) {
+        Write-STErr 'Indica un solo comando. Consulta sparktune ayuda.'
+        exit 2
+    }
+    $cmd = if ($aliases.ContainsKey($name)) { $aliases[$name] } else { $name.ToLowerInvariant() }
+}
+if ($cmd -and $cmd -notin $commands) {
+    Write-STErr "Comando desconocido: $name. Consulta sparktune ayuda."
+    exit 2
+}
+if ($cmd -eq 'help' -or $flagHelp) {
+    if ($cmd -eq 'help' -and $words.Count -gt 2) {
+        Write-STErr 'Usa sparktune ayuda o sparktune ayuda preparar.'
+        exit 2
+    }
+    $topic = if ($cmd -ne 'help') { $cmd } elseif ($words.Count -eq 2) { $words[1] }
+    if ($topic -and $aliases.ContainsKey($topic)) { $topic = $aliases[$topic] }
+    if ($topic -and $topic -notin $commands) {
+        Write-STErr "Comando desconocido: $topic. Consulta sparktune ayuda."
+        exit 2
+    }
+    Show-STHelp -Topic $topic
+    exit 0
+}
+if ($words.Count -gt 1) {
+    if ($words.Count -eq 2 -and $cmd -eq 'setup' -and -not $optPerfil) {
+        $optPerfil = $words[1]
+    } elseif ($words.Count -eq 2 -and $cmd -eq 'ai' -and -not $aiGoalSpecified) {
+        $aiGoal = $words[1]
+        $aiGoalSpecified = $true
+    } else {
+        Write-STErr "Argumentos inesperados. Consulta sparktune ayuda $name."
+        exit 2
+    }
+}
 
 # Algunos comandos escriben fuera del motor; no aceptar una simulacion que no pueden respetar.
 if ($flagDry -and (($setLang -or $setBanner -or $setNivel) -or $cmd -in @('power','report','battery'))) {
@@ -102,18 +149,16 @@ if ($setLang -or $setBanner -or $setNivel) {
     exit 0
 }
 
-Set-STLang $Global:STLang
 $Global:STDryRun = $flagDry
-
-if ($flagHelp) { Show-STHelp; exit 0 }
+if (-not $cmd -and ($optPerfil -or $optNivel -or $flagDry -or $flagYes)) { $cmd = 'wizard' }
 
 if ($cmd -ne 'setup' -and ($setupPlan -or $skipApps -or $skipTweaks -or $saveSetupPath -or ($loadSetupPath -and $cmd -ne 'validar'))) {
-    Write-STErr 'Las opciones de plan y selección se utilizan con setup.'
+    Write-STErr 'Las opciones de plan y selección se usan con sparktune preparar.'
     exit 2
 }
 
 if ($cmd -eq 'setup' -and ($optNivel -or $optId -or $optCat -or $appsInstall -or $appsUpdate -or $appsScope -or $Global:STReportOut)) {
-    Write-STErr 'setup no admite opciones de otros comandos. Consulta sparktune setup --help.'
+    Write-STErr 'Consulta sparktune ayuda preparar para ver sus opciones.'
     exit 2
 }
 
@@ -146,7 +191,12 @@ if ($cmd -eq 'ejecutar' -and -not $optId) {
 
 try {
     switch ($cmd) {
-        ''          { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
+        ''          {
+            if ($script:STConsole -and $Global:STBanner -and -not $flagNoBanner) { Show-STBanner }
+            Show-STHelp
+            exit 0
+        }
+        'wizard'   { Start-STWizard -NoBanner:$flagNoBanner -Yes:$flagYes -Perfil:$optPerfil -Nivel:$optNivel }
 
         'version'   { Write-Output $Global:STVersion; exit 0 }
         'validar'   {
@@ -193,8 +243,6 @@ try {
             Invoke-STAIAdvisor -Goal $aiGoal -Perfil $optPerfil -Nivel $optNivel -DryRun:$flagDry
             exit 0
         }
-        'help'      { Show-STHelp }
-        default     { Write-STErr ("comando desconocido: $cmd"); Show-STHelp; exit 1 }
     }
 } catch {
     Write-STErr $_.Exception.Message

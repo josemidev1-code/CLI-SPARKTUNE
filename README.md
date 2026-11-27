@@ -41,18 +41,26 @@ Eso copia a `%LOCALAPPDATA%\SparkTune` y anade la carpeta al PATH de usuario (si
 Abre una **nueva** ventana de CMD o PowerShell y escribe:
 
 ```
-sparktune
+sparktune ayuda
+```
+
+`sparktune` muestra la intro y la guía de comandos. Para abrir el asistente interactivo, escribe `sparktune optimizar`. El asistente ofrece crear un punto de restauración antes de aplicar ajustes que lo requieren, si Windows lo permite y tienes permisos de administrador.
+
+```powershell
+sparktune ayuda preparar
+sparktune help --lang=en
+sparktune --set-lang=en
 ```
 
 Para desinstalar desde PowerShell, ejecuta `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\SparkTune\uninstall.ps1"`.
 
 ## Intro en la terminal
 
-Al abrir el asistente desde una terminal de Windows verás cómo los `0` y `1` forman el logo de bloques, una chispa enciende la onda RGB y aparece la firma `made by josemidev1`. Puedes reproducir la intro por separado con `sparktune banner`. Usa `--no-banner` para omitirla.
+Al ejecutar `sparktune` desde una terminal de Windows verás cómo los `0` y `1` forman el logo de bloques, una chispa enciende la onda RGB y aparece la firma `made by josemidev1`. Puedes reproducir la intro por separado con `sparktune banner`. Usa `--no-banner` para omitirla.
 
 ## Preparar un PC nuevo
 
-`sparktune setup` abre el selector de perfiles. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
+`sparktune preparar` abre el selector de perfiles. También puedes usar `sparktune setup`. El comando muestra las aplicaciones y los ajustes propuestos. Puedes confirmar cada aplicación, cada ajuste y el plan de energía por separado.
 
 | Perfil | Qué prepara |
 | --- | --- |
@@ -63,7 +71,7 @@ Al abrir el asistente desde una terminal de Windows verás cómo los `0` y `1` f
 | `ofimatica` | LibreOffice, Firefox y 7-Zip |
 
 ```powershell
-sparktune setup --perfil=desarrollo --dry-run
+sparktune preparar desarrollo --simular
 sparktune setup --perfil=video-adobe
 sparktune setup --perfil=gaming --sin-apps
 sparktune setup --perfil=ofimatica --sin-ajustes --plan=ninguno
@@ -110,19 +118,21 @@ El catálogo [acciones.json](src/data/acciones.json) define los ajustes de cuent
 ## Uso
 
 ```
-sparktune                          # asistente interactivo (perfil -> nivel -> lista de acciones)
-sparktune ai                       # recomendaciones personalizadas con IA
-sparktune status                   # CPU, RAM, discos, GPU, bateria, plan, servicios pesados
-sparktune analyze                  # que esta ocupando espacio (no borra nada)
-sparktune power                    # planes SparkTune: listar / crear / aplicar / restaurar
-sparktune battery                  # informe de bateria + planes recomendados
-sparktune history                  # historial de cambios del journal (estado por entrada)
+sparktune ayuda                    # guía rápida
+sparktune preparar desarrollo      # preparación por perfil
+sparktune optimizar                # asistente interactivo (perfil -> nivel -> lista de acciones)
+sparktune ia                       # recomendaciones personalizadas con IA
+sparktune estado                   # CPU, RAM, discos, GPU, bateria, plan, servicios pesados
+sparktune espacio                  # que esta ocupando espacio (no borra nada)
+sparktune energia                  # planes SparkTune: listar / crear / aplicar / restaurar
+sparktune bateria                  # informe de bateria + planes recomendados
+sparktune historial                # historial de cambios del journal (estado por entrada)
 sparktune apps                     # instalar apps populares (menu estilo winutil, via winget)
 sparktune apps --install=chrome,vlc --scope=user   # instalacion no interactiva (scripts)
 sparktune apps --update=vlc             # actualizar solo apps concretas
 sparktune doctor                   # salud del sistema y coherencia journal/catalogo
-sparktune report [--out=archivo]   # informe HTML (sistema, discos, journal) para compartir
-sparktune undo                     # deshace cambios (en orden inverso), --id=xxx o --category=priv
+sparktune informe [--out=archivo]  # informe HTML (sistema, discos, journal) para compartir
+sparktune deshacer                 # deshace cambios (en orden inverso), --id=xxx o --category=priv
 sparktune --help
 ```
 

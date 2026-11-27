@@ -314,127 +314,110 @@ function STField($Action, [string]$Name) {
 }
 
 # ---------- help ----------
-function Show-STHelp {
-    $L = $Global:STLang
-    $title = if ($L -eq 'en') { 'Command guide' } else { 'Guía de comandos' }
-    Write-STHeader -Title $title -Detail "v$Global:STVersion · $(T 'app.tagline') · $(T 'app.by')"
-    $lines = @(
-        'Uso:  sparktune [comando] [opciones]',
-        '',
-        '@Preparación',
-        '  setup                  Preparar un PC nuevo: apps, ajustes y energía',
-        '  setup --perfil=desarrollo --dry-run',
-        '  setup --objetivo="Ahorrar batería"    Pedir un perfil y plan a la IA',
-        '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
-        '  setup: --guardar-plan=archivo.json | --cargar-plan=archivo.json',
-        '  banner                 Ver la intro ASCII',
-        '  version                Mostrar la versión instalada',
-        '  validar [--cargar-plan=archivo.json]   Validar el catálogo o un plan',
-        '  acciones [--json]      Listar las acciones configurables',
-        '  ejecutar --id=setup.nombre [--dry-run]    Ejecutar una acción',
-        '  (sin comando)          Asistente interactivo',
-        '@Diagnóstico y cambios',
-        '  status                 Panel: CPU, RAM, disco, GPU, bateria, plan, servicios',
-        '  battery                Informe de bateria + planes recomendados',
-        '  power                  Listar/crear/aplicar planes SparkTune',
-        '  undo                   Deshacer cambios (--id=xxx para uno concreto)',
-        '  analyze                Que ocupa espacio (no borra nada)',
-        '  history                Historial de cambios',
-        '  doctor                 Comprobar el sistema y el historial',
-        '  report                 Generar un informe HTML',
-        '  ai                     Recomendar ajustes del catálogo con IA',
-        '  ai --objetivo="texto"   Personalizar recomendaciones (--dry-run: ver contexto)',
-        '  apps                   Instalar apps populares via winget (menu interactivo)',
-        '  apps --install=a,b     Instalar sin interactuar (ids o nombres, comma separados)',
-        '  apps --update=a,b      Actualizar solo las apps indicadas',
-        '',
-        '@Opciones',
-        '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
-        '                         portatil-ahorro|portatil-rendimiento|',
-        '                         red-privacidad|creativo|desarrollo|',
-        '                         personalizado',
-        '  --nivel=suave          suave|medio|agresivo',
-        '  --yes                  Sin confirmaciones (cuidado)',
-        '  --dry-run              Simulacion: muestra, no ejecuta',
-        '  --lang=es|en           Idioma de esta ejecucion',
-        '  --set-lang=es|en       Guarda idioma por defecto (persistente)',
-        '  --set-banner=on|off    Banner de arranque por defecto',
-        '  --set-nivel=medio      Nivel por defecto en el wizard (suave|medio|agresivo)',
-        '  --no-banner            Sin animacion de arranque',
-        '  --id=xxx               (undo) solo el cambio con ese id',
-        '  --scope=user           (apps) pedir winget --scope=user',
-        '  --interactive          (apps) mostrar UI de winget en vez de silencioso',
-        '  (apps)                 paquetes "(p)" = winget Portable (sin instalador)',
-        '',
-        '@Ejemplos',
-        '  sparktune',
-        '  sparktune --perfil=gaming --nivel=medio --dry-run',
-        '  sparktune undo',
-        '  sparktune apps --install=chrome,vlc',
-        '  sparktune power'
+function Show-STHelp([string]$Topic) {
+    $en = $Global:STLang -eq 'en'
+    $title = if ($en) { 'Quick help' } else { 'Ayuda rápida' }
+    $rows = @(
+        @{ id='setup';    es='preparar';   en='setup';    desc='Prepara un PC por perfil';           descEn='Set up a PC by profile' }
+        @{ id='wizard';   es='optimizar';  en='wizard';   desc='Elige qué ajustes de Windows aplicar'; descEn='Choose which Windows settings to apply' }
+        @{ id='apps';     es='apps';       en='apps';     desc='Instala o actualiza aplicaciones';   descEn='Install or update apps' }
+        @{ id='power';    es='energia';    en='power';    desc='Elige un plan de energía';           descEn='Choose a power plan' }
+        @{ id='ai';       es='ia';         en='ai';       desc='Pide recomendaciones a la IA';      descEn='Ask AI for recommendations' }
+        @{ id='status';   es='estado';     en='status';   desc='Consulta CPU, RAM, discos y GPU';    descEn='Check CPU, RAM, drives and GPU' }
+        @{ id='battery';  es='bateria';    en='battery';  desc='Consulta el estado de la batería';   descEn='Check battery health' }
+        @{ id='analyze';  es='espacio';    en='analyze';  desc='Mira qué ocupa espacio';             descEn='See what takes up disk space' }
+        @{ id='history';  es='historial';  en='history';  desc='Consulta los cambios aplicados';     descEn='See applied changes' }
+        @{ id='undo';     es='deshacer';   en='undo';     desc='Restaura cambios reversibles';       descEn='Revert supported changes' }
+        @{ id='acciones'; es='acciones';  en='acciones'; desc='Lista los ajustes del catálogo';     descEn='List catalog settings' }
+        @{ id='ejecutar'; es='ejecutar';  en='ejecutar'; desc='Aplica un ajuste por su ID';         descEn='Apply a setting by ID' }
+        @{ id='validar';  es='validar';   en='validar';  desc='Comprueba el catálogo o un plan';    descEn='Validate a catalog or plan' }
+        @{ id='doctor';   es='doctor';    en='doctor';   desc='Comprueba el sistema y el historial'; descEn='Check the system and history' }
+        @{ id='report';   es='informe';   en='report';   desc='Exporta un informe HTML';            descEn='Export an HTML report' }
+        @{ id='banner';   es='banner';    en='banner';   desc='Reproduce la intro';                descEn='Play the intro' }
+        @{ id='version';  es='version';   en='version';  desc='Muestra la versión instalada';      descEn='Show the installed version' }
     )
-    if ($L -eq 'en') {
-        $lines = @(
-            'Usage: sparktune [command] [options]',
-            '',
-            '@Setup',
-            '  setup                    Set up a new PC: apps, settings and power',
-            '  setup --perfil=desarrollo --dry-run',
-            '  setup --goal="Save battery"    Ask AI for a profile and power plan',
-            '  setup: --plan=ninguno | --sin-apps | --sin-ajustes',
-            '  setup: --save-plan=file.json | --load-plan=file.json',
-            '  banner                 Play the ASCII intro',
-            '  version                Show the installed version',
-            '  validar [--load-plan=file.json]   Validate the catalog or a plan',
-            '  acciones [--json]      List configurable actions',
-            '  ejecutar --id=setup.name [--dry-run]    Run an action',
-            '  (no command)           Interactive wizard',
-            '@Diagnostics and changes',
-            '  status                 Dashboard: CPU, RAM, disk, GPU, battery, plan, services',
-            '  battery                Battery report + recommended plans',
-            '  power                  List/create/apply SparkTune power plans',
-            '  undo                   Revert changes (--id=xxx for a single one)',
-            '  analyze                What takes space (deletes nothing)',
-            '  history                Change history',
-            '  doctor                 Check the system and change history',
-            '  report                 Generate an HTML report',
-            '  ai                     Recommend catalog actions with AI',
-            '  ai --goal="text"         Personalize advice (--dry-run: preview context)',
-            '  apps                   Install popular apps via winget (interactive menu)',
-            '  apps --install=a,b     Non-interactive install (ids or names, comma separated)',
-            '  apps --update=a,b      Update only the listed apps',
-            '',
-            '@Options',
-            '  --perfil=gaming        gaming|ofimatica|limpieza|bajos-recursos|',
-            '                         portatil-ahorro|portatil-rendimiento|',
-            '                         red-privacidad|creativo|desarrollo|',
-            '                         personalizado',
-            '  --nivel=suave          suave|medio|agresivo',
-            '  --yes                  Skip confirmations (careful)',
-            '  --dry-run              Simulation: show, do not execute',
-            '  --lang=es|en           Language for this run',
-            '  --set-lang=es|en       Save default language (persistent)',
-            '  --set-banner=on|off    Default boot banner',
-            '  --set-nivel=medio      Default wizard level (suave|medio|agresivo)',
-            '  --no-banner            Skip boot animation',
-            '  --id=xxx               (undo) only the change with that id',
-            '  --scope=user           (apps) request winget --scope=user',
-            '  --interactive          (apps) show winget UI instead of silent',
-            '  (apps)                 "(p)" packages = winget Portable (no installer)',
-            '',
-            '@Examples',
-            '  sparktune',
-            '  sparktune --perfil=gaming --nivel=medio --dry-run',
-            '  sparktune undo',
-            '  sparktune apps --install=chrome,vlc',
-            '  sparktune power'
-        )
+    $lang = if ($en) { 'en' } else { 'es' }
+    $description = if ($en) { 'descEn' } else { 'desc' }
+    $help = if ($en) { 'help' } else { 'ayuda' }
+    $prepare = if ($en) { 'setup' } else { 'preparar' }
+    $simulate = if ($en) { '--dry-run' } else { '--simular' }
+    if (-not $Topic -or $Topic -eq 'help') {
+        Write-STHeader -Title $title -Detail "v$Global:STVersion"
+        if ($en) {
+            Write-STLine '  SparkTune sets up and tunes your Windows PC from the terminal.'
+            Write-STLine '  Choose apps, Windows settings and power plans before applying changes.'
+            Write-STLine '  For settings that need it, the wizard offers a Windows restore point'
+            Write-STLine '  when System Protection is available. Creating one requires admin rights.'
+        } else {
+            Write-STLine '  SparkTune prepara y optimiza tu PC con Windows desde la terminal.'
+            Write-STLine '  Elige las aplicaciones, los ajustes y el plan de energía antes de aplicar.'
+            Write-STLine '  Si un ajuste lo requiere, el asistente ofrece crear un punto de restauración'
+            Write-STLine '  cuando Windows lo permite. Crearlo requiere permisos de administrador.'
+        }
+        for ($i = 0; $i -lt $rows.Count; $i++) {
+            switch ($i) {
+                0  { Write-STSection $(if ($en) { 'Set up and tune' } else { 'Preparar y optimizar' }) }
+                5  { Write-STSection $(if ($en) { 'Check and revert' } else { 'Consultar y deshacer' }) }
+                10 { Write-STSection $(if ($en) { 'More commands' } else { 'Más comandos' }) }
+            }
+            $row = $rows[$i]
+            Write-STLine ('  {0,-22} {1}' -f "sparktune $($row[$lang])", $row[$description])
+        }
+        Write-STLine ''
+        Write-STInfo "sparktune $prepare desarrollo $simulate"
+        if ($en) {
+            Write-STLine '  See examples for a command with sparktune help setup.'
+            Write-STLine '  Español   sparktune ayuda --lang=es   |   sparktune --set-lang=es'
+        } else {
+            Write-STLine '  Más ejemplos con sparktune ayuda preparar.'
+            Write-STLine '  English   sparktune help --lang=en    |   sparktune --set-lang=en'
+        }
+        return
     }
-    foreach ($line in $lines) {
-        if ($line.StartsWith('@')) { Write-STSection $line.Substring(1) }
-        elseif ($line) { Write-STLine "  $line" }
+
+    $row = $rows | Where-Object { $_.id -eq $Topic }
+    $command = "sparktune $($row[$lang])"
+    Write-STHeader -Title $command -Detail $row[$description]
+    $examples = switch ($Topic) {
+        'setup' {
+            "$command desarrollo $simulate"
+            "$command gaming"
+            if ($en) {
+                "$command --goal=`"Save battery`""
+                "$command desarrollo --save-plan=plan.json"
+                "$command --load-plan=plan.json $simulate"
+            } else {
+                "$command --objetivo=`"Ahorrar batería`""
+                "$command desarrollo --guardar-plan=plan.json"
+                "$command --cargar-plan=plan.json $simulate"
+                'Perfiles disponibles  desarrollo, gaming, ofimatica, video-adobe y video-libre'
+            }
+        }
+        'wizard' {
+            "$command --perfil=gaming --nivel=medio $simulate"
+            if ($en) { 'The wizard offers a restore point before settings that need it.' }
+            else { 'El asistente ofrece crear un punto de restauración si algún ajuste lo requiere.' }
+        }
+        'apps' {
+            "$command --install=vlc $simulate"
+            "$command --install=vlc"
+            "$command --update=vlc"
+        }
+        'ai' {
+            $goal = if ($en) { 'Save battery' } else { 'Ahorrar batería' }
+            "$command `"$goal`" $simulate"
+            "$command `"$goal`""
+        }
+        'undo' { "$command $simulate"; "$command --id=setup.file-extensions" }
+        'report' { "$command --out=informe.html" }
+        'validar' { "$command --cargar-plan=plan.json" }
+        'acciones' { "$command --json" }
+        'ejecutar' { "$command --id=setup.file-extensions $simulate" }
     }
+    Write-STLine "  $command"
+    foreach ($example in $examples) { Write-STLine "  $example" }
     Write-STLine ''
+    Write-STInfo "sparktune $help"
 }
 
 # ---------- input teclado ----------
