@@ -33,3 +33,30 @@ class ErrorIA(ErrorSparkTune):
     """El proveedor de IA no está disponible o respondió algo inutilizable."""
 
     codigo_salida = 1
+
+
+class ErrorEnergia(ErrorSparkTune):
+    """powercfg falló o el archivo que recuerda el plan original no se puede usar."""
+
+    codigo_salida = 1
+
+
+def describir(error: BaseException) -> str:
+    """Mensaje en español para errores de la biblioteca estándar, que llegan en inglés."""
+    import json
+
+    if isinstance(error, json.JSONDecodeError):
+        return f"JSON mal formado en la línea {error.lineno}, columna {error.colno}"
+    if isinstance(error, FileNotFoundError):
+        return f"No existe {error.filename}"
+    if isinstance(error, PermissionError):
+        return f"Sin permiso sobre {error.filename}"
+    if isinstance(error, IsADirectoryError):
+        return f"{error.filename} es una carpeta, no un archivo"
+    if isinstance(error, NotADirectoryError):
+        return f"{error.filename} no es una carpeta"
+    if isinstance(error, UnicodeError):
+        return "El archivo no está en UTF-8"
+    if isinstance(error, OSError):
+        return error.strerror or str(error)
+    return str(error)
