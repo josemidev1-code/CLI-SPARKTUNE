@@ -11,7 +11,8 @@ from typing import Annotated
 
 import typer
 
-from . import ia, preparar
+from . import energia, ia, preparar
+from .asistente import asistente
 from .config import Catalogo
 from .dialogo import confirmar
 from .errores import ErrorSparkTune
@@ -19,17 +20,23 @@ from .ficheros import leer_carpeta
 from .motor import Plan
 
 app = typer.Typer(
-    no_args_is_help=True, add_completion=False, pretty_exceptions_enable=False,
-    help="Prepara tu PC según tus intereses. Empieza con perfiles o describe tu objetivo con asesorar.",
+    add_completion=False, pretty_exceptions_enable=False,
+    help="Prepara tu PC según el uso que le vas a dar. Ejecuta sparktune sin nada más para abrir el asistente.",
 )
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def inicio(ctx: typer.Context, config: Annotated[Path | None, typer.Option(
     "--config", help="Ruta a tu catálogo JSON de acciones de archivos."
+)] = None, local: Annotated[bool, typer.Option(
+    "--local", help="El asistente usa reglas locales sin conectar a Groq."
+)] = False, env_file: Annotated[Path | None, typer.Option(
+    "--env-file", help="Archivo privado con GROQ_API_KEY para el asistente."
 )] = None):
     usar_utf8()
     ctx.obj = config.expanduser() if config else None
+    if ctx.invoked_subcommand is None:
+        asistente(env_file, local)
 
 
 def usar_utf8():
@@ -152,3 +159,4 @@ def _gib(cantidad: int) -> str:
 
 preparar.registrar(app)
 ia.registrar(app)
+energia.registrar(app)

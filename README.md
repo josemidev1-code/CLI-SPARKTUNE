@@ -14,9 +14,27 @@ Si ya tienes el repositorio clonado, `uv tool install .` en su carpeta instala l
 
 Desde otra carpeta, comprueba `sparktune version` y `sparktune --help`. Si la terminal no encuentra el comando, ejecuta `uv tool update-shell` y vuelve a abrirla. Si tenías SparkTune 1.x, comprueba con `Get-Command sparktune -All` que estás ejecutando la versión 2. Para desinstalarla usa `uv tool uninstall sparktune`. La documentación de la edición PowerShell 1.x está en [docs/POWERSHELL.md](docs/POWERSHELL.md).
 
+## Asistente para toda la familia
+
+Ejecuta `sparktune` sin nada más. El asistente te saluda y te pregunta qué vas a hacer con el ordenador, por ejemplo «ver series con batería» o «programar en Python». Después te dice qué plan de energía pondría, por qué y qué valores cambiaría. Si tu uso encaja con un entorno de trabajo, también te ofrece los programas. Solo cambia algo si respondes que sí, y todo se puede deshacer. Con `GROQ_API_KEY` el saludo y la recomendación los hace Groq; con `--local` o sin clave se usan las reglas locales.
+
+## Planes de energía según el uso
+
+```console
+sparktune energia planes
+sparktune energia recomendar "Portátil gaming, voy a ver series y se me acaba la batería"
+sparktune energia aplicar series-bateria --simular
+sparktune energia aplicar maximo-portatil
+sparktune energia restaurar
+```
+
+Hay cinco planes: `series-bateria`, `ofimatica-bateria`, `programar`, `equilibrado` y `maximo-portatil`. En un sobremesa no se ofrecen los de portátil. La IA solo elige uno de ellos: los valores de CPU, pantalla y suspensión los fija SparkTune. `aplicar` duplica el plan Equilibrado de Windows con `powercfg`, cambia esos valores y lo activa. Si aplicas otro plan al cambiar de uso, sustituye al anterior. `restaurar` vuelve al plan que tenías antes del primero y borra el de SparkTune. El estado se guarda en `~/.sparktune/energia.json`. `recomendar` también lista las apps abiertas que más memoria usan, para que decidas si cerrarlas: SparkTune no las cierra.
+
 ## Primeros cinco minutos
 
 ```console
+sparktune
+sparktune energia recomendar "ver series con batería" --local
 sparktune perfiles
 sparktune asesorar "Desarrollo aplicaciones Android y mi portátil tiene poca memoria"
 sparktune preparar android --simular
