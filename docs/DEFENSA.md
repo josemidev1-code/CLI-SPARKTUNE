@@ -4,7 +4,7 @@ Este documento reúne la evidencia de cada criterio de la rúbrica y explica qu�
 
 Los criterios se basan en un resumen de la rúbrica (https://aulaenlanube.com/programacion-ia/cli/). Antes de la defensa, compara los textos con la página.
 
-Estado verificado el 27 de noviembre de 2026 en la rama `codex/sparktune-python`: `pytest` muestra 66 pruebas en verde en local, y en el PR #3 pasan todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell).
+Estado verificado el 27 de noviembre de 2026 en la rama `codex/sparktune-python`: `pytest` muestra 68 pruebas en verde en local, y en el PR #3 pasan todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell).
 
 ## Puerta de entrada
 
@@ -161,7 +161,7 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 
 **Evidencia**
 
-- 66 pruebas `pytest` en tres archivos (30 + 20 + 16). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
+- 68 pruebas `pytest` en tres archivos (30 + 20 + 18). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
 - Hay decenas de casos feos: los 13 errores de esquema, enlaces, carreras, colisiones, codificación, HTTP 401/429, timeout, respuestas inventadas del modelo, instalaciones fallidas…
 - [.github/workflows/python.yml](../.github/workflows/python.yml) ejecuta `uv sync --locked` y `pytest` en Ubuntu, Windows y macOS. Después construye el wheel y lo instala en una carpeta limpia con [scripts/probar_wheel.py](../scripts/probar_wheel.py), que prueba la ayuda, el catálogo, la simulación, la ejecución y la desinstalación.
 - [.github/workflows/ci.yml](../.github/workflows/ci.yml) mantiene las pruebas de la edición PowerShell 1.x, incluida una integración real con `powercfg` en un runner Windows desechable.
@@ -342,7 +342,7 @@ Preparación común (fixture `cli`):
 - Se muestran el perfil y el motivo del modelo, pero ni `Malware.Falso` ni `format C:`.
 - Las líneas «Cómo revertirlo» son exactamente las dos del catálogo, las de LibreOffice y Firefox. **El modelo solo elige; SparkTune decide qué se instala.**
 
-### tests/test_preparar.py · 16 pruebas
+### tests/test_preparar.py · 18 pruebas
 
 Preparación común (fixture `invocar`): equipo Windows AMD64 con 16 GiB de RAM, 120 GiB libres y sin batería. Además, simula WinGet y desactiva la comprobación de transparencia. Ninguna prueba instala nada ni crea puntos de restauración reales.
 
@@ -386,7 +386,14 @@ Preparación común (fixture `invocar`): equipo Windows AMD64 con 16 GiB de RAM,
 **`test_fallo_a_medias_explica_como_revertir_lo_aplicado`** (línea 143). LibreOffice se instala y Firefox falla.
 - Después de «Preparación detenida», el programa indica cómo desinstalar LibreOffice, no menciona Firefox y recuerda Restaurar sistema.
 
-**`test_vista_previa_incluye_como_deshacer`** (línea 156).
+**`test_aplicacion_ya_instalada_no_se_ofrece_deshacer`** (línea 156). WinGet responde que Firefox ya está instalado (`0x8A150061`) y `winget list` lo confirma.
+- Después de «Mozilla.Firefox ya estaba instalado.», Firefox no vuelve a aparecer y no hay lista «Cambios aplicados». Si la hubiera, quien la siguiera desinstalaría un programa que ya tenía.
+- Antes de la corrección, `_instalar` no distinguía entre instalar y encontrar el programa ya instalado. Ahora devuelve `True` o `False`, y solo lo instalado entra en la lista para deshacer.
+
+**`test_estado_de_carga_desconocido_no_se_muestra_como_enchufado`** (línea 173). Comprueba `resumen_equipo` con batería y `enchufado=None`, que es lo que devuelve psutil cuando Windows no informa del cargador.
+- El resumen dice «con batería, estado de carga desconocido» y no «enchufado». Antes, cualquier valor distinto de `False` se mostraba como «enchufado».
+
+**`test_vista_previa_incluye_como_deshacer`** (línea 182).
 - `preparar gaming --simular` muestra cómo desinstalar Steam, el aviso de Restaurar sistema y «Simulación terminada».
 
 ---
@@ -418,6 +425,4 @@ Conviene saberlos antes de que te pregunten por ellos:
 5. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`).
 6. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 2 de RELEVO.
 7. En la edición 1.x, 50 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
-8. `preparar` tiene dos errores sin corregir, encontrados al escribir el guion de Windows (pendiente 1 de RELEVO):
-   - Una aplicación que ya estaba instalada aparece en «Cambios aplicados y cómo deshacerlos».
-   - Si Windows no informa de si el portátil está enchufado, se muestra «enchufado».
+8. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
