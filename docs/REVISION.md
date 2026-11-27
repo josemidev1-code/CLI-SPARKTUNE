@@ -14,7 +14,10 @@ SparkTune es un optimizador de Windows; la finalidad es elegir ajustes útiles p
   - Borran valores del registro que podían existir antes de aplicarlas.
   - Si el valor no existía, el undo crea uno. Por ejemplo, `net.smb-hardening` escribe `AllowInsecureGuestAuth=1`, que relaja la seguridad respecto a no tener la directiva.
   - El apply no guarda nada que el undo pueda leer. En `cpu.fgboost`, el undo lee una copia que nunca se escribe, y en `mem.compact` vuelve a escribir el valor actual.
-- Se siguen ofreciendo las acciones que guardan el estado con `Set-STStateFile` (`net.doh`, `net.wsl-nat`, los planes de energía y los ajustes de `setup`), `off.startup-bloat` (guarda cada entrada borrada de `Run`), las informativas y las irreversibles, que se confirman una por una. `tests/run-tests.ps1` comprueba que ninguna acción en revisión se ofrece y que una acción reversible nueva no puede ofrecerse sin guardar su estado.
+- En una segunda revisión pasaron también a revisión `net.doh` y `net.wsl-nat`, ya son 52:
+  - `net.doh`: el undo borra las entradas DoH de 1.1.1.1, 8.8.8.8 y 9.9.9.9 aunque existieran antes (Windows 11 las trae de serie). Además, con dos adaptadores activos, el segundo `Add-DnsClientDohServerAddress` falla antes de guardar el estado.
+  - `net.wsl-nat`: si `~/.wslconfig` ya tiene una sección `[wsl2]`, el apply lo reescribe entero y se pierden sus otras opciones mientras está aplicado.
+- Se siguen ofreciendo las acciones que guardan el estado con `Set-STStateFile` (los planes de energía y los ajustes de `setup`), `off.startup-bloat` (guarda cada entrada borrada de `Run`), las informativas y las irreversibles, que se confirman una por una. `tests/run-tests.ps1` comprueba que ninguna acción en revisión se ofrece y que una acción reversible nueva no puede ofrecerse sin guardar su estado.
 
 ## Pendiente antes de recomendar su uso diario
 
