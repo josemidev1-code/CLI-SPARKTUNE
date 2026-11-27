@@ -3,7 +3,7 @@
   Instala SparkTune en %LOCALAPPDATA%\SparkTune y lo añade al PATH de usuario.
 .DESCRIPTION
   Desde el ZIP o el repositorio, instala la copia local. Si ejecutas solo
-  install.ps1, descarga e instala el ZIP de la última versión publicada.
+  install.ps1, descarga e instala el ZIP de la última versión 1.x publicada.
   Consulta el README para el comando de instalación rápida.
 #>
 [CmdletBinding()]
@@ -20,6 +20,13 @@ function Test-InstallFiles([string]$Directory) {
         if (-not (Test-Path -LiteralPath (Join-Path $Directory $file) -PathType Leaf)) { return $false }
     }
     return (Test-Path -LiteralPath (Join-Path $Directory 'src\catalog') -PathType Container)
+}
+
+function Select-STRelease($Releases) {
+    # Este instalador es de la edición 1.x. Desde la 2.0.0 (Python), la última release
+    # de GitHub no incluye el ZIP de PowerShell, así que se elige la 1.x publicada más reciente.
+    $Releases | Where-Object { -not $_.draft -and -not $_.prerelease -and $_.tag_name -match '^v1\.\d+\.\d+$' } |
+        Sort-Object { [version]$_.tag_name.Substring(1) } -Descending | Select-Object -First 1
 }
 
 function Add-InstallPath {
@@ -77,10 +84,10 @@ try {
         $tls = [Net.ServicePointManager]::SecurityProtocol
         try {
             [Net.ServicePointManager]::SecurityProtocol = $tls -bor [Net.SecurityProtocolType]::Tls12
-            $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -UseBasicParsing -TimeoutSec 60
-            if ($release.tag_name -notmatch '^v(\d+\.\d+\.\d+)$') {
-                throw "Etiqueta de versión no válida: $($release.tag_name)"
-            }
+            $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -UseBasicParsing -TimeoutSec 60
+            $release = Select-STRelease $releases
+            if (-not $release) { throw 'No hay ninguna versión 1.x de SparkTune publicada.' }
+            $null = $release.tag_name -match '^v(\d+\.\d+\.\d+)$'
             $releaseVersion = $Matches[1]
             $assetName = "SparkTune-$releaseVersion.zip"
             $asset = $release.assets | Where-Object { $_.name -eq $assetName }

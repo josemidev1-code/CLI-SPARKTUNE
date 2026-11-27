@@ -105,7 +105,9 @@ def test_datos_invalidos_del_modelo_recuperan_recomendacion_local(cli, monkeypat
     assert "local" in salida.output.lower() and "Inválido" not in salida.output
 
 
-@pytest.mark.parametrize("objetivo", [r"programar en C:\Users\ana\privado", "programar con gsk_secreta"])
+@pytest.mark.parametrize("objetivo", [r"programar en C:\Users\ana\privado", "programar con gsk_secreta",
+                                      "Quiero programar; mi contrasena es Hunter2", "mi pwd es secreta",
+                                      "programar con el PIN 1234"])
 def test_objetivos_con_datos_privados_se_tratan_localmente(cli, monkeypatch, objetivo):
     monkeypatch.setenv("GROQ_API_KEY", "gsk_ejemplo")
     salida = cli("asesorar", objetivo)
