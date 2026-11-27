@@ -15,7 +15,7 @@ by **@josemidev1**
 ## Instalacion
 
 **Instalación rápida desde PowerShell** (sin administrador). Descarga el instalador
-y deja que instale la última versión publicada. Para actualizar, repite el bloque.
+y deja que instale la última versión 1.x publicada. Para actualizar, repite el bloque.
 
 ```powershell
 $dir = Join-Path $env:TEMP ('sparktune-' + [guid]::NewGuid().ToString('N'))
@@ -30,7 +30,7 @@ try {
 }
 ```
 
-**Instalación manual.** Extrae el ZIP de la [última versión](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/latest),
+**Instalación manual.** Extrae `SparkTune-1.8.0.zip` de la [versión 1.8.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v1.8.0), la última de la edición PowerShell,
 abre PowerShell en la carpeta extraída y ejecuta:
 
 ```powershell
