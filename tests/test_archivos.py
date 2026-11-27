@@ -201,3 +201,17 @@ def test_firma_coincide_al_abrir_el_archivo(tmp_path):
         detalle = {c: (getattr(entrada.estado, c), getattr(abierto, c)) for c in campos}
         assert archivos.firma(abierto) == archivos.firma(entrada.estado), detalle
         assert flujo.read() == b"demo"
+
+
+def test_salida_redirigida_con_codificacion_antigua(tmp_path):
+    # Windows usa cp1252 al redirigir la salida; el plan contiene «→» y nombres con tildes.
+    import os
+    import subprocess
+    import sys
+
+    (tmp_path / "diagnóstico.txt").write_text("ok", encoding="utf-8")
+    entorno = dict(os.environ, PYTHONIOENCODING="cp1252")
+    resultado = subprocess.run([sys.executable, "-m", "sparktune", "ejecutar", "reunir-informes",
+                                str(tmp_path), "--simular"], capture_output=True, env=entorno)
+    assert resultado.returncode == 0, resultado.stderr.decode("utf-8", "replace")
+    assert "→".encode() in resultado.stdout and "diagnóstico".encode() in resultado.stdout
