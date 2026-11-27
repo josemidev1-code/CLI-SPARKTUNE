@@ -53,7 +53,12 @@ Save-Scene '02-estado' 'Estado de la VM Windows' {
     Invoke-DemoCli doctor
 }
 
-foreach ($profile in @('desarrollo','video-adobe','video-libre','gaming','ofimatica')) {
+Save-Scene '03-perfiles' 'Perfiles de SparkTune por tipo de uso' {
+    Invoke-DemoCli perfiles
+}
+
+$profiles = Get-Content -LiteralPath (Join-Path $root 'src/data/setup-profiles.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach ($profile in $profiles.PSObject.Properties.Name) {
     Save-Scene "03-$profile" "Perfil $profile · simulación de SparkTune" {
         Invoke-DemoCli setup "--perfil=$profile" --dry-run
     }

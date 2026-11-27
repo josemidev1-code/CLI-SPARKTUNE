@@ -86,8 +86,51 @@ function Invoke-STStartup([switch]$Interactive) {
     return $result
 }
 
+function Get-STSetupGroups($Profiles) {
+    $en = $Global:STLang -eq 'en'
+    $labels = [ordered]@{
+        trabajo = if ($en) { 'Work and study' } else { 'Trabajo y estudios' }
+        creacion = if ($en) { 'Creative work and gaming' } else { 'Creación y juegos' }
+        tecnologia = if ($en) { 'Technology' } else { 'Tecnología' }
+        casa = if ($en) { 'Home and everyday use' } else { 'Casa y uso cotidiano' }
+    }
+    $groups = @{}
+    foreach ($profile in $Profiles.PSObject.Properties) {
+        $group = $profile.Value.grupo
+        if (-not $group -or -not $labels.Contains($group)) { $group = 'casa' }
+        $groups[$group] += @([pscustomobject]@{
+            id = $profile.Name
+            label = if ($en) { $profile.Value.nombre_en } else { $profile.Value.nombre }
+        })
+    }
+    foreach ($group in $labels.Keys) {
+        if ($groups[$group]) {
+            [pscustomobject]@{ id = $group; label = $labels[$group]; profiles = $groups[$group] }
+        }
+    }
+}
+
+function Read-STSetupProfile([object[]]$Groups, [bool]$OfferAI) {
+    $en = $Global:STLang -eq 'en'
+    $title = if ($en) { 'What will you use this PC for?' } else { '¿Para qué vas a usar este PC?' }
+    $options = @(
+        if ($OfferAI) {
+            [pscustomobject]@{ id = '_ai'; label = $(if ($en) { 'Describe your situation to AI' } else { 'Cuéntale tu situación a la IA' }) }
+        }
+        $Groups
+    )
+    while ($true) {
+        $index = Show-STMenu -Title $title -Items $options
+        if ($index -lt 0) { return '' }
+        $choice = $options[$index]
+        if ($choice.id -eq '_ai') { return $choice.id }
+        $profileIndex = Show-STMenu -Title $choice.label -Items $choice.profiles
+        if ($profileIndex -ge 0) { return $choice.profiles[$profileIndex].id }
+    }
+}
+
 function Invoke-STSetup {
-    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath, [switch]$ValidateOnly, [switch]$AdviceOnly)
+    param([string]$Perfil, [string]$Plan, [string]$Goal, [switch]$SkipApps, [switch]$SkipTweaks, [switch]$Interactive, [switch]$Yes, [string]$SavePath, [string]$LoadPath, [switch]$ValidateOnly, [switch]$AdviceOnly, [switch]$ListProfiles)
 
     $en = $Global:STLang -eq 'en'
     $file = Join-Path $Global:STData 'setup-profiles.json'
@@ -100,31 +143,28 @@ function Invoke-STSetup {
         $Perfil = $saved.perfil
         $Plan = $saved.energia
     }
-    if (-not $Perfil -and -not $Goal) {
-        if ($Yes) { throw 'Indica --perfil para usar --yes.' }
-        if ($Global:STDryRun -or [Console]::IsInputRedirected) {
+    if ($ListProfiles -or (-not $Perfil -and -not $Goal)) {
+        if ($Yes) { throw 'Indica un perfil para usar --yes.' }
+        $groups = @(Get-STSetupGroups $profiles)
+        if ($ListProfiles -or $Global:STDryRun -or [Console]::IsInputRedirected) {
             Write-STHeader -Title $(if ($en) { 'Setup profiles' } else { 'Perfiles de preparación' })
-            Write-STInfo "sparktune setup --perfil=$($keys[0]) --dry-run"
-            foreach ($key in $keys) {
-                $label = if ($en) { $profiles.$key.nombre_en } else { $profiles.$key.nombre }
-                Write-STInfo "$key - $label"
+            foreach ($group in $groups) {
+                Write-STSection $group.label
+                foreach ($profile in $group.profiles) {
+                    Write-STLine ('  {0,-16} {1}' -f $profile.id, $profile.label)
+                }
             }
+            Write-STLine ''
+            Write-STInfo $(if ($en) { 'sparktune setup estudios --dry-run' } else { 'sparktune preparar estudios --simular' })
             return 0
         }
-        $items = @(
-            if (-not $Plan) {
-                [pscustomobject]@{ id = '_ai'; label = $(if ($en) { 'Describe your situation to AI' } else { 'Cuéntale tu situación a la IA' }) }
-            }
-            foreach ($key in $keys) {
-                [pscustomobject]@{ id = $key; label = $(if ($en) { $profiles.$key.nombre_en } else { $profiles.$key.nombre }) }
-            }
-        )
-        $index = Show-STMenu -Title $(if ($en) { 'Set up your new PC' } else { 'Prepara tu PC nuevo' }) -Items $items
-        if ($index -lt 0) { return 0 }
-        if ($items[$index].id -eq '_ai') {
+        $Perfil = Read-STSetupProfile -Groups $groups -OfferAI (-not $Plan)
+        if (-not $Perfil) { return 0 }
+        if ($Perfil -eq '_ai') {
+            $Perfil = ''
             $Goal = Read-STSetupGoal -Provider (Get-STAIProvider)
             if (-not $Goal) { return 0 }
-        } else { $Perfil = $items[$index].id }
+        }
     }
 
     $hw = Get-STHardware

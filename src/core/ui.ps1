@@ -336,6 +336,7 @@ function Show-STHelp([string]$Topic, [switch]$SkipIntroduction) {
     $title = if ($en) { 'Quick help' } else { 'Ayuda rápida' }
     $rows = @(
         @{ id='setup';    es='preparar';   en='setup';    desc='Prepara un PC por perfil';           descEn='Set up a PC by profile' }
+        @{ id='profiles'; es='perfiles'; en='profiles'; desc='Ve todos los perfiles por uso';     descEn='Browse all profiles by use' }
         @{ id='wizard';   es='optimizar';  en='wizard';   desc='Elige qué ajustes de Windows aplicar'; descEn='Choose which Windows settings to apply' }
         @{ id='apps';     es='apps';       en='apps';     desc='Instala o actualiza aplicaciones';   descEn='Install or update apps' }
         @{ id='power';    es='energia';    en='power';    desc='Elige un plan de energía';           descEn='Choose a power plan' }
@@ -364,8 +365,8 @@ function Show-STHelp([string]$Topic, [switch]$SkipIntroduction) {
         for ($i = 0; $i -lt $rows.Count; $i++) {
             switch ($i) {
                 0  { Write-STSection $(if ($en) { 'Set up and tune' } else { 'Preparar y optimizar' }) }
-                5  { Write-STSection $(if ($en) { 'Check and revert' } else { 'Consultar y deshacer' }) }
-                10 { Write-STSection $(if ($en) { 'More commands' } else { 'Más comandos' }) }
+                6  { Write-STSection $(if ($en) { 'Check and revert' } else { 'Consultar y deshacer' }) }
+                11 { Write-STSection $(if ($en) { 'More commands' } else { 'Más comandos' }) }
             }
             $row = $rows[$i]
             Write-STLine ('  {0,-22} {1}' -f "sparktune $($row[$lang])", $row[$description])
@@ -393,11 +394,12 @@ function Show-STHelp([string]$Topic, [switch]$SkipIntroduction) {
                 "$command --goal=`"Save battery`""
                 "$command desarrollo --save-plan=plan.json"
                 "$command --load-plan=plan.json $simulate"
+                'sparktune profiles'
             } else {
                 "$command --objetivo=`"Ahorrar batería`""
                 "$command desarrollo --guardar-plan=plan.json"
                 "$command --cargar-plan=plan.json $simulate"
-                'Perfiles disponibles  desarrollo, gaming, ofimatica, video-adobe y video-libre'
+                'sparktune perfiles'
             }
         }
         'wizard' {
