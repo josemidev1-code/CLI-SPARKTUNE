@@ -97,6 +97,40 @@ Check 'required fields per action' {
     }
 }
 
+Check 'actions under review exist and are never offered' {
+    $ids = @{}; foreach ($a in $all) { $ids[$a.id] = $a }
+    $portatil = [pscustomobject]@{ IsWin = $true; IsLaptop = $true; Battery = $true; Plugged = $false; BatteryPct = 50
+                                   HasDgpu = $true; HasNvidia = $true; HasSSD = $true; Build = 26100; RamGB = 8 }
+    $sobremesa = [pscustomobject]@{ IsWin = $true; IsLaptop = $false; Battery = $false; HasDgpu = $true; HasAmd = $true
+                                    HasHDD = $true; Build = 26100; RamGB = 32 }
+    foreach ($id in $script:STEnRevision) {
+        if (-not $ids.ContainsKey($id)) { throw "acción en revisión inexistente: $id" }
+        if (-not $ids[$id].enRevision) { throw "$id no está marcada como en revisión" }
+        foreach ($hw in @($portatil, $sobremesa)) {
+            if (Test-STApplies $ids[$id] $hw) { throw "$id en revisión se ofrece igualmente" }
+        }
+    }
+    # Control: sin la marca, la misma comprobación sí acepta una acción de cada tipo de equipo.
+    $control = $ids['svc.sysmain-hdd-off'].Clone(); $control.enRevision = $false
+    if (-not (Test-STApplies $control $sobremesa)) { throw 'la prueba de control no se aplica en sobremesa con HDD' }
+}
+
+Check 'every offered reversible action restores a saved state' {
+    # Las que no usan Set-STStateFile se han revisado a mano o no cambian nada.
+    $revisadas = @{
+        'off.startup-bloat'   = 'guarda cada entrada borrada de Run en SparkTune\StartupBackup'
+        'gpu.driver-advice'   = 'solo muestra consejos'
+        'gpu.resbar'          = 'solo muestra consejos'
+        'upd.driver-advice'   = 'solo muestra consejos'
+        'sec.defender-report' = 'solo lectura'
+    }
+    foreach ($a in $all) {
+        if (-not $a.reversible -or $a.enRevision) { continue }
+        if ($a.apply.ToString() -match 'Set-STStateFile') { continue }
+        if (-not $revisadas.ContainsKey($a.id)) { throw "$($a.id) se ofrece como reversible sin guardar el estado anterior" }
+    }
+}
+
 Check 'profiles reference existing ids' {
     $j = (Get-Content (Join-Path $root 'src\data\profiles.json') -Raw -Encoding UTF8) | ConvertFrom-Json
     $ids = @{}; foreach ($a in $all) { $ids[$a.id] = $true }
