@@ -280,7 +280,7 @@ function Invoke-STPowerMenu {
     while ($true) {
         Clear-STScreen
         Write-STLine ''
-        Write-STLine "  $(T 'power.title')" 'cyan' 'bold'
+        Write-STLine "  $(T 'power.title')" 'accent' 'bold'
         $act = (powercfg.exe /getactivescheme 2>$null) -join "`n"
         Write-STInfo "activo: $act"
         Write-STLine ''
@@ -329,7 +329,7 @@ function Show-STBatteryReport {
     Enable-STVirtualTerminal
     $hw = Get-STHardware
     Write-STLine ''
-    Write-STLine "  $(T 'battery.title')" 'cyan' 'bold'
+    Write-STLine "  $(T 'battery.title')" 'accent' 'bold'
     if (-not $hw.Battery) { Write-STInfo 'sin bateria (sobremesa)'; Show-STPlanSuggestion $hw; return }
     $outFile = Join-Path $env:TEMP 'sparktune-battery.html'
     try {
@@ -366,7 +366,7 @@ function Show-STPlanSuggestion($hw) {
     } else {
         $s += 'spark-equili'; $s += 'spark-rendi'; if ($hw.HasDgpu) { $s += 'spark-turbo' }; $s += 'spark-max'
     }
-    Write-STLine "  planes recomendados para tu equipo:" 'cyan'
+    Write-STLine "  planes recomendados para tu equipo:" 'accent'
     foreach ($k in $s) {
         $meta = $script:STPowerSet[$k]
         Write-STInfo "  $($meta.num). $($meta.name)   ->  sparktune power"
