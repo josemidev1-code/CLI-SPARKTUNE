@@ -24,7 +24,7 @@ Decisiones de diseño de estos prompts:
 
 - `AGENTS.md`: reglas generales del proyecto para cualquier agente.
 - `.opencode/commands/nueva-accion.md`: diseña una acción con el alumno, que escribe o aprueba la entrada JSON.
-- `.opencode/agents/revisor.md`: subagente de solo lectura que busca pérdida de datos, sobrescrituras, escrituras durante la simulación, secretos y cambios de Windows sin confirmación.
+- `.opencode/agents/revisor.md`: agente de solo lectura, usable como principal o como subagente, que busca pérdida de datos, sobrescrituras, escrituras durante la simulación, secretos y cambios de Windows sin confirmación.
 - `.opencode/skills/acciones-json/SKILL.md`: lista de comprobaciones al añadir o revisar acciones.
 
 ## 3. Sesiones de desarrollo
