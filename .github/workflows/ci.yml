@@ -26,6 +26,9 @@ jobs:
       - name: Run setup profile tests (mocked WinGet and hardware)
         shell: powershell
         run: ./tests/setup-tests.ps1
+      - name: Validate setup plan files
+        shell: powershell
+        run: ./tests/plan-tests.ps1
       - name: Run AI advisor tests (mocked API)
         shell: powershell
         run: ./tests/ai-tests.ps1

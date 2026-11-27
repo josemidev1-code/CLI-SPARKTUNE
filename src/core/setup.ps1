@@ -2,7 +2,11 @@
 function Read-STSetupPlan([string]$Path) {
     $item = Get-Item -LiteralPath $Path -ErrorAction Stop
     if ($item -isnot [IO.FileInfo] -or $item.Length -gt 65536) { throw 'El plan debe ser un archivo JSON de hasta 64 KB.' }
-    $doc = Get-Content -LiteralPath $item.FullName -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+    $json = Get-Content -LiteralPath $item.FullName -Raw -Encoding UTF8 -ErrorAction Stop
+    if (-not $json -or -not $json.TrimStart().StartsWith('{')) {
+        throw 'El plan debe contener un objeto JSON.'
+    }
+    $doc = ConvertFrom-Json -InputObject $json -ErrorAction Stop
     $fields = @('version','perfil','apps','ajustes','energia','manual')
     if ($doc -isnot [pscustomobject] -or
         @($doc.PSObject.Properties.Name | Where-Object { $_ -cnotin $fields }).Count -or
@@ -10,7 +14,7 @@ function Read-STSetupPlan([string]$Path) {
         throw 'Formato de plan de SparkTune no válido (versión 1).'
     }
     foreach ($field in @('perfil','energia')) {
-        if ($doc.$field -isnot [string] -or $doc.$field -cnotmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
+        if ($doc.$field -isnot [string] -or $doc.$field -cnotmatch '\A[a-z0-9]+(-[a-z0-9]+)*\z') {
             throw "Campo no válido en el plan: $field."
         }
     }
@@ -18,7 +22,7 @@ function Read-STSetupPlan([string]$Path) {
         if ($doc.$field -isnot [array]) { throw "El campo $field debe ser una lista de IDs." }
         $seen = @{}
         foreach ($id in $doc.$field) {
-            if ($id -isnot [string] -or $id -cnotmatch '^[a-z0-9]+([.-][a-z0-9]+)*$' -or $seen.ContainsKey($id)) {
+            if ($id -isnot [string] -or $id -cnotmatch '\A[a-z0-9]+([.-][a-z0-9]+)*\z' -or $seen.ContainsKey($id)) {
                 throw "ID no válido o repetido en $field."
             }
             $seen[$id] = $true
