@@ -42,6 +42,12 @@ Save-Scene '01-instalacion' 'Instalación de SparkTune en Windows' {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la ayuda desde el lanzador instalado.' }
 }
 
+Save-Scene '00-ayuda' 'Guía de comandos en español e inglés' {
+    Invoke-DemoCli ayuda --lang=es
+    Invoke-DemoCli help --lang=en
+    Invoke-DemoCli ayuda preparar --lang=es
+}
+
 Save-Scene '02-estado' 'Estado de la VM Windows' {
     Invoke-DemoCli status --no-banner
     Invoke-DemoCli doctor

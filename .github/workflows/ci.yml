@@ -29,6 +29,9 @@ jobs:
       - name: Validate setup plan files
         shell: powershell
         run: ./tests/plan-tests.ps1
+      - name: Check quick help and commands
+        shell: powershell
+        run: ./tests/cli-help-tests.ps1
       - name: Run AI advisor tests (mocked API)
         shell: powershell
         run: ./tests/ai-tests.ps1
