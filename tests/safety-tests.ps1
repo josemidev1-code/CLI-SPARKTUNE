@@ -71,3 +71,24 @@ if (New-STRestorePoint) { throw 'Un punto anterior no debe contar como nuevo.' }
 $script:restoreMode = 'new'; $script:restoreCalls = 0
 if (-not (New-STRestorePoint)) { throw 'No se reconoció el punto nuevo.' }
 Write-Host 'Verificación de punto de restauración: OK'
+
+# Una acción en revisión ya no se ofrece, pero undo debe seguir deshaciendo lo que se
+# aplicó con una versión anterior. Se carga el catálogo real sin globals.ps1 para no
+# crear ~/.sparktune, y se sustituye el undo de net.doh para no tocar el equipo.
+$Global:STData = Join-Path $root 'src\data'
+$Global:STCatalogDir = Join-Path $root 'src\catalog'
+. (Join-Path $root 'src\core\catalog.ps1')
+Load-STCatalog
+$enRevision = @(Get-STCatalogActions | Where-Object { $_.id -eq 'net.doh' })[0]
+if (-not $enRevision -or -not $enRevision.enRevision) { throw 'net.doh debe seguir en el catálogo y marcada en revisión.' }
+if (Test-STApplies $enRevision @{}) { throw 'Una acción en revisión no debe ofrecerse.' }
+$script:undoneIds = @()
+$script:markedSeqs = @()
+$enRevision.undo = { param($a) $script:undoneIds += $a.id }
+function Get-STJournalPending { return @([pscustomobject]@{seq='7'; id='net.doh'; titulo='DoH'; categoria='network'; reversible=$true}) }
+function Mark-STJournalUndone($Seq) { $script:markedSeqs += $Seq }
+Invoke-STUndo -Id 'net.doh' -Yes
+if ($script:undoneIds -notcontains 'net.doh' -or $script:markedSeqs -notcontains '7') {
+    throw 'undo no deshizo una acción en revisión aplicada con una versión anterior.'
+}
+Write-Host 'Undo de una acción en revisión: OK'

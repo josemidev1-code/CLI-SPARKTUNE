@@ -4,11 +4,16 @@ Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [Se
 
 ## [Sin publicar]
 
+## [2.0.1] - 2026-11-27
+
 ### Corregido
 - `install.ps1` (edición 1.x) descarga la última versión 1.x publicada. Desde la 2.0.0, la última release de GitHub es la edición Python y no incluye el ZIP de PowerShell, así que el instalador fallaba.
 - El asesor de IA reconoce como datos privados «contrasena» sin tilde, «pwd», «passwd» o un «PIN», y no los envía a Groq. El texto se compara sin tildes ni mayúsculas.
 - `.gitattributes` mantiene los scripts `.sh` con finales de línea LF también en Windows.
 - Edición 1.x: `net.doh` y `net.wsl-nat` también quedan en revisión, con lo que son 52. El undo de `net.doh` borraba entradas DoH que ya existían, y `net.wsl-nat` reescribía un `~/.wslconfig` que ya tuviera `[wsl2]`.
+- El agente revisor de OpenCode (`.opencode/agents/revisor.md`) usa `mode: all`. Con `mode: subagent`, `scripts/revisar.sh` no podía lanzarlo como agente principal.
+- `docs/POWERSHELL.md` y `tests/verify-windows.ps1` ya no piden aplicar `gpu.power-mode`, `net.wsl-nat`, `off.hibernation` ni las acciones `sec.*` y `priv.*` en revisión.
+- `tests/safety-tests.ps1` comprueba que `undo` sigue deshaciendo una acción en revisión aplicada con una versión anterior.
 
 ## [2.0.0] - 2026-11-27
 

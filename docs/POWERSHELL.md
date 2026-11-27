@@ -248,14 +248,14 @@ Instalador de apps (menu `sparktune apps` → Herramientas del sistema):
 
 ## Que hace (y que no)
 
-- **Perfiles por caso de uso** (gaming, ofimatica, portatil ahorro/rendimiento, limpieza, PC antiguo, **creativo**, **desarrollo**, **red-privacidad**) en 3 niveles de agresividad.
+- **Perfiles por caso de uso** (gaming, ofimatica, portatil ahorro/rendimiento, limpieza, PC antiguo, **creativo**, **desarrollo**, **red-privacidad**) en 3 niveles de agresividad. Con las acciones en revisión, `red-privacidad` solo ofrece el informe de Defender y vaciar la caché DNS.
 - **Deteccion de hardware**: aplica o filtra acciones segun SSD/HDD, bateria, GPU discreta, RAM, portatil/sobremesa.
 - **Fichas antes de aplicar**: descripcion, aviso, valor actual -> propuesto, riesgo, reversible, admin, reinicio.
 - **Riesgo alto = confirmacion tipando SI**, y aviso de punto de restauracion.
 - **Journal** en `~/.sparktune/journal.json` y **undo** de todo o de un cambio concreto.
 - **Planes de energia** propios (Ultra Ahorro -> Alto Rendimiento) creados con `powercfg` duplicando los de fabrica, y restaurables.
 - **Instalador de apps** (`sparktune apps`): 66 apps organizadas por categorias (navegadores, social, herramientas, gaming, diseno, programacion, docs, musica, seguridad, oficina, emulacion, streaming) instaladas con **winget oficial**; nada de mirrors ni instaladores sueltos. Incluye paquetes **portables** (marcados `(p)`) que no tocan el registro.
-- **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catalogo `sec.*` informa y endurece (PUA, SMBv1, logs), la restauración de cada ajuste necesita verificación en Windows real.
+- **Seguridad sin sustos**: nunca desactiva Defender, firewall ni UAC. El catálogo `sec.*` solo informa (estado de Defender) y recupera opciones ocultas por políticas. El endurecimiento (PUA, SMBv1, registro del firewall, avisos de inicio) está en revisión y no se ofrece.
 
 La limpieza de ficheros es irreversible y se confirma aparte. La restauración de otros ajustes aún está en revisión: comprueba los cambios en una máquina virtual antes de usarlos en tu equipo.
 
@@ -273,7 +273,7 @@ docs/DESIGN.md       arquitectura y como anadir acciones
 
 ## Roadmap
 
-- [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0
+- [x] Perfil "red/privacidad" dedicado (perfil `red-privacidad` + acciones `net.*` / `priv.*` nuevas) — v1.1.0. Las `priv.*` y casi todas las `net.*` están ahora en revisión ([REVISION.md](REVISION.md))
 - [x] Instalador de apps estilo winutil via winget (`sparktune apps`) — v1.2.0
 - [x] Smoke-test automatizado en --dry-run (CI en runner de Windows) — v1.2.0
 - [x] Perfiles creativo/edicion y desarrollo — v1.3.0
