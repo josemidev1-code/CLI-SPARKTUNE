@@ -8,7 +8,7 @@ En Windows 11 (UTM) se instaló el wheel intermedio en un entorno temporal y se 
 
 Los PR 5 y 6 están fusionados y v2.0.1 publicada. La rama parte del merge f749abd, posterior a esa etiqueta. El relevo histórico de abajo describe etapas anteriores.
 
-Se retomó la extracción del módulo equipo.py y el manejo de confirmaciones. Ahora las consultas asesorar, explicar y energia recomendar respetan --local antes del subcomando y la activación del plan exige un punto nuevo verificado. Si falla la escritura del historial de energía tras la activación, se intenta recuperar el plan anterior. Se añadieron cinco casos de regresión y un simulacro en DEFENSA.md. macOS: 82 pruebas pasan, instalación/uso/desinstalación del wheel correctos y Gitleaks sin detecciones en 86 commits. Las pruebas del sistema energético usan dobles. Pendientes: verificar el cambio de plan y su recuperación en Windows con consentimiento en la consola, comprobar con batería física, revisar el diff con el alumno antes de publicar.
+Se retomó la extracción del módulo equipo.py y el manejo de confirmaciones. Ahora las consultas asesorar, explicar y energia recomendar respetan --local antes del subcomando y la activación del plan exige un punto nuevo verificado. Si falla la escritura del historial de energía tras la activación, se intenta recuperar el plan anterior. Se añadieron cinco casos de regresión. macOS: 82 pruebas pasan, instalación/uso/desinstalación del wheel correctos y Gitleaks sin detecciones en 86 commits. Las pruebas del sistema energético usan dobles. Pendientes: verificar el cambio de plan y su recuperación en Windows con consentimiento en la consola, comprobar con batería física, revisar el diff con el alumno antes de publicar.
 
 ---
 
@@ -26,7 +26,7 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 - Identidad de git: desde la 2.0.1 los commits usan `josemidev1-code` con el correo noreply de GitHub, configurado solo en este repositorio. El historial anterior no se reescribe.
 - 71 pruebas pytest en verde y las 8 pruebas `tests/*.ps1` en verde con `pwsh` en este Mac.
 - Estructura: `cli.py` (interfaz), `config.py` (`Catalogo`), `acciones.py` (una clase por tipo), `motor.py` (`Plan`), `ficheros.py`, `esquema.py`, `errores.py`, `dialogo.py`, `proveedores.py` (Groq y local), `ia.py` y `preparar.py`.
-- Documentación para la defensa: `docs/DEFENSA.md` y `docs/PRUEBA-WINDOWS.md` (17 casos, todavía sin ejecutar en un portátil).
+- Comprobación manual: `docs/PRUEBA-WINDOWS.md` (17 casos, todavía sin ejecutar en un portátil).
 - Edición 1.x: 52 de las 81 acciones quedan en revisión y no se ofrecen (`$script:STEnRevision` en `src/core/catalog.ps1`, detalle en `docs/REVISION.md`). Corregirlas es trabajo futuro.
 - Estimación frente a la rúbrica: unos 92-94 de 100.
 

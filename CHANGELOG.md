@@ -2,11 +2,15 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.1.1] - 2026-11-28
+
+- Actualiza la documentación de la distribución.
+
 ## [2.1.0] - 2026-11-27
 
 - Asistente guiado y planes de energía según el uso y los recursos del equipo.
 - Activación protegida por un punto de restauración verificado y recuperación del plan anterior si falla la escritura del historial.
-- Modo local respetado antes del subcomando y simulacro de defensa con evidencia de Windows.
+- Modo local respetado antes del subcomando y evidencia de Windows.
 
 ## [Sin publicar]
 
@@ -40,7 +44,7 @@ Nueva edición en Python 3.12 con Typer, para Windows, Linux y macOS. Se instala
 - `perfiles` y `preparar`: 13 perfiles de uso que instalan aplicaciones con WinGet y adaptan los pasos a la RAM, el disco y la batería. Cada cambio se confirma por separado, antes del primero se crea y se verifica un punto de restauración, y SparkTune indica cómo deshacer cada cambio, también si el lote falla a medias.
 - `asesorar`, `explicar` y `comprobar-ia`. La IA solo elige un perfil del catálogo y redacta el motivo: lo que se instala y cómo se revierte lo decide SparkTune. Sin red o sin clave, se usan reglas locales, y `--local` evita la red por completo.
 - Pruebas con pytest en Ubuntu, Windows y macOS, e instalación del paquete en una carpeta limpia en GitHub Actions.
-- `docs/DEFENSA.md` (evidencia de cada criterio y qué comprueba cada prueba) y `docs/PRUEBA-WINDOWS.md` (guion para un portátil real).
+- `docs/PRUEBA-WINDOWS.md` (guion para un portátil real).
 
 ### Corregido
 - Edición 1.x: 50 acciones que se declaraban reversibles sin guardar el estado anterior real quedan en revisión y no se ofrecen. `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
