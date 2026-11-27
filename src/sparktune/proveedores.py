@@ -43,10 +43,12 @@ def texto_seguro(valor: object, limite: int = 600) -> str:
 
 def contiene_datos_privados(objetivo: str) -> bool:
     """Rutas, credenciales o correos: la recomendación se calcula sin enviar el texto."""
+    # Sin tildes ni mayúsculas, para reconocer también «contrasena» o «CONTRASEÑA».
+    texto = "".join(c for c in unicodedata.normalize("NFKD", objetivo.casefold()) if not unicodedata.combining(c))
     return bool(re.search(
-        r"[/\\@=]|\b(?:gsk_|sk-|gh[pousr]_|github_pat_|AKIA|eyJ)|"
-        r"\b(?:token|contraseña|password|api[_ -]?key|clave)\b|[\w-]{32,}",
-        objetivo, re.IGNORECASE,
+        r"[/\\@=]|\b(?:gsk_|sk-|gh[pousr]_|github_pat_|akia|eyj)|"
+        r"\b(?:token|contrasena|pass(?:wd|word)?|pwd|pin|api[_ -]?key|clave)\b|[\w-]{32,}",
+        texto,
     ))
 
 

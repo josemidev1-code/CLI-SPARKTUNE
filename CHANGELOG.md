@@ -2,6 +2,14 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Corregido
+- `install.ps1` (edición 1.x) descarga la última versión 1.x publicada. Desde la 2.0.0, la última release de GitHub es la edición Python y no incluye el ZIP de PowerShell, así que el instalador fallaba.
+- El asesor de IA reconoce como datos privados «contrasena» sin tilde, «pwd», «passwd» o un «PIN», y no los envía a Groq. El texto se compara sin tildes ni mayúsculas.
+- `.gitattributes` mantiene los scripts `.sh` con finales de línea LF también en Windows.
+- Edición 1.x: `net.doh` y `net.wsl-nat` también quedan en revisión, con lo que son 52. El undo de `net.doh` borraba entradas DoH que ya existían, y `net.wsl-nat` reescribía un `~/.wslconfig` que ya tuviera `[wsl2]`.
+
 ## [2.0.0] - 2026-11-27
 
 Nueva edición en Python 3.12 con Typer, para Windows, Linux y macOS. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE`. La edición PowerShell 1.x sigue en el repositorio y está documentada en `docs/POWERSHELL.md`.

@@ -4,7 +4,7 @@ Este documento reúne la evidencia de cada criterio de la rúbrica y explica qu�
 
 Los criterios se basan en un resumen de la rúbrica (https://aulaenlanube.com/programacion-ia/cli/). Antes de la defensa, compara los textos con la página.
 
-Estado verificado el 27 de noviembre de 2026 en la rama `codex/sparktune-python`: `pytest` muestra 68 pruebas en verde en local, y en el PR #3 pasan todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell).
+Estado verificado el 27 de noviembre de 2026: `pytest` muestra 71 pruebas en verde en local, y en el PR #3 pasaron todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell) antes de fusionarlo en `main`. La versión publicada es la release `v2.0.0`.
 
 ## Puerta de entrada
 
@@ -12,10 +12,10 @@ Si falla alguna de estas condiciones, el proyecto no se evalúa.
 
 | Condición | Estado | Evidencia |
 | --- | --- | --- |
-| Se instala siguiendo el README y `--help` funciona | **Solo desde la rama** | Instalar desde la rama funciona: `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python`. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py). **Pero la orden del README apunta a `main`, donde no hay `pyproject.toml`, así que hoy fallaría.** Hay que fusionar el PR #3 antes de entregar. |
+| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la versión 2.0.0. Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
 | Al menos 3 acciones propias en `acciones.json` | Cumple | Hay 5 acciones y 1 perfil en [acciones.json](../acciones.json). |
 | Ninguna clave en el repositorio ni en su historial | Cumple | `git log -p --all \| grep -E "gsk_[A-Za-z0-9]{20,}\|sk-[A-Za-z0-9]{20,}"` no encuentra nada, y `git log --all -- .env` está vacío. Las claves de las pruebas (`gsk_ejemplo`) son falsas. |
-| Al menos 10 commits | Cumple | La rama tiene 67 commits y `main`, 45. |
+| Al menos 10 commits | Cumple | `main` tiene más de 70 commits. Compruébalo con `git rev-list --count main`. |
 
 ## Demostración en cinco minutos
 
@@ -161,7 +161,7 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 
 **Evidencia**
 
-- 68 pruebas `pytest` en tres archivos (30 + 20 + 18). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
+- 71 pruebas `pytest` en tres archivos (30 + 23 + 18). Todas usan `tmp_path` o simulan WinGet, PowerShell y Groq, así que no tocan el equipo ni la red.
 - Hay decenas de casos feos: los 13 errores de esquema, enlaces, carreras, colisiones, codificación, HTTP 401/429, timeout, respuestas inventadas del modelo, instalaciones fallidas…
 - [.github/workflows/python.yml](../.github/workflows/python.yml) ejecuta `uv sync --locked` y `pytest` en Ubuntu, Windows y macOS. Después construye el wheel y lo instala en una carpeta limpia con [scripts/probar_wheel.py](../scripts/probar_wheel.py), que prueba la ayuda, el catálogo, la simulación, la ejecución y la desinstalación.
 - [.github/workflows/ci.yml](../.github/workflows/ci.yml) mantiene las pruebas de la edición PowerShell 1.x, incluida una integración real con `powercfg` en un runner Windows desechable.
@@ -177,11 +177,10 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 - [CHANGELOG.md](../CHANGELOG.md) con formato Keep a Changelog, y etiquetas `v1.1.0`…`v1.8.0` de la edición 1.x.
 - Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un subagente revisor de solo lectura, el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
 
-**Pendiente antes de entregar** (en [RELEVO.md](RELEVO.md)):
+- Release [SparkTune 2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0): la etiqueta `v2.0.0` apunta al merge commit del PR #3 y sus notas son la entrada 2.0.0 del CHANGELOG.
+- El PR #3 se fusionó con merge commit, así que `main` conserva cada commit pequeño de la rama y se puede enseñar el historial cambio a cambio.
 
-1. Fusionar el PR #3. Hasta entonces, la orden del README falla porque `main` no tiene `pyproject.toml`.
-2. Añadir la entrada 2.0.0 en el CHANGELOG, la etiqueta `v2.0.0` y la release.
-3. Completar las sesiones con ChatGPT y Codex en `docs/prompts.md`.
+**Pendiente antes de entregar** (en [RELEVO.md](RELEVO.md)): completar las sesiones con ChatGPT y Codex en `docs/prompts.md`.
 
 ---
 
@@ -281,7 +280,7 @@ Prueban el catálogo, el motor y las acciones de archivos.
 - `s` y `sí` crean la salida. Enter no la crea, porque el valor por defecto es no. `quizá` hace que se vuelva a preguntar, y la respuesta `n` siguiente cancela.
 - La pregunta muestra `[s/N]`. La mayúscula indica la respuesta por defecto.
 
-### tests/test_ia.py · 20 pruebas
+### tests/test_ia.py · 23 pruebas
 
 Preparación común (fixture `cli`):
 - Ejecuta en una carpeta temporal y quita `GROQ_API_KEY`.
@@ -308,37 +307,37 @@ Preparación común (fixture `cli`):
 **`test_datos_invalidos_del_modelo_recuperan_recomendacion_local`** (línea 100; 2 casos). El modelo devuelve un perfil inventado o no devuelve motivo.
 - Se muestra la recomendación local, con `android`, y nunca el texto «Inválido» del modelo.
 
-**`test_objetivos_con_datos_privados_se_tratan_localmente`** (línea 109; 2 casos). El objetivo contiene la ruta `C:\Users\ana\privado` o un token `gsk_secreta`.
+**`test_objetivos_con_datos_privados_se_tratan_localmente`** (línea 111; 5 casos). El objetivo contiene la ruta `C:\Users\ana\privado`, un token `gsk_secreta`, «contrasena» sin tilde, «pwd» o un «PIN». Antes de buscar, el texto se pasa a minúsculas y se le quitan las tildes, así que «CONTRASEÑA» y «contrasena» se detectan igual.
 - Se responde en local y el objetivo no se repite en la salida. Groq no está simulado, así que la prueba también demuestra que no se envió nada.
 
-**`test_explicar_groq_presenta_prioridad_y_primer_paso`** (línea 116).
+**`test_explicar_groq_presenta_prioridad_y_primer_paso`** (línea 118).
 - Se muestran la prioridad y el primer paso, y la petición incluye `ram_gib`: el modelo recibe los recursos medidos.
 
-**`test_comprobar_distingue_fallos_sin_revelar_clave`** (línea 125; 3 casos).
+**`test_comprobar_distingue_fallos_sin_revelar_clave`** (línea 127; 3 casos).
 - Un 401 habla de la clave, un 429 del límite y un timeout de la conexión. Todos terminan con el código 1 y ninguno muestra la clave.
 
-**`test_comprobar_verifica_el_modelo`** (línea 133).
+**`test_comprobar_verifica_el_modelo`** (línea 135).
 - Con la respuesta `{"estado": "ok"}`, termina con código 0 y muestra el nombre del modelo.
 
-**`test_selecciona_edicion_adobe_frente_a_video_generico`** (línea 140). En «Editar vídeos con Adobe», «adobe» coincide con `video-adobe` y «videos» (sin tilde tras normalizar) con `video-libre`: es un empate de 1 a 1.
+**`test_selecciona_edicion_adobe_frente_a_video_generico`** (línea 142). En «Editar vídeos con Adobe», «adobe» coincide con `video-adobe` y «videos» (sin tilde tras normalizar) con `video-libre`: es un empate de 1 a 1.
 - Gana `video-adobe` porque solo una coincidencia mayor desplaza a la anterior, y `video-adobe` va antes en el vocabulario. Es intencionado: la mención de una marca concreta debe ganar al término genérico.
 
-**`test_orientacion_android_con_poca_ram_es_especifica`** (línea 145).
+**`test_orientacion_android_con_poca_ram_es_especifica`** (línea 147).
 - Con 8 GiB, el consejo para Android propone probar la app en un teléfono en lugar del emulador. No es un consejo genérico.
 
-**`test_objetivo_no_se_recorta_a_mitad`** (línea 150). El objetivo tiene unos 720 caracteres.
+**`test_objetivo_no_se_recorta_a_mitad`** (línea 152). El objetivo tiene unos 720 caracteres.
 - La frase final llega a la petición. El límite para el objetivo es de 1200 caracteres, no los 600 que `texto_seguro` usa por defecto.
 
-**`test_consulta_no_envia_clave_literal_fuera_de_cabecera`** (línea 160). El objetivo contiene la clave configurada, `privada1234`, que no tiene forma de token.
+**`test_consulta_no_envia_clave_literal_fuera_de_cabecera`** (línea 162). El objetivo contiene la clave configurada, `privada1234`, que no tiene forma de token.
 - Se responde en local. La segunda barrera de `_consultar` detecta la clave literal antes de enviar nada, y Groq no está simulado.
 
-**`test_desarrollo_movil_sin_mencionar_android`** (línea 166). El objetivo es «aplicaciones móviles».
+**`test_desarrollo_movil_sin_mencionar_android`** (línea 168). El objetivo es «aplicaciones móviles».
 - Se recomienda `android`, porque coinciden «moviles» y «aplicaciones moviles» (2 términos), mientras que «programar» solo da 1 a `desarrollo`.
 
-**`test_propuesta_dice_que_cambia_por_que_y_como_revertir`** (línea 171).
+**`test_propuesta_dice_que_cambia_por_que_y_como_revertir`** (línea 173).
 - La salida contiene el porqué (las palabras citadas), el equipo, cada instalación con su orden `winget uninstall` exacta, el punto de restauración y la frase «Todavía no se ha aplicado nada».
 
-**`test_el_modelo_no_decide_cambios_ni_reversion`** (línea 180). El modelo devuelve además `paquetes: ["Malware.Falso"]` y `deshacer: "format C:"`.
+**`test_el_modelo_no_decide_cambios_ni_reversion`** (línea 182). El modelo devuelve además `paquetes: ["Malware.Falso"]` y `deshacer: "format C:"`.
 - Se muestran el perfil y el motivo del modelo, pero ni `Malware.Falso` ni `format C:`.
 - Las líneas «Cómo revertirlo» son exactamente las dos del catálogo, las de LibreOffice y Firefox. **El modelo solo elige; SparkTune decide qué se instala.**
 
@@ -418,11 +417,9 @@ Preparación común (fixture `invocar`): equipo Windows AMD64 con 16 GiB de RAM,
 
 Conviene saberlos antes de que te pregunten por ellos:
 
-1. **La instalación desde `main` falla hasta fusionar el PR #3.** Es una condición de la puerta de entrada.
-2. Todavía no hay una release `v2.0.0`. Las etiquetas existentes son de la 1.x.
-3. `.env` no estaba en `.gitignore` en el primer commit, aunque nunca se subió ninguna clave.
-4. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
-5. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`).
-6. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 2 de RELEVO.
-7. En la edición 1.x, 50 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
-8. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
+1. `.env` no estaba en `.gitignore` en el primer commit, aunque nunca se subió ninguna clave.
+2. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
+3. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`). El caso 1.5 del guion de Windows lo comprueba a mano.
+4. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 1 de RELEVO.
+5. En la edición 1.x, 52 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
+6. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
