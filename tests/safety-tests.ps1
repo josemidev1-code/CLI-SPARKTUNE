@@ -52,3 +52,22 @@ if ($script:commands.Count -ne 2 -or $script:commands[0][0] -ne '/duplicateschem
     $script:commands[1][0] -ne '/changename' -or $script:commands[1][1] -ne $created -or
     $script:commands[1][2] -ne 'SparkTune Ultra Ahorro') { throw 'creacion de plan powercfg incorrecta' }
 Write-Host 'Creacion de plan simulada: OK'
+
+# Un punto antiguo no confirma que Windows haya creado uno nuevo.
+$Global:STVersion = 'test'
+$script:restoreMode = 'old'
+$script:restoreCalls = 0
+function Test-STRestoreEnabled { return $true }
+function Start-Sleep { param($Seconds) }
+function Checkpoint-Computer { param($Description, $RestorePointType) }
+function Get-ComputerRestorePoint {
+    $script:restoreCalls++
+    [pscustomobject]@{ SequenceNumber=1; Description='SparkTune test' }
+    if ($script:restoreMode -eq 'new' -and $script:restoreCalls -gt 1) {
+        [pscustomobject]@{ SequenceNumber=2; Description='SparkTune test' }
+    }
+}
+if (New-STRestorePoint) { throw 'Un punto anterior no debe contar como nuevo.' }
+$script:restoreMode = 'new'; $script:restoreCalls = 0
+if (-not (New-STRestorePoint)) { throw 'No se reconoció el punto nuevo.' }
+Write-Host 'Verificación de punto de restauración: OK'

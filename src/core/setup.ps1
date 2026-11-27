@@ -225,8 +225,10 @@ function Invoke-STSetup {
             Write-STInfo $(if ($en) { 'Continue without AI with sparktune setup.' } else { 'Para seguir sin IA, elige un perfil desde sparktune setup.' })
             return 1
         }
+        Write-STSection $(if ($en) { 'Why this recommendation' } else { 'Por qué esta recomendación' })
         Write-STInfo $recommendation.reason
         if ($recommendation.profile -eq 'ninguno') { return 0 }
+        Write-STInfo $(if ($en) { 'Review the suggested apps, settings and power plan below before deciding.' } else { 'Revisa las aplicaciones, ajustes y el plan de energía antes de decidir.' })
 
         $Perfil = $recommendation.profile
         $Plan = $recommendation.plan
@@ -353,20 +355,38 @@ function Invoke-STSetup {
     }
 
     $result = 0
+    $installed = @(); $present = @(); $failed = @(); $skipped = @()
     foreach ($app in $apps) {
         $question = if ($en) { "Install $($app.name)?" } else { "¿Instalar $($app.name)?" }
-        if (-not $Yes -and -not (Read-STConfirm -Question $question)) { continue }
+        if (-not $Yes -and -not (Read-STConfirm -Question $question)) { $skipped += $app.name; continue }
         if (-not (Test-STWinget)) {
             Write-STErr $(if ($en) { 'WinGet is unavailable. Install App Installer to continue with apps.' } else { 'WinGet no está disponible. Instala App Installer para poder instalar las aplicaciones.' })
             $result = 1
+            $skipped += @($apps | Where-Object { $_.name -notin ($installed + $present + $failed + $skipped) } | ForEach-Object { $_.name })
             break
         }
         $status = Install-STWingetApp -App $app -Source 'winget' -Interactive:$Interactive
-        if ($status -eq 'ok') { Write-STOk $app.name }
+        if ($status -eq 'ok') { $installed += $app.name; Write-STOk $app.name }
         elseif ($status -eq 'present') {
+            $present += $app.name
             Write-STInfo $(if ($en) { "$($app.name) is already installed." } else { "$($app.name) ya está instalada." })
         }
-        else { Write-STErr "$($app.name) [$($app.winget)]: $status"; $result = 1 }
+        else { $failed += $app.name; Write-STErr "$($app.name) [$($app.winget)]: $status"; $result = 1 }
+    }
+    if ($apps.Count) {
+        Write-STSection $(if ($en) { 'WinGet results' } else { 'Resultados de WinGet' })
+        foreach ($row in @(
+            @{ es='Instalación comunicada como correcta'; en='Installation reported successful'; names=$installed },
+            @{ es='Ya instaladas'; en='Already installed'; names=$present },
+            @{ es='Fallidas'; en='Failed'; names=$failed },
+            @{ es='No intentadas'; en='Not attempted'; names=$skipped }
+        )) {
+            if ($row.names.Count) {
+                $label = if ($en) { $row.en } else { $row.es }
+                Write-STLine "    ${label}: $($row.names -join ', ')"
+            }
+        }
+        Write-STInfo $(if ($en) { 'WinGet reports the installer result; some apps may still need sign-in or setup.' } else { 'WinGet comunica el resultado del instalador; algunas apps aún pueden requerir inicio de sesión o configuración.' })
     }
     foreach ($action in @($tweaks) + @($power)) {
         if (-not $action) { continue }

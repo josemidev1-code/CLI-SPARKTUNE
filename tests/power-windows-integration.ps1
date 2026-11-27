@@ -37,7 +37,30 @@ try {
     if ((Get-STActivePowerGuid) -ne $original) { throw 'undo del plan Portátil Máximo no restauró el original.' }
     Remove-STPowerPlans
     if ($ShowEvidence) { Write-Host "Plan original restaurado: $(Get-STActivePowerGuid)" }
-    Write-Host 'Ahorro y Portátil Máximo creados, configurados, activados, restaurados y eliminados en Windows.'
+    # Comprobar todos los valores declarados, tanto enchufado como con batería.
+    foreach ($key in @('spark-ultra','spark-ahorro','spark-equili','spark-rendi','spark-turbo','spark-max','spark-portatil-max')) {
+        $guid = Install-STPowerPlan -Key $key
+        if ((Get-STActivePowerGuid) -ne $guid) { throw "No se activó $key." }
+        $spec = Get-STPlanSpec $key $null
+        foreach ($pair in @($spec.Ac.Keys | Sort-Object -Unique)) {
+            $parts = $pair.Split('|')
+            $query = Invoke-STPowerCfg @('/query', $guid, $parts[0], $parts[1])
+            $indices = @([regex]::Matches($query, '0x[0-9a-fA-F]+') | ForEach-Object { [Convert]::ToInt32($_.Value.Substring(2), 16) })
+            if ($indices.Count -lt 2 -or $indices[-2] -ne $spec.Ac[$pair] -or $indices[-1] -ne $spec.Dc[$pair]) {
+                throw "Valores CA/CC incorrectos en $key ${pair}: $query"
+            }
+        }
+        foreach ($pair in @($spec.Dc.Keys | Where-Object { -not $spec.Ac.ContainsKey($_) })) {
+            $parts = $pair.Split('|')
+            $query = Invoke-STPowerCfg @('/query', $guid, $parts[0], $parts[1])
+            $indices = @([regex]::Matches($query, '0x[0-9a-fA-F]+') | ForEach-Object { [Convert]::ToInt32($_.Value.Substring(2), 16) })
+            if ($indices.Count -lt 2 -or $indices[-1] -ne $spec.Dc[$pair]) { throw "Valor de batería incorrecto en $key ${pair}: $query" }
+        }
+        Invoke-STPowerCfg @('/setactive', $original) | Out-Null
+        Remove-STPowerPlans
+        if ($ShowEvidence) { Write-Host "$key`: valores CA/CC verificados y plan anterior restaurado." }
+    }
+    Write-Host 'Todos los planes: valores CA/CC comprobados y plan original restaurado en Windows.'
 } finally {
     try { Invoke-STPowerCfg @('/setactive', $original) | Out-Null } catch { Write-Warning $_ }
     if (Test-Path $script:STPowerGuidFile) {
