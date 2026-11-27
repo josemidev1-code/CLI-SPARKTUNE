@@ -4,11 +4,13 @@ SparkTune prepara un entorno de trabajo para quien estudia, programa, juega o ed
 
 ## Instalación
 
-Con [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado, en la carpeta de esta versión ejecuta:
+Con [uv](https://docs.astral.sh/uv/getting-started/installation/) instalado, ejecuta en cualquier carpeta:
 
 ```console
-uv tool install .
+uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE
 ```
+
+Si ya tienes el repositorio clonado, `uv tool install .` en su carpeta instala la misma versión.
 
 Desde otra carpeta, comprueba `sparktune version` y `sparktune --help`. Si la terminal no encuentra el comando, ejecuta `uv tool update-shell` y vuelve a abrirla. Si tenías SparkTune 1.x, comprueba con `Get-Command sparktune -All` que estás ejecutando la versión 2. Para desinstalarla usa `uv tool uninstall sparktune`. La documentación de la edición PowerShell 1.x está en [docs/POWERSHELL.md](docs/POWERSHELL.md).
 
@@ -24,6 +26,73 @@ sparktune acciones
 sparktune validar
 ```
 
-`asesorar` elige un perfil y `explicar` ayuda a entender cómo encaja un perfil con el equipo. Usa `--local` si prefieres trabajar sin red. Para habilitar el proveedor Groq, configura `GROQ_API_KEY` en la sesión o copia `.env.example` a un fichero privado y pasa su ruta con `--env-file`. Prueba la conexión con `sparktune comprobar-ia`. Nunca incluyas claves en capturas, transcripciones o commits. El modelo predeterminado es `openai/gpt-oss-120b`. La disponibilidad depende de la cuenta y de los límites de Groq.
+## Acciones de archivos
 
-Para desarrollar, ejecuta `uv sync --locked`, `uv run pytest` y `uv run sparktune --help`. La guía de [pruebas en una VM](docs/PRUEBA-VM.md) y el [simulacro](docs/SIMULACRO.md) explican cómo comprobar el comportamiento.
+Las acciones trabajan sobre la carpeta que indiques (por defecto, la actual). Nunca modifican ni borran los originales: el resultado se escribe en una carpeta nueva, `sparktune-salida`, dentro de esa carpeta. Si ya existe, se usa `sparktune-salida-2`, `-3`, etc.
+
+```console
+sparktune ejecutar reunir-capturas ~/pruebas --simular
+sparktune ejecutar reunir-informes,inventariar ~/pruebas
+sparktune ejecutar preparar-entrega ~/pruebas --si
+```
+
+- `--simular` muestra qué archivos se copiarían o incluirían y no escribe nada.
+- Sin opciones, SparkTune muestra el plan y pregunta antes de crear la salida.
+- `--si` confirma sin preguntar, para scripts.
+- Puedes combinar acciones separándolas por comas o usar un perfil del catálogo.
+- Para deshacer, descarta la carpeta de salida. Si una ejecución falla a medias, la salida conserva un archivo `.incompleto` y los originales quedan intactos.
+
+## Esquema de `acciones.json`
+
+SparkTune busca el catálogo en este orden: la ruta de `--config`, `./acciones.json` en la carpeta actual y el catálogo incluido en el paquete.
+
+```console
+sparktune --config mis-acciones.json validar
+sparktune --config mis-acciones.json ejecutar mi-accion ~/pruebas --simular
+```
+
+```json
+{
+  "version": 1,
+  "acciones": [
+    {
+      "id": "reunir-capturas",
+      "descripcion": "Copia las capturas e imágenes del proyecto.",
+      "tipo": "copiar",
+      "extensiones": [".png", ".jpg"]
+    }
+  ],
+  "perfiles": {
+    "preparar-entrega": ["reunir-capturas"]
+  }
+}
+```
+
+| Campo | Obligatorio | Regla |
+| --- | --- | --- |
+| `version` | Sí | El entero `1`. |
+| `acciones` | Sí | Lista no vacía de acciones. |
+| `acciones[].id` | Sí | Único. De 1 a 48 caracteres: minúsculas ASCII, números o guiones, empezando por letra. No puede ser un nombre reservado de Windows (`con`, `nul`…). |
+| `acciones[].descripcion` | Sí | Texto visible, sin caracteres de control. |
+| `acciones[].tipo` | Sí | `copiar` (copia los archivos a `<id>/`), `inventario` (crea `<id>/inventario.json` con nombres y tamaños) o `huellas` (crea `<id>/sha256.json` con la huella SHA-256 de cada archivo). |
+| `acciones[].extensiones` | Sí | Lista de extensiones en minúsculas, como `".png"`, sin repetir. `copiar` necesita al menos una; en `inventario` y `huellas`, una lista vacía incluye todos los archivos. |
+| `perfiles` | Sí | Objeto. Cada clave sigue las reglas de `id`, no coincide con una acción y contiene una lista no vacía de IDs de acciones existentes, sin repetir. |
+
+No se admiten campos adicionales ni claves repetidas. `sparktune validar` comprueba todo esto antes de ejecutar nada e indica el campo que falla, por ejemplo `Falta el campo acciones[2].tipo.`. Para añadir una acción de un tipo existente basta con editar el JSON. La decisión está explicada en el [ADR 0002](docs/adr/0002-python-y-proveedor-ia.md).
+
+## Códigos de salida
+
+| Código | Significado |
+| --- | --- |
+| `0` | Todo correcto, o el usuario canceló. |
+| `1` | Falló la ejecución (ruta inexistente, archivo cambiado durante la copia, WinGet, Groq en `comprobar-ia`…). |
+| `2` | Error de uso: opción, perfil o acción desconocidos. |
+| `3` | El catálogo `acciones.json` no es válido. |
+
+## Asesor de IA
+
+`asesorar` elige un perfil y `explicar` ayuda a entender cómo encaja un perfil con el equipo. Usa `--local` si prefieres trabajar sin red. Si no hay red o no hay clave, SparkTune lo indica y responde con sus reglas locales. Para habilitar el proveedor Groq, configura `GROQ_API_KEY` en la sesión o copia `.env.example` a un fichero privado y pasa su ruta con `--env-file`. Prueba la conexión con `sparktune comprobar-ia`. Nunca incluyas claves en capturas, transcripciones o commits. El modelo predeterminado es `openai/gpt-oss-120b`. La disponibilidad depende de la cuenta y de los límites de Groq.
+
+## Desarrollo
+
+Ejecuta `uv sync --locked`, `uv run pytest` y `uv run sparktune --help`. Las pruebas usan carpetas temporales y simulan WinGet, PowerShell y Groq, así que no cambian el equipo. GitHub Actions las ejecuta en Ubuntu, Windows y macOS e instala el paquete desde una carpeta limpia.
