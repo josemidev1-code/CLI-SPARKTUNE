@@ -138,3 +138,23 @@ def test_contexto_no_incluye_datos_personales():
     assert set(contexto) == {"sistema", "arquitectura", "nucleos_logicos", "ram_gib",
                              "disco_libre_gib", "con_bateria", "enchufado"}
     assert json.loads(json.dumps(contexto)) == contexto
+
+
+def test_fallo_a_medias_explica_como_revertir_lo_aplicado(monkeypatch, invocar):
+    ejecutar, _ = invocar
+    monkeypatch.setattr(p, "_crear_punto", lambda: "SparkTune-Test")
+    codigos = iter([0, 7])
+    monkeypatch.setattr(p.subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess([], next(codigos)))
+    resultado = ejecutar("preparar", "ofimatica", respuestas="s\ns\n")
+    assert resultado.exit_code == 1
+    despues = resultado.output.split("Preparación detenida")[1]
+    assert "winget uninstall --id TheDocumentFoundation.LibreOffice --exact" in despues
+    assert "Mozilla.Firefox --exact" not in despues
+    assert "Restaurar sistema" in despues
+
+
+def test_vista_previa_incluye_como_deshacer(invocar):
+    ejecutar, _ = invocar
+    salida = ejecutar("preparar", "gaming", "--simular").output
+    assert "Para deshacerlo: winget uninstall --id Valve.Steam --exact" in salida
+    assert "Restaurar sistema" in salida and "Simulación terminada." in salida
