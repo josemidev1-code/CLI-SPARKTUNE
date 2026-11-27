@@ -22,6 +22,7 @@ def windows(monkeypatch, tmp_path):
     monkeypatch.setattr(energia, "contexto_equipo", lambda: PORTATIL)
     monkeypatch.setattr(asistente.preparar, "contexto_equipo", lambda: PORTATIL)
     monkeypatch.setattr(energia, "procesos_pesados", lambda limite=5: [("Steam", 900)])
+    monkeypatch.setattr(energia, "_crear_punto", lambda: "SparkTune-prueba")
     ordenes = []
 
     def powercfg(*argumentos):
@@ -58,7 +59,7 @@ def test_aplicar_cambiar_y_restaurar(windows, tmp_path):
     windows.clear()
     assert runner.invoke(app, ["energia", "aplicar", "maximo-portatil", "--si"]).exit_code == 0
     segundo = json.loads((tmp_path / "energia.json").read_text(encoding="utf-8"))
-    assert segundo["original"] == ORIGINAL and ("/getactivescheme",) not in windows
+    assert segundo["original"] == ORIGINAL
     assert windows[-1] == ("/delete", primero["sparktune"])
 
     windows.clear()
@@ -104,3 +105,30 @@ def test_asistente_explica_y_aplica_solo_si_dices_que_si(windows, monkeypatch):
     assert salida.exit_code == 0, salida.output
     assert "Git.Git" in salida.output and any(o[0] == "/setactive" for o in windows)
     assert re.search(r"Plan activo: SparkTune Programar", salida.output)
+
+def test_energia_sin_punto_no_modifica(windows, monkeypatch):
+    def denegado():
+        raise RuntimeError("Protección del sistema desactivada")
+    monkeypatch.setattr(energia, "_crear_punto", denegado)
+    salida = runner.invoke(app, ["energia", "aplicar", "programar", "--si"])
+    assert salida.exit_code == 1
+    assert all(orden[0] == "/getactivescheme" for orden in windows)
+
+
+@pytest.mark.parametrize("args", [
+    ["asesorar", "quiero programar"], ["explicar", "android"],
+    ["energia", "recomendar", "programar"],
+])
+def test_local_global_impide_contacto_con_groq(args, monkeypatch):
+    monkeypatch.setattr(energia.ProveedorGroq, "desde_entorno",
+                        lambda *a, **kw: pytest.fail("Se intentó usar Groq"))
+    assert runner.invoke(app, ["--local", *args]).exit_code == 0
+
+def test_fallo_al_guardar_reactiva_el_plan_anterior(windows, monkeypatch):
+    def disco_lleno(datos):
+        raise OSError("disco lleno")
+    monkeypatch.setattr(energia, "_guardar_estado", disco_lleno)
+    salida = runner.invoke(app, ["energia", "aplicar", "programar", "--si"])
+    nuevo = next(o[2] for o in windows if o[0] == "/duplicatescheme")
+    assert salida.exit_code == 1
+    assert windows[-2:] == [("/setactive", ORIGINAL), ("/delete", nuevo)]

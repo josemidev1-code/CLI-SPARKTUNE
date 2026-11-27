@@ -5,6 +5,7 @@ from typing import Annotated
 
 import typer
 
+from .dialogo import opciones_ia
 from .errores import ErrorIA
 from .preparar import PERFIL_DESCRIPCIONES, RESTAURAR, contexto_equipo, propuesta, resumen_equipo
 from .proveedores import MODELO, ProveedorGroq, ProveedorIA, ProveedorLocal, texto_seguro
@@ -26,11 +27,12 @@ def _remoto(local: bool, env_file: Path | None) -> ProveedorIA | None:
         return None
 
 
-def asesorar(objetivo: Annotated[str, typer.Argument(help="Describe qué quieres hacer con el equipo.")],
+def asesorar(ctx: typer.Context, objetivo: Annotated[str, typer.Argument(help="Describe qué quieres hacer con el equipo.")],
              local: SoloLocal = False, env_file: ArchivoEnv = None):
     """Elige un perfil según tu objetivo y explica el motivo."""
     if not texto_seguro(objetivo) or len(objetivo) > 1200:
         raise typer.BadParameter("Escribe un objetivo de entre 1 y 1200 caracteres.")
+    local, env_file = opciones_ia(ctx, local, env_file)
     equipo = contexto_equipo()
     proveedor: ProveedorIA = ProveedorLocal(PERFIL_DESCRIPCIONES)
     perfil, motivo = proveedor.recomendar(objetivo, equipo)
@@ -46,11 +48,12 @@ def asesorar(objetivo: Annotated[str, typer.Argument(help="Describe qué quieres
     _mostrar_propuesta(perfil, equipo, con_equipo=True)
 
 
-def explicar(perfil: Annotated[str, typer.Argument(help="Identificador que aparece en sparktune perfiles.")],
+def explicar(ctx: typer.Context, perfil: Annotated[str, typer.Argument(help="Identificador que aparece en sparktune perfiles.")],
              local: SoloLocal = False, env_file: ArchivoEnv = None):
     """Interpreta los recursos del equipo para trabajar con un perfil elegido."""
     if perfil not in PERFIL_DESCRIPCIONES:
         raise typer.BadParameter("Perfil desconocido. Consulta sparktune perfiles.")
+    local, env_file = opciones_ia(ctx, local, env_file)
     equipo = contexto_equipo()
     proveedor: ProveedorIA = ProveedorLocal(PERFIL_DESCRIPCIONES)
     lineas = proveedor.explicar(perfil, equipo)

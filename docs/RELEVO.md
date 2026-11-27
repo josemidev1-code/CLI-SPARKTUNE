@@ -1,3 +1,17 @@
+# Entrega 2.1.0
+
+La revisión final reúne el asistente, los planes de energía, los cambios de protección y 82 pruebas. El registro siguiente conserva los detalles y las limitaciones de las comprobaciones.
+
+# Relevo vigente · rama codex/final
+
+En Windows 11 (UTM) se instaló el wheel intermedio en un entorno temporal y se ejecutaron asesorar Android en modo local y energia aplicar programar --simular. Salida: docs/evidencias/windows-simulacion.txt. La recuperación ante disco lleno se añadió después y se probó mediante un fallo simulado.
+
+Los PR 5 y 6 están fusionados y v2.0.1 publicada. La rama parte del merge f749abd, posterior a esa etiqueta. El relevo histórico de abajo describe etapas anteriores.
+
+Se retomó la extracción del módulo equipo.py y el manejo de confirmaciones. Ahora las consultas asesorar, explicar y energia recomendar respetan --local antes del subcomando y la activación del plan exige un punto nuevo verificado. Si falla la escritura del historial de energía tras la activación, se intenta recuperar el plan anterior. Se añadieron cinco casos de regresión y un simulacro en DEFENSA.md. macOS: 82 pruebas pasan, instalación/uso/desinstalación del wheel correctos y Gitleaks sin detecciones en 86 commits. Las pruebas del sistema energético usan dobles. Pendientes: verificar el cambio de plan y su recuperación en Windows con consentimiento en la consola, comprobar con batería física, revisar el diff con el alumno antes de publicar.
+
+---
+
 # Relevo · SparkTune · 27 de noviembre de 2026
 
 Objetivo acordado: preparar equipos para necesidades reales, usar IA como asesor, poder simular y combinar acciones y confirmar cada cambio de sistema. La entrega requiere Python 3.12, Typer, uv y pruebas en los tres sistemas. El código PowerShell se conserva como edición 1.x.

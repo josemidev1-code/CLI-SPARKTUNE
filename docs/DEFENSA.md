@@ -4,7 +4,7 @@ Este documento reúne la evidencia de cada criterio de la rúbrica y explica qu�
 
 Los criterios se basan en un resumen de la rúbrica (https://aulaenlanube.com/programacion-ia/cli/). Antes de la defensa, compara los textos con la página.
 
-Estado verificado el 27 de noviembre de 2026: `pytest` muestra 71 pruebas en verde en local, y en el PR #3 pasaron todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell) antes de fusionarlo en `main`. La versión publicada es la release `v2.0.1`, con las correcciones posteriores a la 2.0.0.
+Entrega 2.1.0. La suite incluye 82 pruebas. El flujo SparkTune Python comprueba la instalación y ejecuta pytest en Windows, Ubuntu y macOS.
 
 ## Puerta de entrada
 
@@ -12,7 +12,7 @@ Si falla alguna de estas condiciones, el proyecto no se evalúa.
 
 | Condición | Estado | Evidencia |
 | --- | --- | --- |
-| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la última versión (2.0.1). Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
+| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la revisión de main. Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
 | Al menos 3 acciones propias en `acciones.json` | Cumple | Hay 5 acciones y 1 perfil en [acciones.json](../acciones.json). |
 | Ninguna clave en el repositorio ni en su historial | Cumple | `git log -p --all \| grep -E "gsk_[A-Za-z0-9]{20,}\|sk-[A-Za-z0-9]{20,}"` no encuentra nada, y `git log --all -- .env` está vacío. Las claves de las pruebas (`gsk_ejemplo`) son falsas. |
 | Al menos 10 commits | Cumple | `main` tiene más de 70 commits. Compruébalo con `git rev-list --count main`. |
@@ -423,3 +423,11 @@ Conviene saberlos antes de que te pregunten por ellos:
 4. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 1 de RELEVO.
 5. En la edición 1.x, 52 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, `tests/safety-tests.ps1` comprueba que `undo` sigue deshaciendo una de ellas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
 6. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.
+
+## Simulacro de cinco minutos para el código de la rama final
+
+1. Una editora quiere trabajar en un portátil con poca RAM. Enseña `sparktune --local asesorar "editar con Premiere"` y `sparktune preparar video-adobe --simular`. Explica cómo comprobarías si los proxies reducen los saltos de reproducción y qué requiere una licencia de Adobe.
+2. El evaluador rompe un campo de acciones.json. Enséñale con una copia temporal qué campo señala `sparktune --config copia.json validar` y cómo obtiene el script el código 3.
+3. Ejecuta preparar-entrega dos veces en una carpeta de muestras. Compara los directorios de salida y las huellas del archivo original. ¿Qué evidencia distingue una copia de un movimiento?
+4. ¿Qué ocurre si el proveedor responde con un identificador inventado? Localiza la validación del proveedor y la prueba que cubre ese caso. Explica qué información recibe Groq.
+5. Windows rechaza el punto de restauración. Enseña test_energia_sin_punto_no_modifica y explica por qué se permite leer el plan activo y se prohíbe duplicarlo o activarlo. ¿Cómo cambiaría tu demostración si solo tuvieras una VM sin batería?

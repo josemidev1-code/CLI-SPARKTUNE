@@ -2,6 +2,12 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.1.0] - 2026-11-27
+
+- Asistente guiado y planes de energía según el uso y los recursos del equipo.
+- Activación protegida por un punto de restauración verificado y recuperación del plan anterior si falla la escritura del historial.
+- Modo local respetado antes del subcomando y simulacro de defensa con evidencia de Windows.
+
 ## [Sin publicar]
 
 ### Añadido
