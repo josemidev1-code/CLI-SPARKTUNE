@@ -2,6 +2,26 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es/1.1.0/), versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.0.0] - 2026-11-27
+
+Nueva edición en Python 3.12 con Typer, para Windows, Linux y macOS. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE`. La edición PowerShell 1.x sigue en el repositorio y está documentada en `docs/POWERSHELL.md`.
+
+### Cambiado (incompatible)
+- `sparktune` es ahora el CLI en Python. Las órdenes y opciones de la 1.x (`setup`, `wizard`, `--dry-run`…) no existen en la 2.0. La simulación se pide con `--simular`.
+- El asesor de IA usa Groq (`GROQ_API_KEY`, modelo `openai/gpt-oss-120b`) en lugar de OpenAI.
+
+### Añadido
+- Acciones de archivos definidas en `acciones.json`: `reunir-capturas`, `reunir-informes`, `guardar-planes`, `inventariar` y `calcular-huellas`, combinables por comas o con el perfil `preparar-entrega`. Nunca modifican los originales: escriben en una carpeta `sparktune-salida` nueva y, si algo falla a medias, la marcan con `.incompleto`.
+- `validar` comprueba el catálogo antes de ejecutar nada e indica el campo que falla. `--config` permite usar otro catálogo. Una acción nueva de un tipo existente solo requiere editar el JSON (ADR 0003).
+- `listar`, `acciones`, `limpiar` y `version`. Cada error previsible tiene su mensaje y su código de salida: 1 si falla la ejecución, 2 si el uso es incorrecto y 3 si el catálogo no es válido.
+- `perfiles` y `preparar`: 13 perfiles de uso que instalan aplicaciones con WinGet y adaptan los pasos a la RAM, el disco y la batería. Cada cambio se confirma por separado, antes del primero se crea y se verifica un punto de restauración, y SparkTune indica cómo deshacer cada cambio, también si el lote falla a medias.
+- `asesorar`, `explicar` y `comprobar-ia`. La IA solo elige un perfil del catálogo y redacta el motivo: lo que se instala y cómo se revierte lo decide SparkTune. Sin red o sin clave, se usan reglas locales, y `--local` evita la red por completo.
+- Pruebas con pytest en Ubuntu, Windows y macOS, e instalación del paquete en una carpeta limpia en GitHub Actions.
+- `docs/DEFENSA.md` (evidencia de cada criterio y qué comprueba cada prueba) y `docs/PRUEBA-WINDOWS.md` (guion para un portátil real).
+
+### Corregido
+- Edición 1.x: 50 acciones que se declaraban reversibles sin guardar el estado anterior real quedan en revisión y no se ofrecen. `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
+
 ## [1.8.0] - 2026-11-17
 
 - `sparktune ai` consulta a OpenAI para recomendar ajustes reversibles del catálogo según el equipo y el objetivo.
