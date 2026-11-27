@@ -176,8 +176,59 @@ def _plan(perfil: str, equipo: dict) -> tuple[list[str], list[str]]:
     return paquetes, pasos
 
 
+@dataclass(frozen=True)
+class Cambio:
+    """Un cambio que SparkTune puede aplicar y la forma de deshacerlo."""
+
+    descripcion: str
+    deshacer: str
+
+
+RESTAURAR = ("Para volver al estado anterior de una vez, abre Restaurar sistema (rstrui.exe) y elige el "
+             "punto SparkTune. Windows quita los programas y controladores instalados después de ese "
+             "punto y no toca tus documentos.")
+
+
+def deshacer_paquete(paquete: str) -> str:
+    if paquete == "Adobe.CreativeCloud":
+        return ("Desinstala primero Premiere Pro y After Effects desde Creative Cloud y después "
+                "ejecuta winget uninstall --id Adobe.CreativeCloud --exact.")
+    return f"winget uninstall --id {paquete} --exact"
+
+
+def sugerir_transparencia(equipo: dict) -> bool:
+    """Con batería o con poca RAM se propone quitar la transparencia, si está activa."""
+    ram = equipo["ram_gib"]
+    optimizar = equipo["enchufado"] is False or (ram is not None and ram <= 8)
+    return equipo["sistema"] == "Windows" and optimizar and _transparencia_activa()
+
+
+def propuesta(perfil: str, equipo: dict) -> tuple[list[Cambio], list[str]]:
+    """Cambios del perfil con su reversión y pasos adaptados al equipo, sin aplicar nada."""
+    paquetes, pasos = _plan(perfil, equipo)
+    cambios = [Cambio(f"Instalar {paquete} con WinGet", deshacer_paquete(paquete)) for paquete in paquetes]
+    if sugerir_transparencia(equipo):
+        cambios.append(Cambio("Desactivar los efectos de transparencia de esta cuenta", _RECUPERAR_TEMA))
+    return cambios, pasos
+
+
+def resumen_equipo(equipo: dict) -> str:
+    ram, disco = equipo["ram_gib"], equipo["disco_libre_gib"]
+    partes = [f"{equipo['sistema']} {equipo['arquitectura']}",
+              f"{ram:g} GiB de RAM" if ram is not None else "RAM desconocida",
+              f"{disco:g} GiB libres" if disco is not None else "espacio libre desconocido"]
+    if equipo["con_bateria"]:
+        partes.append("con batería, desenchufado" if equipo["enchufado"] is False else "con batería, enchufado")
+    elif equipo["con_bateria"] is False:
+        partes.append("sin batería")
+    return " · ".join(partes)
+
+
 def _transparencia_activa() -> bool:
-    import winreg
+    try:
+        import winreg
+    except ImportError:  # Fuera de Windows no existe el registro.
+        return False
 
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _CLAVE_TEMA) as clave:
@@ -281,20 +332,17 @@ def preparar(
     equipo = contexto_equipo()
     paquetes, pasos = _plan(perfil, equipo)
     windows = equipo["sistema"] == "Windows"
-    ram = equipo["ram_gib"]
-    optimizar = equipo["enchufado"] is False or (ram is not None and ram <= 8)
-    transparencia = windows and optimizar and _transparencia_activa()
+    transparencia = sugerir_transparencia(equipo)
     typer.echo(f"Plan para {PERFIL_DESCRIPCIONES[perfil]} ({perfil})")
-    ram_txt = f"{ram:g} GiB de RAM" if ram is not None else "RAM desconocida"
-    disco = equipo["disco_libre_gib"]
-    disco_txt = f"{disco:g} GiB libres" if disco is not None else "espacio libre desconocido"
-    typer.echo(f"Equipo observado: {equipo['sistema']} {equipo['arquitectura']} · {ram_txt} · {disco_txt}")
+    typer.echo(f"Equipo observado: {resumen_equipo(equipo)}")
     typer.echo("Instalaciones disponibles en Windows (WinGet):")
     for paquete in paquetes:
-        typer.echo(f"  • {paquete}")
+        typer.echo(f"  • {paquete}\n    Para deshacerlo: {deshacer_paquete(paquete)}")
     if transparencia:
         typer.echo("Ajuste opcional para esta cuenta: desactivar los efectos de transparencia "
                    "del escritorio. " + _RECUPERAR_TEMA)
+    typer.echo("Cada cambio se confirma por separado y antes del primero se crea un punto de restauración. "
+               + RESTAURAR)
     typer.echo("Pasos para completar y comprobar tu entorno:")
     for paso in pasos:
         typer.echo(f"  • {paso}")
@@ -310,6 +358,7 @@ def preparar(
     typer.echo("Al aceptar el primer cambio también autorizas crear un punto de restauración. "
                "Windows requiere una consola de administrador y Protección del sistema activa.")
     protegido = False
+    aplicados: list[str] = []
     try:
         for paquete in paquetes:
             if not confirmar(f"¿Instalar {paquete}?"):
@@ -318,17 +367,31 @@ def preparar(
                 typer.echo(f"Punto verificado: {_crear_punto()}")
                 protegido = True
             _instalar(winget, paquete)
+            aplicados.append(deshacer_paquete(paquete))
             typer.echo(f"Disponible: {paquete}")
         if transparencia and confirmar("¿Desactivar los efectos de transparencia para esta cuenta?"):
             if not protegido:
                 typer.echo(f"Punto verificado: {_crear_punto()}")
                 protegido = True
             _desactivar_transparencia()
+            aplicados.append(_RECUPERAR_TEMA)
             typer.echo("Efectos de transparencia desactivados. " + _RECUPERAR_TEMA)
     except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
         typer.echo(f"Preparación detenida. {exc}", err=True)
+        _mostrar_reversion(aplicados, protegido)
         raise typer.Exit(1) from exc
     typer.echo("Preparación terminada." if protegido else "Sin cambios.")
+    _mostrar_reversion(aplicados, protegido)
+
+
+def _mostrar_reversion(aplicados: list[str], protegido: bool) -> None:
+    """Tras un lote completo o a medias, dice cómo deshacer lo que sí se aplicó."""
+    if aplicados:
+        typer.echo("Cambios aplicados y cómo deshacerlos uno a uno:")
+        for paso in aplicados:
+            typer.echo(f"  • {paso}")
+    if protegido:
+        typer.echo(RESTAURAR)
 
 
 def registrar(app: typer.Typer) -> None:
