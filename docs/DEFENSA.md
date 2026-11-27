@@ -4,7 +4,7 @@ Este documento reúne la evidencia de cada criterio de la rúbrica y explica qu�
 
 Los criterios se basan en un resumen de la rúbrica (https://aulaenlanube.com/programacion-ia/cli/). Antes de la defensa, compara los textos con la página.
 
-Estado verificado el 27 de noviembre de 2026: `pytest` muestra 71 pruebas en verde en local, y en el PR #3 pasaron todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell) antes de fusionarlo en `main`. La versión publicada es la release `v2.0.0`.
+Estado verificado el 27 de noviembre de 2026: `pytest` muestra 71 pruebas en verde en local, y en el PR #3 pasaron todos los trabajos de GitHub Actions (pytest en Ubuntu, Windows y macOS, y los trabajos de PowerShell) antes de fusionarlo en `main`. La versión publicada es la release `v2.0.1`, con las correcciones posteriores a la 2.0.0.
 
 ## Puerta de entrada
 
@@ -12,7 +12,7 @@ Si falla alguna de estas condiciones, el proyecto no se evalúa.
 
 | Condición | Estado | Evidencia |
 | --- | --- | --- |
-| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la versión 2.0.0. Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
+| Se instala siguiendo el README y `--help` funciona | Cumple | El PR #3 está fusionado, así que `main` contiene el paquete y `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE` instala la última versión (2.0.1). Hace falta Git, como indica el README. El CI lo comprueba en los tres sistemas con [scripts/probar_wheel.py](../scripts/probar_wheel.py): construye el paquete, lo instala en una carpeta limpia y ejecuta `--help`. |
 | Al menos 3 acciones propias en `acciones.json` | Cumple | Hay 5 acciones y 1 perfil en [acciones.json](../acciones.json). |
 | Ninguna clave en el repositorio ni en su historial | Cumple | `git log -p --all \| grep -E "gsk_[A-Za-z0-9]{20,}\|sk-[A-Za-z0-9]{20,}"` no encuentra nada, y `git log --all -- .env` está vacío. Las claves de las pruebas (`gsk_ejemplo`) son falsas. |
 | Al menos 10 commits | Cumple | `main` tiene más de 70 commits. Compruébalo con `git rev-list --count main`. |
@@ -175,9 +175,9 @@ Para enseñar la validación, copia `acciones.json`, cambia un `tipo` por `borra
 
 - Una orden: `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE`. El comando `sparktune` queda disponible en cualquier carpeta, porque es el punto de entrada `[project.scripts]` de [pyproject.toml](../pyproject.toml).
 - [CHANGELOG.md](../CHANGELOG.md) con formato Keep a Changelog, y etiquetas `v1.1.0`…`v1.8.0` de la edición 1.x.
-- Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un subagente revisor de solo lectura, el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
+- Proceso: PR #3 desde una rama, commits pequeños y legibles, [AGENTS.md](../AGENTS.md), [opencode.json](../opencode.json) (no deja leer `.env` ni hacer `git push`), y `.opencode/` con un agente revisor de solo lectura (`mode: all`, para que `scripts/revisar.sh` pueda lanzarlo como agente principal), el comando `/nueva-accion` y la skill `acciones-json`. También [scripts/revisar.sh](../scripts/revisar.sh), [docs/prompts.md](prompts.md) y los ADR.
 
-- Release [SparkTune 2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0): la etiqueta `v2.0.0` apunta al merge commit del PR #3 y sus notas son la entrada 2.0.0 del CHANGELOG.
+- Release [SparkTune 2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0): la etiqueta `v2.0.0` apunta al merge commit del PR #3 y sus notas son la entrada 2.0.0 del CHANGELOG. La [2.0.1](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.1) sigue el mismo proceso con el PR #5.
 - El PR #3 se fusionó con merge commit, así que `main` conserva cada commit pequeño de la rama y se puede enseñar el historial cambio a cambio.
 
 **Pendiente antes de entregar** (en [RELEVO.md](RELEVO.md)): completar las sesiones con ChatGPT y Codex en `docs/prompts.md`.
@@ -421,5 +421,5 @@ Conviene saberlos antes de que te pregunten por ellos:
 2. `preparar.py` no está organizado en clases y mezcla la salida en pantalla con la lógica.
 3. No hay una prueba específica de `asesorar` con un fallo de red. Ese camino sí está cubierto con datos inválidos del modelo y en `comprobar-ia` con timeout, y el código que lo trata es el mismo (`except ErrorIA`). El caso 1.5 del guion de Windows lo comprueba a mano.
 4. Las pruebas de Windows usan simulaciones. El guion para un portátil físico está en [PRUEBA-WINDOWS.md](PRUEBA-WINDOWS.md), pero todavía no se ha ejecutado: es el pendiente 1 de RELEVO.
-5. En la edición 1.x, 52 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
+5. En la edición 1.x, 52 acciones no guardaban el estado anterior real. Ahora están en revisión y no se ofrecen, pero no se han corregido ([REVISION.md](REVISION.md)). Si preguntan: se dejan en el catálogo para que quien las aplicó con una versión anterior pueda seguir deshaciéndolas, `tests/safety-tests.ps1` comprueba que `undo` sigue deshaciendo una de ellas, y `tests/run-tests.ps1` impide ofrecer una acción reversible nueva que no guarde su estado.
 6. Al escribir el guion de Windows aparecieron dos errores de `preparar`, ya corregidos con su prueba: una aplicación que ya estaba instalada aparecía en «Cambios aplicados y cómo deshacerlos», y un estado de carga desconocido se mostraba como «enchufado». Si preguntan, es un buen ejemplo de por qué hace falta probar en un equipo real además de con dobles.

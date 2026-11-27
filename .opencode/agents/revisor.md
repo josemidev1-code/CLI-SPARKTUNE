@@ -1,6 +1,6 @@
 ---
 description: Revisa SparkTune y señala errores reproducibles sin modificar archivos.
-mode: subagent
+mode: all
 permissions:
   - action: edit
     resource: "*"

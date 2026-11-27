@@ -6,41 +6,38 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 
 ## Estado
 
-- **SparkTune 2.0.0 está publicado.** El PR #3 se fusionó en `main` con merge commit (`e88062b`), y la release [v2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0) apunta a ese commit.
-- **La instalación del README funciona desde `main`.** Se comprobó instalando desde la URL de GitHub en un entorno limpio y ejecutando `version`, `--help`, `validar`, `acciones` y `ejecutar` desde otra carpeta. Hace falta Git.
-- Los cambios posteriores a la release (PR #4) están en `main` y figuran en `CHANGELOG.md` como «Sin publicar»:
-  - El instalador 1.x vuelve a funcionar.
-  - El filtro de privacidad de la IA detecta más formas de escribir datos privados.
-  - Los scripts `.sh` usan LF.
-  - `net.doh` y `net.wsl-nat` pasan a revisión.
-- 71 pruebas pytest en verde en Ubuntu, Windows y macOS, y las 8 pruebas `tests/*.ps1` en verde con `pwsh` en este Mac.
+- **SparkTune 2.0.0 está publicado** (PR #3, merge `e88062b`, release [v2.0.0](https://github.com/josemidev1-code/CLI-SPARKTUNE/releases/tag/v2.0.0)).
+- **El PR #4 se fusionó en `main`** con merge commit (`5fd8c47`) tras pasar las 10 comprobaciones de CI: instalador 1.x, filtro de privacidad, `*.sh` con LF y `net.doh`/`net.wsl-nat` en revisión.
+- **La 2.0.1 se prepara en el PR #5** (rama `codex/2.0.1`): versión 2.0.1 en `pyproject.toml` y `uv.lock`, entrada en el CHANGELOG y las correcciones de la revisión. Al fusionarlo se crea la etiqueta `v2.0.1` sobre el merge commit y la release con las notas de la entrada 2.0.1.
+- Identidad de git: desde la 2.0.1 los commits usan `josemidev1-code` con el correo noreply de GitHub, configurado solo en este repositorio. El historial anterior no se reescribe.
+- 71 pruebas pytest en verde y las 8 pruebas `tests/*.ps1` en verde con `pwsh` en este Mac.
 - Estructura: `cli.py` (interfaz), `config.py` (`Catalogo`), `acciones.py` (una clase por tipo), `motor.py` (`Plan`), `ficheros.py`, `esquema.py`, `errores.py`, `dialogo.py`, `proveedores.py` (Groq y local), `ia.py` y `preparar.py`.
-- Documentación para la defensa:
-  - `docs/DEFENSA.md`: evidencia de cada criterio, demostración en cinco minutos, qué comprueba cada una de las 71 pruebas, preguntas probables y puntos débiles.
-  - `docs/PRUEBA-WINDOWS.md`: guion de 17 casos para un portátil real. Todavía no se ha ejecutado.
-- Edición 1.x: 52 de las 81 acciones quedan en revisión y no se ofrecen, porque no restauraban el estado anterior real. La lista es `$script:STEnRevision` en `src/core/catalog.ps1` y el detalle está en `docs/REVISION.md`. Corregirlas es trabajo futuro, no un requisito de la entrega.
+- Documentación para la defensa: `docs/DEFENSA.md` y `docs/PRUEBA-WINDOWS.md` (17 casos, todavía sin ejecutar en un portátil).
+- Edición 1.x: 52 de las 81 acciones quedan en revisión y no se ofrecen (`$script:STEnRevision` en `src/core/catalog.ps1`, detalle en `docs/REVISION.md`). Corregirlas es trabajo futuro.
 - Estimación frente a la rúbrica: unos 92-94 de 100.
 
 ## Revisión del 27 de noviembre
 
-Se lanzó una revisión con seis enfoques: código, seguridad, pruebas, documentación, entrega y PowerShell. Cada hallazgo pasaba después por un verificador escéptico. Terminaron los enfoques de seguridad, entrega y PowerShell. Los de **código, pruebas y documentación no habían terminado** al cerrar la sesión: hay que repetirlos. Si terminaron después, sus resultados están en `~/.claude/projects/-Users-josemidev1-Documents-ChatGPT-SparkTune-CLI-CLI-SPARKTUNE/7c8c2768-05b4-4d02-a653-41216a650243/subagents/workflows/wf_8e098163-5b6/journal.jsonl`.
+Seis enfoques (código, seguridad, pruebas, documentación, entrega y PowerShell), cada hallazgo comprobado antes de aceptarlo. Los enfoques de código, pruebas y documentación se repitieron en la sesión de la 2.0.1.
 
-Corregido en esta sesión: el instalador 1.x, el filtro de privacidad, `*.sh` con LF, la cifra de commits de DEFENSA y `net.doh` y `net.wsl-nat` a revisión.
+Corregido en el PR #4: instalador 1.x, filtro de privacidad, `*.sh` con LF, cifra de commits de DEFENSA y `net.doh`/`net.wsl-nat` a revisión.
 
-Pendiente, sin verificar todavía por un segundo revisor salvo donde se indica:
+Corregido en el PR #5:
 
-1. **Identidad de git (confirmado).** Casi todos los commits de la 2.0.0 tienen como autor un nombre y un correo que git genera a partir del usuario y del nombre del equipo, porque no tiene `user.name` ni `user.email` configurados. Ese correo ya está publicado. Compruébalo con `git log --format='%an <%ae>' | sort | uniq -c`. Antes del siguiente commit, el alumno configura su identidad, por ejemplo con su correo noreply de GitHub. No conviene reescribir el historial de `main`.
-2. `scripts/revisar.sh` ejecuta `opencode run --agent revisor`, pero `.opencode/agents/revisor.md` declara `mode: subagent`, que según la documentación de OpenCode no puede ser el agente principal. Posible corrección: `mode: all`.
-3. `docs/POWERSHELL.md` (líneas 252, 258 y 276) sigue anunciando funciones que ahora están en revisión: el endurecimiento `sec.*` y las acciones `priv.*` del perfil `red-privacidad`.
-4. `tests/verify-windows.ps1` (líneas 89 y 102) pide aplicar desde el asistente `gpu.power-mode` y acciones `sec.*`/`priv.*`, que ya no se ofrecen.
-5. Ninguna prueba comprueba que `undo` siga deshaciendo una acción en revisión aplicada con una versión anterior. Habría que añadir un caso a `tests/safety-tests.ps1`.
+1. Identidad de git configurada antes del primer commit (correo noreply).
+2. `.opencode/agents/revisor.md` pasa a `mode: all`. Según la documentación de OpenCode, `subagent` solo se ejecuta desde la herramienta `subagent`, y `all` sirve como agente principal o como subagente. No se pudo ejecutar `scripts/revisar.sh` porque OpenCode no está instalado en este Mac.
+3. `docs/POWERSHELL.md` ya no anuncia el endurecimiento `sec.*` ni las acciones `priv.*`, y aclara que `red-privacidad` solo ofrece el informe de Defender y vaciar la caché DNS.
+4. `tests/verify-windows.ps1` ya no aplica ni deshace `gpu.power-mode`, y el bloque manual ya no pide `net.wsl-nat`, `off.hibernation`, `sec.*` ni `priv.*`.
+5. `tests/safety-tests.ps1` carga el catálogo real y comprueba que `net.doh` no se ofrece pero `undo` la sigue deshaciendo. Se comprobó que la prueba falla si `Invoke-STUndo` omite las acciones en revisión.
+
+Revisión repetida de código, pruebas y documentación: sin errores graves. Queda un detalle menor sin corregir: si `ejecutar` o `preparar` no reciben respuesta (entrada cerrada o Ctrl+C), Click muestra «Aborted.» en inglés y sale con código 1. No escribe nada, así que es seguro.
 
 ## Pendiente, por orden
 
-1. Repetir la revisión de código, pruebas y documentación y verificar y corregir los puntos 2 a 5 de la revisión, cada uno con su prueba si es código.
-2. Publicar los cambios «Sin publicar» como 2.0.1: fecha en el CHANGELOG, etiqueta `v2.0.1` y release.
-3. Ejecutar `docs/PRUEBA-WINDOWS.md` en el portátil y guardar la tabla de resultados. Si obliga a corregir algo, va en la siguiente versión.
-4. Completar en `docs/prompts.md` las sesiones con ChatGPT y Codex (solo las conoce el alumno).
+1. Fusionar el PR #5 con el CI en verde, crear la etiqueta `v2.0.1` y la release.
+2. Ejecutar `docs/PRUEBA-WINDOWS.md` en el portátil y guardar la tabla de resultados. Si obliga a corregir algo, va en la siguiente versión.
+3. Completar en `docs/prompts.md` las sesiones con ChatGPT y Codex (solo las conoce el alumno).
+4. Opcional: mensaje en español cuando falta la respuesta a una confirmación.
 
 ## Por confirmar con el profesor
 
