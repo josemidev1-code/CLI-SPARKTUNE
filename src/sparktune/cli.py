@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from . import archivos, limpieza
+from . import archivos, limpieza, preparar
 
 app = typer.Typer(
     no_args_is_help=True, add_completion=False, pretty_exceptions_enable=False,
@@ -28,3 +28,4 @@ def version():
 
 archivos.registrar(app)
 limpieza.registrar(app)
+preparar.registrar(app)
