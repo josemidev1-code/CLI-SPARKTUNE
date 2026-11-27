@@ -12,14 +12,14 @@ Rúbrica: https://aulaenlanube.com/programacion-ia/cli/ (7 criterios: acciones 2
 - Estructura: `cli.py` (interfaz), `config.py` (`Catalogo`), `acciones.py` (una clase por tipo), `motor.py` (`Plan`), `ficheros.py`, `esquema.py`, `errores.py`, `dialogo.py`, `proveedores.py` (Groq y local), `ia.py` y `preparar.py`.
 - Hecho en esta sesión: rescate del trabajo sin commitear; correcciones para Windows (firma `lstat`/`fstat`, salida en `cp1252`, `PERFEPP` oculto, que ahora se lee con `powercfg /qh`); diseño en clases; robustez (ruta inexistente, enlaces de root como `/tmp` y confirmación `[s/N]`); `.gitattributes`; ADR 0003; `docs/prompts.md`; propuestas de IA con qué cambia, por qué encaja y cómo se revierte, generadas desde el catálogo y no desde el modelo; reversión cuando `preparar` falla a medias.
 - `docs/DEFENSA.md`: evidencia de cada criterio de la rúbrica, demostración en cinco minutos, qué comprueba cada una de las 66 pruebas, preguntas probables y puntos débiles conocidos.
+- Seguridad de la 1.x: 50 acciones que no guardaban el estado anterior real quedan en revisión y no se ofrecen (`$script:STEnRevision` en `src/core/catalog.ps1`; detalle en `docs/REVISION.md`). Corregirlas es trabajo futuro, no un requisito de la entrega. PowerShell 7 está instalado en este Mac (`pwsh`), así que las pruebas `tests/*.ps1` se pueden ejecutar en local.
 - Estimación frente a la rúbrica: unos 92-94 de 100.
 
 ## Pendiente, por orden
 
-1. Seguridad de la 1.x: desactivar u ocultar como «en revisión» las acciones de `src/catalog/*.ps1` que no guardan el estado anterior real (véase `docs/REVISION.md`).
-2. `docs/PRUEBA-WINDOWS.md`: guion para un portátil físico con Windows 10 (1809 o posterior) o 11. Debe cubrir el punto de restauración (incluido el límite de 24 h y la Protección del sistema desactivada), WinGet real (app ya instalada, fallo de red, Adobe, que requiere cuenta) y la autonomía con `powercfg /batteryreport`, con una tabla de resultados. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python` mientras no se fusione el PR.
-3. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
-4. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Es imprescindible para la puerta de entrada: `main` no tiene `pyproject.toml`, así que hasta que se fusione la orden de instalación del README falla. Mientras tanto, se instala desde la rama con `@codex/sparktune-python`.
+1. `docs/PRUEBA-WINDOWS.md`: guion para un portátil físico con Windows 10 (1809 o posterior) o 11. Debe cubrir el punto de restauración (incluido el límite de 24 h y la Protección del sistema desactivada), WinGet real (app ya instalada, fallo de red, Adobe, que requiere cuenta) y la autonomía con `powercfg /batteryreport`, con una tabla de resultados. Se instala con `uv tool install git+https://github.com/josemidev1-code/CLI-SPARKTUNE@codex/sparktune-python` mientras no se fusione el PR.
+2. Completar en `docs/prompts.md` las sesiones anteriores con ChatGPT y Codex (solo las conoce el alumno).
+3. Al final: entrada 2.0.0 en `CHANGELOG.md`, fusionar el PR #3, etiqueta `v2.0.0` y release. Es imprescindible para la puerta de entrada: `main` no tiene `pyproject.toml`, así que hasta que se fusione la orden de instalación del README falla. Mientras tanto, se instala desde la rama con `@codex/sparktune-python`.
 
 ## Por confirmar con el profesor
 
