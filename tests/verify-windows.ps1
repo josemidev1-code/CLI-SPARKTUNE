@@ -75,20 +75,11 @@ $ok2 = (Get-Content $cfg -Raw) -match '"nivel":\s*"medio"'
 if ($prev) { [System.IO.File]::WriteAllText($cfg, $prev) }
 if ($ok1 -and $ok2) { Write-STVerify 'config --set-*' 'PASS' } else { Write-STVerify 'config --set-*' 'FAIL' "lang=$ok1 nivel=$ok2" }
 
-# 6) power: planes + GPU power mode
+# 6) power: planes (gpu.power-mode esta en revision y ya no se ofrece: no se aplica ni se deshace)
 $act = (powercfg.exe /getactivescheme) -join "`n"
 Write-STVerify 'powercfg activo' 'PASS' ($act -replace '\s+', ' ')
 $ls = (powercfg.exe /list) -join "`n"
 if ($ls -match 'SparkTune') { Write-STVerify 'planes SparkTune existen' 'PASS' } else { Write-STVerify 'planes SparkTune' 'WARN' 'crea uno con "sparktune power" y repite' }
-if ($Admin) {
-    & $st undo --id=gpu.power-mode --yes --no-banner | Out-Null
-    # lectura directa del setting PCI-E Link State del plan activo
-    $q = ((powercfg.exe /query SCHEME_CURRENT 4d36e967-e325-11ce-bfc1-08002be10318 eeabc0fe-811e-11d5-b4d9-00a0242541e9 2>&1) -join "`n")
-    if ($q -match '0x00000000') { Write-STVerify 'gpu.power-mode AC=Off' 'PASS' }
-    elseif ($q -match '0x000000[0-9a-fA-F]{2}') { Write-STVerify 'gpu.power-mode AC' 'WARN' 'valor no Off (esperado si no lo has aplicado)' }
-    else { Write-STVerify 'gpu.power-mode setting' 'FAIL' 'powercfg no encuentra el setting (check GUIDs)' }
-    Write-Host '  MANUAL: aplica gpu.power-mode desde el wizard gaming/medio y repite este script: debe salir PASS arriba.' -ForegroundColor DarkGray
-} else { Write-STVerify 'checks GPU power' 'WARN' 'ejecutar con -Admin' }
 
 # 7) journal/undo/doctor
 & $st doctor --no-banner | Out-Null
@@ -101,10 +92,9 @@ if ((Test-Path "$env:TEMP\st-report.html") -or $LASTEXITCODE -le 1) { Write-STVe
 # 8) acciones delicadas (solo recordatorio manual)
 Write-Host @"
   MANUAL (requieren decision tuya):
-   - net.wsl-nat: con WSL instalado, aplicar y comprobar que ~/.wslconfig guarda el previo y undo lo devuelve.
    - clean.thumbnails: con Explorer abierto; comprobar que las miniaturas se regeneran.
-   - off.hibernation: solo si es sobremesa; powercfg /h on para revertir.
-   - sec.* / priv.*: aplicar 2-3 con dry-run primero, luego real + undo desde otra consola.
+   - En revision y no ofrecidas (docs/REVISION.md): gpu.power-mode, net.wsl-nat, off.hibernation,
+     y el endurecimiento sec.* y priv.*. No las apliques; comprueba que el asistente no las propone.
 "@ -ForegroundColor DarkGray
 
 Write-Host "`nPASS=$pass WARN=$warn FAIL=$fail" -ForegroundColor $(if ($fail) { 'Red' } elseif ($warn) { 'Yellow' } else { 'Green' })
