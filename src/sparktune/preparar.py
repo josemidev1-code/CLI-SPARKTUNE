@@ -14,6 +14,8 @@ from uuid import uuid4
 import psutil
 import typer
 
+from .dialogo import confirmar
+
 
 @dataclass(frozen=True)
 class Perfil:
@@ -263,16 +265,6 @@ def _instalar(winget: str, paquete: str) -> None:
     raise RuntimeError(f"WinGet terminó con código 0x{codigo & 0xFFFFFFFF:08X} para {paquete}.")
 
 
-def _confirmar(pregunta: str) -> bool:
-    while True:
-        respuesta = typer.prompt(f"{pregunta} [s/N]", default="n", show_default=False).strip().casefold()
-        if respuesta in {"s", "sí", "si", "y", "yes"}:
-            return True
-        if respuesta in {"n", "no"}:
-            return False
-        typer.echo("Responde s o n.")
-
-
 def perfiles() -> None:
     """Lista los perfiles de preparación disponibles."""
     for nombre, descripcion in PERFIL_DESCRIPCIONES.items():
@@ -320,14 +312,14 @@ def preparar(
     protegido = False
     try:
         for paquete in paquetes:
-            if not _confirmar(f"¿Instalar {paquete}?"):
+            if not confirmar(f"¿Instalar {paquete}?"):
                 continue
             if not protegido:
                 typer.echo(f"Punto verificado: {_crear_punto()}")
                 protegido = True
             _instalar(winget, paquete)
             typer.echo(f"Disponible: {paquete}")
-        if transparencia and _confirmar("¿Desactivar los efectos de transparencia para esta cuenta?"):
+        if transparencia and confirmar("¿Desactivar los efectos de transparencia para esta cuenta?"):
             if not protegido:
                 typer.echo(f"Punto verificado: {_crear_punto()}")
                 protegido = True
