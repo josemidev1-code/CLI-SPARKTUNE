@@ -56,7 +56,7 @@ function STC([string]$code) {
 
 $script:STColorMap = @{
     reset='0'; bold='1'; dim='2'; italic='3'
-    gray='90'; red='91'; green='92'; yellow='93'; blue='94'; magenta='95'; cyan='96'; white='97'
+    gray='90'; red='91'; green='92'; yellow='93'; blue='94'; magenta='95'; accent='38;2;195;180;245'; white='97'
     bg_red='41'; bg_green='42'; bg_yellow='43'; bg_blue='44'; bg_magenta='45'; bg_cyan='46'; bg_gray='100'
 }
 
@@ -73,8 +73,8 @@ function Write-STLine {
 function Write-STPlain([string]$Text) {
     if ($script:STConsole) { [Console]::Write($Text) } else { Write-Host -NoNewline $Text }
 }
-function Write-STInfo([string]$T)  { Write-STLine "  $T" 'cyan' }
-function Write-STOk([string]$T)    { Write-STLine "  $T" 'green' }
+function Write-STInfo([string]$T)  { Write-STLine "  $T" }
+function Write-STOk([string]$T)    { Write-STLine "  $T" }
 function Write-STWarn([string]$T)  { Write-STLine "  [!] $T" 'yellow' }
 function Write-STErr([string]$T)   { Write-STLine "  [x] $T" 'red' }
 
@@ -85,14 +85,14 @@ function Clear-STScreen {
 function Write-STHeader {
     param([string]$Title, [string]$Detail = '')
     Write-STLine ''
-    Write-STLine "  SparkTune  /  $Title" 'cyan' 'bold'
+    Write-STLine "  SparkTune  /  $Title" 'accent' 'bold'
     if ($Detail) { Write-STLine "  $Detail" 'gray' }
     Write-STLine "  $('─' * 44)" 'gray'
 }
 
 function Write-STSection([string]$Title) {
     Write-STLine ''
-    Write-STLine "  $Title" 'cyan' 'bold'
+    Write-STLine "  $Title" '' 'bold'
 }
 
 # ---------- idioma ----------

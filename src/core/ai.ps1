@@ -189,7 +189,7 @@ function Invoke-STAIAdvisor {
 
         $action = $candidates[$item.id]
         $seen[$action.id] = $true
-        Write-STLine "  $(STField $action 'titulo') [$($action.id)]" 'cyan'
+        Write-STLine "  $(STField $action 'titulo') [$($action.id)]" 'accent'
         Write-STLine "    $reason"
         Write-STLine "    $(T 'card.risk'): $(T "risk.$($action.riesgo)")"
         if ($action.admin) { Write-STLine "    $(T 'admin.need')" 'yellow' }

@@ -104,9 +104,9 @@ function Show-STCard {
     $riskColor = switch ($risk) { 'alto' { 'red' } 'medio' { 'yellow' } 'bajo' { 'green' } default { 'gray' } }
     $t = STField $Action 'titulo'
     $border = '-' * ([Math]::Min(76, 14 + $t.Length))
-    Write-STLine $border 'cyan'
-    Write-STLine "  $t" 'cyan' 'bold'
-    Write-STLine $border 'cyan'
+    Write-STLine $border 'accent'
+    Write-STLine "  $t" 'accent' 'bold'
+    Write-STLine $border 'accent'
     Write-STLine "  $(T 'card.desc'): $(STField $Action 'descripcion')"
     if ($Action.ContainsKey('aviso') -and $Action.aviso) {
         Write-STWarn (STField $Action 'aviso')
@@ -116,13 +116,13 @@ function Show-STCard {
     try {
         if ($Action.ContainsKey('preview') -and $Action.preview) { $prevTxt = (& $Action.preview $Action) }
     } catch { $prevTxt = "(preview: $($_.Exception.Message))" }
-    Write-STLine "  $(T 'card.cur'): $prevTxt" 'white'
+    Write-STLine "  $(T 'card.cur'): $prevTxt"
     $revTxt = (T 'yes'); if (-not $Action.reversible) { $revTxt = "$(T 'no') ⚠" }
     $adminTxt = if ($Action.admin) { (T 'yes') } else { (T 'no') }
     $rebTxt   = if ($Action.reinicio) { (T 'yes') } else { (T 'no') }
     Write-STLine "  $(T 'card.risk'): $(T "risk.$risk")   $(T 'card.rev'): $revTxt   $(T 'card.admin'): $adminTxt   $(T 'card.reboot'): $rebTxt" $riskColor
     Write-STLine "  id: $($Action.id)" 'gray'
-    Write-STLine $border 'cyan'
+    Write-STLine $border 'accent'
 }
 
 # ---------- aplicacion ----------
@@ -240,7 +240,7 @@ function Start-STWizard {
     if ($fail) { Write-STErr "$(T 'apply.fail'): $fail" }
     if ($skip) { Write-STWarn "$(T 'apply.skip'): $skip" }
     if (-not $Global:STDryRun -and ($ok -gt 0)) {
-        Write-STLine "  $(T 'run.undo')" 'cyan'
+        Write-STLine "  $(T 'run.undo')" 'accent'
         $reboots = @($sel | Where-Object { $_.reinicio })
         if ($reboots.Count) { Write-STWarn "Requiere reinicio: $($reboots.id -join ', ')" }
 
@@ -287,7 +287,7 @@ function Show-STMenu {
         Write-STLine ''
         for ($i = 0; $i -lt $Items.Count; $i++) {
             $mark = '  '; $col = ''
-            if ($i -eq $cur) { $mark = '› '; $col = 'cyan' }
+            if ($i -eq $cur) { $mark = '› '; $col = 'accent' }
             Write-STLine "    $mark$($Items[$i].label)" $col $(if ($i -eq $cur) { 'bold' } else { '' })
         }
         Write-STLine ''
@@ -311,14 +311,14 @@ function Select-STActions {
     while ($true) {
         Clear-STScreen
         Write-STLine ''
-        Write-STLine "  $(T 'list.title')" 'cyan' 'bold'
+        Write-STLine "  $(T 'list.title')" 'accent' 'bold'
         Write-STLine ''
         $nSel = 0; foreach ($b in $sel) { if ($b) { $nSel++ } }
         for ($i = 0; $i -lt $Actions.Count; $i++) {
             $a = $Actions[$i]
             $box = '[ ]'; if ($sel[$i]) { $box = '[x]' }
             $mark = '  '; $col = ''
-            if ($i -eq $cur) { $mark = '> '; $col = 'yellow' }
+            if ($i -eq $cur) { $mark = '> '; $col = 'accent' }
             $warn = ''; if ($a.riesgo -eq 'alto') { $warn = ' ⚠' }
             elseif ($a.riesgo -eq 'medio') { $warn = ' •' }
             $line = "  $mark$box $($a.categoria.PadRight(9)) $(STField $a 'titulo')$warn"
@@ -356,7 +356,7 @@ function Invoke-STUndo {
     if ($pend.Count -eq 0) { Write-STInfo (T 'undo.none'); return }
 
     Write-STLine ''
-    Write-STLine "  $(T 'undo.title')" 'cyan' 'bold'
+    Write-STLine "  $(T 'undo.title')" 'accent' 'bold'
     Write-STLine "  $(T 'undo.list')" 'gray'
     foreach ($e in $pend) { Write-STLine "    $($e.seq)  $($e.id)  — $($e.titulo)" }
     Write-STLine ''
@@ -435,7 +435,7 @@ function Invoke-STAppsMenu {
     while ($true) {
         Clear-STScreen
         Write-STLine ''
-        Write-STLine "  $(if ($lang -eq 'en') { 'Install apps (winget)' } else { 'Instalar apps (winget)' })" 'cyan' 'bold'
+        Write-STLine "  $(if ($lang -eq 'en') { 'Install apps (winget)' } else { 'Instalar apps (winget)' })" 'accent' 'bold'
         Write-STLine ''
         $items = @()
         foreach ($c in $cat.categories) {
@@ -570,14 +570,14 @@ function Invoke-STAppsCategory($cat, [string]$CatId, [string]$Lang) {
     while ($true) {
         Clear-STScreen
         Write-STLine ''
-        Write-STLine "  $(if ($Lang -eq 'en') { 'Apps' } else { 'Apps' })  ·  ✔=$(if ($Lang -eq 'en') {'installed'} else {'instalada'})" 'cyan' 'bold'
+        Write-STLine "  $(if ($Lang -eq 'en') { 'Apps' } else { 'Apps' })  ·  ✔=$(if ($Lang -eq 'en') {'installed'} else {'instalada'})" 'accent' 'bold'
         Write-STLine ''
         for ($i = 0; $i -lt $apps.Count; $i++) {
             $box = '[ ]'; if ($sel[$i]) { $box = '[x]' }
             $tick = if ($installed.ContainsKey($apps[$i].id)) { ' ✔' } else { '' }
             $tagp = if ($apps[$i].portable) { ' (p)' } else { '' }
             $mark = '  '; $col = ''
-            if ($i -eq $cur) { $mark = '> '; $col = 'yellow' }
+            if ($i -eq $cur) { $mark = '> '; $col = 'accent' }
             Write-STLine "  $mark$box $($apps[$i].name)$tick$tagp" $col $(if ($i -eq $cur) { 'bold' } else { '' })
         }
         $nSel = 0; foreach ($b in $sel) { if ($b) { $nSel++ } }
@@ -692,7 +692,7 @@ function Show-STStatus {
     Show-STDetectSummary $hw
     Write-STInfo "$(T 'status.plan'): $($hw.PowerPlan) [$($hw.PowerPlanGuid)]"
     Write-STLine ''
-    Write-STLine "  $(T 'status.heavy'):" 'cyan'
+    Write-STLine "  $(T 'status.heavy'):" 'accent'
     $svcs = @('SysMain','WSearch','DiagTrack','Spooler','WaaSMedicSvc','MapsBroker')
     foreach ($n in $svcs) {
         $st = Get-STServiceState $n
@@ -734,7 +734,7 @@ function Invoke-STAnalyze {
         } catch { Write-STWarn "$k : $($_.Exception.Message)" }
     }
     Write-STLine ''
-    Write-STLine '  Archivos > 1 GB en carpetas de usuario:' 'cyan'
+    Write-STLine '  Archivos > 1 GB en carpetas de usuario:' 'accent'
     try {
         $big = Get-ChildItem ([Environment]::GetFolderPath('UserProfile')) -Recurse -Force -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Length -gt 1GB } | Sort-Object Length -Descending | Select-Object -First 15
