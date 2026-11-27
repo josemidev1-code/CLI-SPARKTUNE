@@ -2,8 +2,6 @@
 
 import json
 import os
-import platform
-import shutil
 import subprocess
 import time
 from dataclasses import dataclass
@@ -11,10 +9,10 @@ from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
 
-import psutil
 import typer
 
 from .dialogo import confirmar
+from .equipo import contexto_equipo, resumen_equipo
 
 
 @dataclass(frozen=True)
@@ -107,33 +105,8 @@ PERFILES = {
 }
 PERFIL_DESCRIPCIONES: dict[str, str] = {id_: p.descripcion for id_, p in PERFILES.items()}
 
-_GIB = 1024**3
 _CLAVE_TEMA = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 _RECUPERAR_TEMA = "Puedes reactivarlos en Configuración > Personalización > Colores."
-
-
-def contexto_equipo() -> dict:
-    """Datos agregados para preparar el plan, sin identificadores de usuario o máquina."""
-    sistema = platform.system()
-    unidad = os.environ.get("SystemDrive", "C:") + "\\" if sistema == "Windows" else "/"
-    try:
-        espacio = round(shutil.disk_usage(unidad).free / _GIB, 1)
-    except OSError:
-        espacio = None
-    try:
-        ram = round(psutil.virtual_memory().total / _GIB, 1)
-    except (OSError, psutil.Error, NotImplementedError):
-        ram = None
-    try:
-        bateria = psutil.sensors_battery()
-        con_bateria = bateria is not None
-        enchufado = bateria.power_plugged if bateria else None
-    except (OSError, psutil.Error, NotImplementedError):
-        con_bateria = enchufado = None
-    return {
-        "sistema": sistema, "arquitectura": platform.machine(), "nucleos_logicos": os.cpu_count(),
-        "ram_gib": ram, "disco_libre_gib": espacio, "con_bateria": con_bateria, "enchufado": enchufado,
-    }
 
 
 def _plan(perfil: str, equipo: dict) -> tuple[list[str], list[str]]:
@@ -210,20 +183,6 @@ def propuesta(perfil: str, equipo: dict) -> tuple[list[Cambio], list[str]]:
     if sugerir_transparencia(equipo):
         cambios.append(Cambio("Desactivar los efectos de transparencia de esta cuenta", _RECUPERAR_TEMA))
     return cambios, pasos
-
-
-def resumen_equipo(equipo: dict) -> str:
-    ram, disco = equipo["ram_gib"], equipo["disco_libre_gib"]
-    partes = [f"{equipo['sistema']} {equipo['arquitectura']}",
-              f"{ram:g} GiB de RAM" if ram is not None else "RAM desconocida",
-              f"{disco:g} GiB libres" if disco is not None else "espacio libre desconocido"]
-    if equipo["con_bateria"]:
-        # psutil devuelve None si Windows no informa del cargador: no se da por enchufado.
-        carga = {True: "enchufado", False: "desenchufado"}.get(equipo["enchufado"], "estado de carga desconocido")
-        partes.append(f"con batería, {carga}")
-    elif equipo["con_bateria"] is False:
-        partes.append("sin batería")
-    return " · ".join(partes)
 
 
 def _transparencia_activa() -> bool:

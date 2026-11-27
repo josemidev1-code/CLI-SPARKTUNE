@@ -1,0 +1,18 @@
+Recomendación local · android
+Por qué encaja con tu uso: Mencionas «android», y este perfil está pensado para eso: Desarrollo de aplicaciones móviles Android.
+Con tu equipo: Windows ARM64 · 6 GiB de RAM · 69.7 GiB libres · sin batería
+  • Para este equipo, utiliza Android Studio en la nube o un equipo de desarrollo remoto. La instalación local para Windows requiere x64, 8 GiB de RAM y espacio para el IDE y el SDK.
+Qué cambiaría en Windows (cada cambio se confirma por separado):
+  • Instalar Git.Git con WinGet
+    Cómo revertirlo: winget uninstall --id Git.Git --exact
+Antes del primer cambio se crea un punto de restauración. Para volver al estado anterior de una vez, abre Restaurar sistema (rstrui.exe) y elige el punto SparkTune. Windows quita los programas y controladores instalados después de ese punto y no toca tus documentos.
+Todavía no se ha aplicado nada. Para revisar el plan, ejecuta sparktune preparar android --simular
+SparkTune Programar (programar)
+  Programar y compilar: toda la CPU enchufado y un 90% con batería, sin suspender a mitad de una compilación.
+  CPU mínima: enchufado 5% · batería 5%
+  CPU máxima: enchufado 100% · batería 90%
+  Preferencia de ahorro (0 rendimiento, 100 ahorro): enchufado 33 · batería 50
+  Apagar pantalla tras: enchufado 15 min · batería 10 min
+  Suspender tras: enchufado 60 min · batería 30 min
+Para volver a tu plan anterior: sparktune energia restaurar
+Simulación terminada.

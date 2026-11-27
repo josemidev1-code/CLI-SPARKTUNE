@@ -4,7 +4,6 @@ import json
 import os
 import shutil
 import sys
-from contextlib import contextmanager
 from importlib.metadata import version as installed_version
 from pathlib import Path
 from typing import Annotated
@@ -14,8 +13,7 @@ import typer
 from . import energia, ia, preparar
 from .asistente import asistente
 from .config import Catalogo
-from .dialogo import confirmar
-from .errores import ErrorSparkTune
+from .dialogo import confirmar, errores_cli
 from .ficheros import leer_carpeta
 from .motor import Plan
 
@@ -44,19 +42,6 @@ def usar_utf8():
     for flujo in (sys.stdout, sys.stderr):
         if callable(getattr(flujo, "reconfigure", None)):
             flujo.reconfigure(encoding="utf-8")
-
-
-@contextmanager
-def errores_cli():
-    """Ningún error previsible termina en traza: mensaje en stderr y código de salida propio."""
-    try:
-        yield
-    except ErrorSparkTune as error:
-        typer.echo(f"Error: {error}", err=True)
-        raise typer.Exit(error.codigo_salida) from error
-    except (OSError, UnicodeError) as error:
-        typer.echo(f"Error: {error}", err=True)
-        raise typer.Exit(1) from error
 
 
 def imprimir_json(datos):

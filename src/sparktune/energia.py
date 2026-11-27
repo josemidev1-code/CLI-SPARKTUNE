@@ -20,7 +20,9 @@ import typer
 
 from .dialogo import confirmar
 from .errores import ErrorIA
-from .preparar import contexto_equipo, resumen_equipo
+from .equipo import contexto_equipo, resumen_equipo
+from .dialogo import opciones_ia
+from .preparar import _crear_punto
 from .proveedores import ProveedorGroq, texto_seguro
 
 # Plan Equilibrado de Windows: SparkTune lo duplica y cambia solo los valores del plan.
@@ -202,8 +204,10 @@ def aplicar_plan(plan_id: str) -> str:
     """Crea el plan, lo activa y recuerda el plan original. Devuelve el GUID nuevo."""
     plan = PLANES[plan_id]
     estado = _leer_estado()
-    original = estado["original"] if estado else _activo()
+    anterior = _activo()
+    original = estado["original"] if estado else anterior
     nuevo = str(uuid4())
+    typer.echo(f"Punto de restauración verificado: {_crear_punto()}")
     _powercfg("/duplicatescheme", EQUILIBRADO, nuevo)
     try:
         _powercfg("/changename", nuevo, plan.nombre, plan.descripcion)
@@ -214,7 +218,13 @@ def aplicar_plan(plan_id: str) -> str:
     except (RuntimeError, OSError, subprocess.TimeoutExpired):
         _borrar(nuevo)  # El plan a medias no se queda en el equipo.
         raise
-    _guardar_estado({"original": original, "sparktune": nuevo, "plan": plan_id})
+    try:
+        _guardar_estado({"original": original, "sparktune": nuevo, "plan": plan_id})
+    except OSError:
+        # Sin historial persistente, devuelve al usuario su plan previo.
+        _powercfg("/setactive", anterior)
+        _borrar(nuevo)
+        raise
     if estado:
         # Al cambiar de uso se sustituye el plan anterior de SparkTune.
         _borrar(estado["sparktune"])
@@ -246,11 +256,13 @@ def planes():
 
 @energia.command("recomendar")
 def recomendar(
+    ctx: typer.Context,
     uso: Annotated[str, typer.Argument(help="Qué vas a hacer, por ejemplo «ver series con batería».")],
     local: Annotated[bool, typer.Option("--local", help="Usa las reglas locales sin conectar a Groq.")] = False,
     env_file: Annotated[Path | None, typer.Option("--env-file", help="Archivo privado con GROQ_API_KEY.")] = None,
 ):
     """Recomienda un plan de energía para tu uso y explica por qué."""
+    local, env_file = opciones_ia(ctx, local, env_file)
     if not texto_seguro(uso) or len(uso) > 1200:
         raise typer.BadParameter("Describe el uso en 1 a 1200 caracteres.")
     equipo = contexto_equipo()

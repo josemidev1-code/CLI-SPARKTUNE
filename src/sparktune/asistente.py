@@ -17,7 +17,7 @@ from .proveedores import VOCABULARIO, ProveedorGroq, texto_seguro
 BIENVENIDA = (
     "Hola, soy SparkTune. Te ayudo a preparar el ordenador para lo que vas a hacer con él.\n"
     "Te haré una pregunta, te explicaré qué cambiaría y por qué, y solo lo cambiaré si me dices que sí.\n"
-    "Todo lo que cambie se puede deshacer."
+    "Puedes recuperar tu plan de energía anterior con sparktune energia restaurar."
 )
 PREGUNTA = "¿Qué vas a hacer con el ordenador? Por ejemplo: ver series, jugar, hacer deberes o programar"
 
