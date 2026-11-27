@@ -251,3 +251,12 @@ def test_acepta_enlaces_del_sistema_como_tmp(tmp_path):
         (Path(carpeta) / "a.log").write_text("ok", encoding="utf-8")
         resultado = runner.invoke(app, ["ejecutar", "reunir-informes", carpeta, "--simular"])
     assert resultado.exit_code == 0, resultado.output
+
+
+@pytest.mark.parametrize(("respuestas", "crea"), [("s\n", True), ("sí\n", True), ("\n", False), ("quizá\nn\n", False)])
+def test_confirmacion_en_espanol(tmp_path, respuestas, crea):
+    (tmp_path / "a.log").write_text("ok", encoding="utf-8")
+    resultado = runner.invoke(app, ["ejecutar", "reunir-informes", str(tmp_path)], input=respuestas)
+    assert resultado.exit_code == 0, resultado.output
+    assert "[s/N]" in resultado.output
+    assert (tmp_path / "sparktune-salida").exists() is crea

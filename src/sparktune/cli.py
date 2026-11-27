@@ -13,6 +13,7 @@ import typer
 
 from . import ia, preparar
 from .config import Catalogo
+from .dialogo import confirmar
 from .errores import ErrorSparkTune
 from .ficheros import leer_carpeta
 from .motor import Plan
@@ -114,7 +115,7 @@ def ejecutar(ctx: typer.Context, nombre: str, carpeta: Path = typer.Argument(Pat
         if simular:
             typer.echo("Simulación completada.")
             return
-        if not si and not typer.confirm("¿Crear esta salida y conservar los originales?", default=False):
+        if not si and not confirmar("¿Crear esta salida y conservar los originales?"):
             typer.echo("Cancelado.")
             return
         plan.aplicar()
@@ -138,7 +139,7 @@ def limpiar(
         typer.echo("Revisa primero los tamaños mayores. Conserva una copia antes de borrar archivos personales.")
         if sys.platform == "win32":
             typer.echo("Para revisar temporales de Windows, abre Configuración > Sistema > Almacenamiento.")
-            if abrir and typer.confirm("¿Abrir Almacenamiento para que elijas los temporales?", default=False):
+            if abrir and confirmar("¿Abrir Almacenamiento para que elijas los temporales?"):
                 os.startfile("ms-settings:storagesense")
         elif abrir:
             typer.echo("El panel de Almacenamiento solo está disponible en Windows.", err=True)
